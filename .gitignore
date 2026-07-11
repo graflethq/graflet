@@ -1,0 +1,3 @@
+# large regenerable audio sources (transcript inputs)
+*.wav
+_audio/
