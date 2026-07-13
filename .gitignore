@@ -1,3 +1,8 @@
 # large regenerable audio sources (transcript inputs)
 *.wav
 _audio/
+
+# context7 SQLite: track the compressed dump + meta, not the 296MB live binary
+research/context7-legality/context7.db
+research/context7-legality/context7.db-wal
+research/context7-legality/context7.db-shm
