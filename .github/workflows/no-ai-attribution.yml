@@ -1,0 +1,48 @@
+name: no-ai-attribution
+# The only un-bypassable layer: local hooks die to `git commit --no-verify`, this does not.
+# Make this a REQUIRED status check on the default branch (Settings -> Branches -> protect).
+on:
+  pull_request:
+  push:
+    branches: ["**"]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reject AI co-author / attribution trailers in the pushed commits
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            range="origin/${{ github.base_ref }}..HEAD"
+          else
+            # push: check only the new commits ('before' is 000..0 on branch create)
+            before="${{ github.event.before }}"
+            if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+              range="HEAD~1..HEAD"
+            else
+              range="$before..HEAD"
+            fi
+          fi
+          echo "Scanning commit messages + author identities in: $range"
+
+          # (a) agent as coauthor NAME (anchored, no substring matches in human emails), or
+          # (b) a known bot email anywhere in the trailer, or the "Generated with"/"Made-with" lines.
+          pat='^[[:space:]]*Co-authored-by:([[:space:]]*(claude|copilot|cursor|aider|codex|windsurf|codeium|devin|jules|gemini)|.*(noreply@anthropic\.com|cursoragent@cursor\.com|aider@aider\.chat|codex@openai\.com|[0-9]*\+?copilot@users\.noreply\.github\.com|copilot@github\.com))|(🤖[[:space:]]*)?Generated with (\[)?(Claude Code|Cursor|[Aa]ider|Codex|Copilot)|^[[:space:]]*Made-with:[[:space:]]*Cursor'
+
+          # messages
+          if git log --format='%B' "$range" | grep -niE "$pat"; then
+            echo "::error::AI co-author/attribution trailer found in $range — clean the commit message(s) and force-push."
+            exit 1
+          fi
+          # author/committer identity (aider/cursor rewrite these)
+          if git log --format='%an <%ae>%n%cn <%ce>' "$range" \
+             | grep -niE 'noreply@anthropic\.com|aider@aider\.chat|cursoragent@cursor\.com|codex@openai\.com|\((aider|cursor|codex)\)[[:space:]]*<'; then
+            echo "::error::An AI agent is set as commit author/committer in $range."
+            exit 1
+          fi
+          echo "OK — no AI attribution in $range"

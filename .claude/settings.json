@@ -3,5 +3,10 @@
     "deny": [
       "Read(./research/js-runtime-research/find-ai-native-js-runtime.md)"
     ]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
   }
 }
