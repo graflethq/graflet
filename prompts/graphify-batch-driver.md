@@ -28,35 +28,88 @@ Each map line looks like:
 
 ## What counts as "done" (the resume signal)
 
-A unit is **done** when `ROOT/<path>/graphify-out/score.json` exists. That file is
-written only by the final scoring step, and only after a *complete* graph — so its
-presence means "graph built **and** scored." A giant that is only partly built has
-**no** `score.json`, so it is correctly picked up again next run.
+A unit is **done** when `ROOT/<path>/graphify-out/.graphify_batch_done` exists. That
+marker is the **last** action of the savings step (Step 4) — written only after the
+graph is built, scored, **and** the savings block is merged. A giant that is only
+partly built, or a unit that scored but died before savings, has **no** marker, so it
+is correctly picked up again next run.
 
-**At the start of every run**, build the skip-set once:
+**At the start of every run**, set counters and a unique session id:
 ```bash
-find /Volumes/ExtSSD/context7-docs -path '*/graphify-out/score.json' -print | \
-  sed -E 's#^/Volumes/ExtSSD/context7-docs/(.*)/graphify-out/score.json$#\1#' | sort > /tmp/gfy_done.txt
-TOTAL=$(wc -l < /Volumes/ExtSSD/context7-docs/.graphify-map.jsonl)   # 50803
-DONE0=$(wc -l < /tmp/gfy_done.txt)                                    # already finished before this run
-echo "start: $DONE0 / $TOTAL done"
+ROOT=/Volumes/ExtSSD/context7-docs
+CLAIM=/Users/mrp/Documents/1-Projects/graphify-graph/prompts/lib/graphify-claim.py
+LOG="$ROOT/.graphify-progress.log"    # shared GLOBAL counter — one line per completed unit, all sessions
+TOTAL=$(wc -l < "$ROOT/.graphify-map.jsonl")                                        # 50803
+# seed the shared counter once (first session), from any already-finished markers
+if [ ! -f "$LOG" ]; then
+  find "$ROOT" -path '*/graphify-out/.graphify_batch_done' 2>/dev/null | \
+    sed -E "s#^$ROOT/(.*)/graphify-out/.graphify_batch_done\$#\1#" > "$LOG.seed.$$"
+  mv -n "$LOG.seed.$$" "$LOG" 2>/dev/null; rm -f "$LOG.seed.$$"
+fi
+DONE0=$(wc -l < "$LOG" | tr -d ' ')    # GLOBAL done at session start (across every session)
+SESSION="$(hostname -s)-$$-$RANDOM"    # unique to THIS session; owns/releases its claims
+LAST=$(date +%s)
+echo "session $SESSION · start: $DONE0 / $TOTAL done"
 ```
-While walking the `MAP`, skip any `path` present in `/tmp/gfy_done.txt`.
+Unit selection is **not** a plain map-walk — it goes through the claim helper (see
+**Parallel-safe claims** below) so many sessions run at once without collisions. The
+processed count is **global** across all sessions: `wc -l "$LOG"`.
 
-Hold three counters in mind for the whole run: `TOTAL` (fixed), `DONE0` (fixed,
-from above), and `RUN_DONE` (starts at 0, +1 each time you write a unit's
-`score.json`). Current overall done = `DONE0 + RUN_DONE`.
+Hold three counters for the whole run: `TOTAL` (fixed), `DONE0` (fixed), and
+`RUN_DONE` (starts at 0, +1 each time a unit's `.graphify_batch_done` marker is
+written by Step 4). Current overall done = `DONE0 + RUN_DONE`.
 
 ---
 
+## Parallel-safe claims (many sessions at once)
+
+Multiple sessions — CommandCode.ai and/or Hermes, all on this same Mac — can run this
+prompt at the same time against the same drive. To stop two sessions grabbing the
+same unit, each unit is **claimed** through a tiny atomic helper before you touch it:
+
+- **Get your next unit** (the most-popular unclaimed + undone unit, atomically claimed
+  for you):
+  ```bash
+  UNIT=$(python3 "$CLAIM" next "$ROOT" "$ROOT/.graphify-map.jsonl" "$SESSION")
+  ```
+  Empty → nothing left to claim (all done, or everything in flight in other sessions) → stop.
+- **Refresh** your claim while working (piggyback the heartbeat):
+  `python3 "$CLAIM" refresh "$ROOT" "$UNIT" "$SESSION"`.
+- **Release** it the moment it is done; **release-all** on stop.
+
+Claims live in `ROOT/.graphify-claims/` (atomic `mkdir`). A claim older than 15 min
+(a crashed session) is auto-stealable, so no unit is stranded. Popularity order holds:
+with N sessions the top N popular units are worked at once, then the next N.
+
 ## The loop
 
-Read `MAP` top to bottom. For each line whose `path` is **not** in the skip-set,
-process it (below). After each unit, check your context usage. **When you reach
-~70%, STOP** — print the run summary and tell the user to paste the prompt again.
-Do not try to finish the whole catalog in one run; 50,803 units span many runs.
+Repeat until `next` returns empty or you hit ~70% context:
 
-Process units **one at a time, in order.** Popular docs get mapped first.
+1. **Claim the next unit and announce it:**
+   ```bash
+   UNIT=$(python3 "$CLAIM" next "$ROOT" "$ROOT/.graphify-map.jsonl" "$SESSION")
+   [ -z "$UNIT" ] && echo "nothing left to claim — stopping" && exit 0
+   D=$(wc -l < "$LOG" | tr -d ' '); P=$(awk "BEGIN{printf \"%.1f\",$D*100/$TOTAL}")
+   printf '\n▶ CLAIMED  %s\n   %s\n   processed so far: %s / %s (%s%%)\n' "$UNIT" "$ROOT/$UNIT" "$D" "$TOTAL" "$P"
+   ```
+2. `SITE="$ROOT/$UNIT"`; process it with the **per-unit procedure** below. It is already claimed for you.
+3. Once it is **done** (marker written by Step 4), **record it in the global counter,
+   announce completion, and release the claim:**
+   ```bash
+   echo "$UNIT" >> "$LOG"                         # atomic append — global count ticks up by one
+   RUN_DONE=$((RUN_DONE+1))
+   D=$(wc -l < "$LOG" | tr -d ' '); P=$(awk "BEGIN{printf \"%.1f\",$D*100/$TOTAL}")
+   printf '\n✓ DONE  %s   GraphScore <NN from Step 3>\n   %s\n   processed so far: %s / %s (%s%%)\n' "$UNIT" "$ROOT/$UNIT" "$D" "$TOTAL" "$P"
+   python3 "$CLAIM" release "$ROOT" "$UNIT" "$SESSION"
+   ```
+   (Substitute the GraphScore the tally step printed.) The two savings lines the
+   helper printed in Step 4 appear just below this.
+4. Heartbeat check (and `refresh` your claim if still mid-unit).
+
+Process **one unit at a time**. **When you reach ~70% context, STOP:** release
+everything you still hold — `python3 "$CLAIM" release-all "$ROOT" "$SESSION"` — then
+print the run summary and tell the user to paste the prompt again. 50,803 units span
+many runs; a partial giant you release resumes from its cache in the next session.
 
 ---
 
@@ -76,10 +129,18 @@ If the gap is **≥ 60**, print one progress line and reset `LAST=$NOW`:
 [progress] 12,431 / 50,803 done (24.5%) · 38,372 left · this run: 87 · elapsed 63s since last
 ```
 
-Compute it from your counters (no filesystem scan):
-- `done  = DONE0 + RUN_DONE`
+Compute `done` from the shared counter (one small file — reflects **every** session),
+and `this run` from your own tally:
+- `done  = $(wc -l < "$LOG")`   (global, all sessions)
 - `pct   = done * 100 / TOTAL`   (one decimal)
 - `left  = TOTAL - done`
+- `this run: RUN_DONE`   (your session's completions)
+
+**Every heartbeat, also refresh your current claim** so a long/giant unit never looks
+abandoned to other sessions:
+```bash
+python3 "$CLAIM" refresh "$ROOT" "$UNIT" "$SESSION"
+```
 
 This guarantees an update at least once a minute during normal flow. A single
 giant can run longer than a minute inside one `/graphify` pass — so also emit the
@@ -189,36 +250,56 @@ python3 ~/.claude/skills/graphify-score/scripts/tally.py "$OUT" --judge-model "<
 ```
 (If you don't know your model string, omit `--judge-model`.) This blends
 Truthful/Complete/Tidy, prints the **GraphScore** headline, and writes
-`OUT/score.json` (+ `OUT/SCORE_REPORT.md`). Writing `score.json` = this unit is
-now **done**.
+`OUT/score.json` (+ `OUT/SCORE_REPORT.md`). Not done yet — Step 4 (savings)
+finalizes the unit and writes the done marker.
 
-### Step 4 — Count it, log one line, heartbeat, continue
+### Step 4 — Savings + mark done (baked telemetry)
 
-- **Increment `RUN_DONE` by 1** (this unit's `score.json` now exists).
-- Append one line to your running summary, e.g.:
-  ```
-  rank 1  vercel/next.js/default  →  GraphScore 92  (T 100 / C 90 / Ti 88)  1772 nodes, 2148 edges
-  ```
-- **Run the heartbeat check** (≥60s since `LAST` → print the `[progress]` line, reset `LAST`).
-- Move to the next map line.
+Run the shared savings helper. It counts tokens with the **free** `count_tokens`
+API, prices them at Sonnet 5 (both tiers), estimates local ollama time from the
+benchmark rate, merges a `savings` block into `score.json`, appends a Savings
+section to `SCORE_REPORT.md`, prints two per-site lines, and — as its **last**
+action — writes `graphify-out/.graphify_batch_done` (the done marker):
+```bash
+python3 /Users/mrp/Documents/1-Projects/graphify-graph/prompts/lib/graphify-savings.py "$SITE" "$OUT"
+```
+This is the free token counter only — no generation, no cost. It needs
+`ANTHROPIC_API_KEY` in the environment; if absent it falls back to a word-based
+token estimate and says so in the JSON (still writes the marker). Only run it on a
+**COMPLETE** unit (Step 2) — never on a partial giant.
+
+### Step 5 — Back to the loop (counter, announce, release, heartbeat)
+
+The unit is finished. Control returns to **The loop**, step 3, which does it all:
+appends to the global counter (`RUN_DONE++`), prints the `✓ DONE` announcement (site +
+absolute path + `processed so far: done / total (pct)`), and releases the claim. The
+two savings lines from Step 4 print just under it. Then run the heartbeat check and
+claim the next unit.
 
 ---
 
 ## Stopping and resuming
 
-When you hit ~70% context (or the user interrupts), **stop cleanly** and print:
+When you hit ~70% context (or the user interrupts), **stop cleanly**. First **release
+every claim you still hold** so other sessions can pick up your in-flight work
+(especially a partial giant):
+```bash
+python3 "$CLAIM" release-all "$ROOT" "$SESSION"
+```
+Then print:
 
 ```
 Run summary
+  session            : $SESSION
   processed this run : N units
-  giants advanced    : M (partial, will resume)
-  total done overall : <count from /tmp/gfy_done.txt + this run>
-  next up            : <path of the first not-yet-done map line>
-To continue: paste prompts/graphify-batch-driver.md again.
+  giants advanced    : M (partial, released for another session to resume)
+  total done overall : DONE0 + RUN_DONE
+  claims released    : <from release-all>
+To continue: paste prompts/graphify-batch-driver.md again (any number of sessions in parallel).
 ```
 
-Re-pasting resumes automatically: the `score.json` skip-set skips finished units,
-and graphify's cache continues any partial giant.
+Re-pasting (or launching more sessions) resumes automatically: `next` skips finished
+(marker) and claimed units, and graphify's cache continues any partial giant.
 
 ---
 
@@ -229,5 +310,8 @@ and graphify's cache continues any partial giant.
 - **Never pass `--out`** — graphify-out must stay inside the doc folder.
 - **Never dispatch more than ~16 worker subagents at once** — batch giants; that ceiling is what protects your context.
 - **Keep file/edge text in subagents, not in your context** — you hold only receipts, headlines, and the map. That is the whole point.
-- **Process in map order** (popularity). Do not skip ahead except to skip already-`done` units.
+- **Take work only via the claim helper's `next`** — never hand-pick a unit or walk the map yourself. That is what keeps parallel sessions collision-free.
+- **Refresh your claim every heartbeat; release on done; release-all on stop.** A unit you never release (short of a crash) blocks it from other sessions for 15 min.
 - **Emit the progress heartbeat at least once a minute** — `done / total (pct) · left` — from the counters, between units and between giant batches.
+- **Mark a unit done only via the savings helper (Step 4)** — it writes `.graphify_batch_done` last, after the graph, the score, and the savings block. Never `touch` the marker yourself.
+- **The `count_tokens` API is free** — it never generates. Do not skip savings to "save cost"; there is none.
