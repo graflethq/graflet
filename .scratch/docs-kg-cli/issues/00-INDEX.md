@@ -7,7 +7,7 @@ Tracker: local files (one ticket per file). Work the **frontier** — any ticket
 
 | # | Title | Blocked by |
 |---|---|---|
-| 01 | Backend skeleton + secrets + health | — |
+| 01 | Backend skeleton + secrets + health ✅ **done 2026-07-20** (commit `d5386a6`; 2 boxes operator-gated) | — |
 | 02 | Catalog store + read/upsert API + seed | 01, P1, P3 |
 | 03 | GitHub OAuth + CLI login/logout | 01 |
 | 04 | CLI md-fetch module (codeload at pinned sha) | 02 |
@@ -38,8 +38,8 @@ P2 ─► 06
 
 ## Frontier
 
-- **Startable now:** `01` (build), `P1` `P2` (kg-pipeline). `P3` ✅ **done**.
-- **After 01:** `03`.
+- **Done:** `01` ✅, `P3` ✅.
+- **Startable now:** `03` (needs only `01`); `P1` `P2` (kg-pipeline).
 - **After P1 + P3 + 01:** `02` — then `04`, `06`, `08`, `09` open up, and the spine `05` after `03`+`04`.
 
-Realistic path: today `01` (+ maybe `03`); next day `P1/P2/P3`; then `02` → the rest.
+Realistic path: `01` ✅ done; next `03` (this repo) + `P1/P2` (kg-pipeline); then `02` → the rest.

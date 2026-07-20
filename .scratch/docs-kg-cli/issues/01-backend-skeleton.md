@@ -4,10 +4,10 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done (commit `d5386a6`, branch `cloudflare-workers-ai-kg`). Code in `backend/`. Two boxes are operator-gated (need the live Cloudflare account) — documented in `backend/README.md` §Deploy.
 
-- [ ] Deploying the Worker publishes it to a live URL, and `curl https://<worker-url>/health` returns HTTP 200 with an `ok` body — sent with no auth header (health is public; the gate applies only to KG download, ADR-0005).
-- [ ] The backend is a Cloudflare Worker with a committed wrangler config whose deploy target is Cloudflare, not the VPS (ADR-0004).
-- [ ] `wrangler secret list` shows both the private-repo access token and the GitHub OAuth client secret as Worker secrets, and a grep of the tracked repo finds neither value anywhere.
-- [ ] A catalog store binding — KV namespace or D1 database — is declared in the wrangler config and is reachable from the Worker at runtime (a probe path performs a trivial read against it and still returns ok).
-- [ ] From inside the fetch handler, `env` exposes all three — the private-repo token, the OAuth client secret, and the catalog-store binding — verified by a smoke check that confirms their presence (not their values), so tickets 02/03/05 build on them with no re-wiring.
+- [ ] **(operator)** Deploying the Worker publishes it to a live URL, and `curl https://<worker-url>/health` returns HTTP 200 with an `ok` body — sent with no auth header (health is public; the gate applies only to KG download, ADR-0005). *Code ready: `GET /health` → `new Response("ok")` (200, no auth); README §Deploy steps 1+3.*
+- [x] The backend is a Cloudflare Worker with a committed wrangler config whose deploy target is Cloudflare, not the VPS (ADR-0004). *`backend/wrangler.jsonc`; `wrangler deploy --dry-run` compiles.*
+- [~] `wrangler secret list` shows both the private-repo access token and the GitHub OAuth client secret as Worker secrets, and a grep of the tracked repo finds neither value anywhere. *Grep clean (no values tracked; `.dev.vars` gitignored). `secret list` is operator-run — README §Deploy step 2.*
+- [x] A catalog store binding — KV namespace or D1 database — is declared in the wrangler config and is reachable from the Worker at runtime (a probe path performs a trivial read against it and still returns ok). *D1 `CATALOG`; `GET /ready` runs `SELECT 1`; vitest proves it in workerd.*
+- [x] From inside the fetch handler, `env` exposes all three — the private-repo token, the OAuth client secret, and the catalog-store binding — verified by a smoke check that confirms their presence (not their values), so tickets 02/03/05 build on them with no re-wiring. *`/ready` returns presence booleans; `index.test.ts` asserts `env.*` presence.*
