@@ -1,0 +1,7 @@
+# Native deps whose install build-scripts we trust to run.
+# workerd = the Workers runtime for `wrangler dev`/preview; esbuild = OpenNext bundling;
+# sharp = next/image optimization in the Node dev/build path.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd

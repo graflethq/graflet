@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#dedbd4;font-family:system-ui,-apple-system,sans-serif}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+p{text-wrap:pretty}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+</style>
+</helmet>
+
+<div style="display:flex;gap:80px;padding:64px 72px;background:#dedbd4;align-items:flex-start;width:max-content">
+
+<!-- ============ FRAME A — TERMINAL / DEV-DARK ============ -->
+<div style="display:flex;flex-direction:column;gap:18px;flex:none">
+<div style="display:flex;align-items:baseline;gap:12px">
+<span style="font:700 24px/1 'JetBrains Mono',monospace;color:#17150f">A</span>
+<span style="font:500 13px/1 system-ui;color:#6b6558">Terminal / dev-dark</span>
+</div>
+<div style="width:1240px;border-radius:16px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.30);background:#0a0b0d;color:#e6e8eb">
+
+<nav style="display:flex;align-items:center;justify-content:space-between;padding:15px 32px;border-bottom:1px solid #1c2027;background:rgba(10,11,13,.85);backdrop-filter:blur(8px)">
+<div style="display:flex;align-items:center;gap:30px">
+<span style="font:700 16px 'JetBrains Mono',monospace">docs<span style="color:#4ef08c">-</span>kg</span>
+<div style="display:flex;gap:24px;font:400 13px 'JetBrains Mono',monospace;color:#8b929c"><a href="#a-cat">Catalog</a><a href="#">Docs</a><a href="#">GitHub</a></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;font:500 13px 'JetBrains Mono',monospace">
+<a href="#" style="display:flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid #262b33;border-radius:8px">★ Star 2.4k</a>
+<a href="#" style="padding:8px 14px;border-radius:8px;background:#4ef08c;color:#06120b;font-weight:600">Sign in with GitHub</a>
+</div>
+</nav>
+
+<section style="padding:76px 48px 60px;text-align:center;background:radial-gradient(60% 90% at 50% 0%,rgba(78,240,140,.09),transparent 70%)">
+<span style="display:inline-block;font:500 12px 'JetBrains Mono',monospace;color:#4ef08c;border:1px solid rgba(78,240,140,.3);border-radius:20px;padding:5px 13px;margin-bottom:26px">FREE · OPEN SOURCE · MIT</span>
+<h1 style="font:700 54px/1.08 'JetBrains Mono',monospace;letter-spacing:-1.5px;margin:0 0 20px;max-width:820px;margin-inline:auto">Ship your AI the docs —<br><span style="color:#4ef08c">and the graph.</span></h1>
+<p style="font:400 18px/1.6 system-ui;color:#9aa1ac;max-width:600px;margin:0 auto 34px">One command downloads a library's docs as Markdown plus a pre-built knowledge graph, pinned to a release. Far better context for your AI, at a fraction of the tokens.</p>
+<div style="display:inline-flex;align-items:center;gap:14px;padding:9px 9px 9px 18px;background:#111317;border:1px solid #262b33;border-radius:11px;font-family:'JetBrains Mono',monospace;margin-bottom:22px">
+<span style="color:#4ef08c">$</span><span style="color:#e6e8eb;font-size:15px">npx docs-kg react</span>
+<button onClick="{{ copy }}" data-cmd="npx docs-kg react" data-key="A" style="border:none;cursor:pointer;background:#4ef08c;color:#06120b;font-weight:600;font-size:12px;padding:8px 13px;border-radius:8px"><sc-if value="{{ copiedA }}" hint-placeholder-val="{{ false }}">Copied ✓</sc-if><sc-if value="{{ notCopiedA }}" hint-placeholder-val="{{ true }}">Copy</sc-if></button>
+</div>
+<div style="display:flex;gap:12px;justify-content:center;font:500 14px 'JetBrains Mono',monospace">
+<a href="#" style="padding:12px 22px;border-radius:9px;background:#4ef08c;color:#06120b;font-weight:600">Get started →</a>
+<a href="#" style="padding:12px 22px;border-radius:9px;border:1px solid #262b33;color:#e6e8eb;display:flex;align-items:center;gap:8px">★ Star on GitHub</a>
+</div>
+<div style="max-width:780px;margin:52px auto 0;background:#0d0f12;border:1px solid #1c2027;border-radius:12px;overflow:hidden;text-align:left;box-shadow:0 30px 70px rgba(0,0,0,.55)">
+<div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #1c2027">
+<span style="width:11px;height:11px;border-radius:50%;background:#ff5f57"></span><span style="width:11px;height:11px;border-radius:50%;background:#febc2e"></span><span style="width:11px;height:11px;border-radius:50%;background:#28c840"></span>
+<span style="margin-left:10px;font:400 12px 'JetBrains Mono',monospace;color:#5c636e">react — docs-kg</span>
+</div>
+<pre style="margin:0;padding:20px;font:400 13px/1.75 'JetBrains Mono',monospace;color:#cdd3da;white-space:pre-wrap"><span style="color:#5c636e">$</span> npx docs-kg react
+<span style="color:#4ef08c">✔</span> Resolved <span style="color:#e6e8eb"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3d4f585c5e497d0c04130c130d">[email&#160;protected]</a></span> <span style="color:#5c636e">(pinned)</span>
+<span style="color:#4ef08c">✔</span> Downloaded docs → <span style="color:#8b929c">./docs-kg/react/*.md</span>  <span style="color:#5c636e">(312 files)</span>
+<span style="color:#4ef08c">✔</span> Fetched knowledge graph → <span style="color:#8b929c">graph.json</span>  <span style="color:#5c636e">(1,204 nodes · 3,880 edges)</span>
+<span style="color:#4ef08c">✔</span> Aligned to release <span style="color:#e6e8eb"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="72001713110632434b5c435c42">[email&#160;protected]</a></span>
+<span style="color:#4ef08c">Done</span> in 8m 12s · saved ~$0.42 in build cost<span style="color:#4ef08c;animation:blink 1.1s step-end infinite">▋</span></pre>
+</div>
+</section>
+
+<section id="a-cat" style="padding:8px 48px 56px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 0 18px">
+<h2 style="font:600 26px 'JetBrains Mono',monospace;letter-spacing:-1px;margin:0">Knowledge-graph catalog</h2>
+<span style="font:400 13px 'JetBrains Mono',monospace;color:#5c636e">39 libraries · aligned to pinned releases</span>
+</div>
+<div style="display:flex;align-items:center;gap:10px;padding:11px 15px;background:#111317;border:1px solid #262b33;border-radius:10px;margin-bottom:14px;max-width:460px">
+<span style="color:#5c636e;font:400 14px 'JetBrains Mono',monospace">⌕</span>
+<input type="text" onInput="{{ setQuery }}" placeholder="Search 39 libraries…" style="flex:1;border:none;outline:none;background:none;color:#e6e8eb;font:400 14px 'JetBrains Mono',monospace" />
+</div>
+<div style="display:flex;gap:6px;margin-bottom:16px">
+<sc-for list="{{ catTabs }}" as="t" hint-placeholder-count="3">
+<button onClick="{{ setTab }}" data-tab="{{ t.key }}" style="border:none;cursor:pointer;background:none;padding:0;font:500 12px 'JetBrains Mono',monospace">
+<sc-if value="{{ t.active }}" hint-placeholder-val="{{ true }}"><span style="display:inline-block;padding:6px 12px;border-radius:7px;background:rgba(78,240,140,.12);border:1px solid rgba(78,240,140,.28);color:#4ef08c">{{ t.label }}</span></sc-if>
+<sc-if value="{{ t.inactive }}" hint-placeholder-val="{{ false }}"><span style="display:inline-block;padding:6px 12px;border-radius:7px;border:1px solid transparent;color:#8b929c">{{ t.label }}</span></sc-if>
+</button>
+</sc-for>
+</div>
+<div style="background:#0d0f12;border:1px solid #1c2027;border-radius:12px;overflow:hidden">
+<div style="display:grid;grid-template-columns:1.7fr .8fr .9fr .95fr 1.4fr .75fr auto;gap:16px;padding:12px 20px;border-bottom:1px solid #1c2027;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.6px;color:#5c636e">
+<span>LIBRARY</span><span>VERSION</span><span style="text-align:right">GRAPHSCORE</span><span style="text-align:right">TOKENS SAVED</span><span style="text-align:right">GRAPH SIZE</span><span style="text-align:right">UPDATED</span><span></span>
+</div>
+<sc-for list="{{ catalogRows }}" as="row" hint-placeholder-count="11">
+<div style="display:grid;grid-template-columns:1.7fr .8fr .9fr .95fr 1.4fr .75fr auto;gap:16px;padding:13px 20px;border-bottom:1px solid #14181d;align-items:center;font:400 13px 'JetBrains Mono',monospace" style-hover="background:#111820">
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="color:#e6e8eb">{{ row.name }}</span><span style="color:#5c636e;font-size:11px">{{ row.repo }}</span></div>
+<span><span style="border:1px solid #262b33;border-radius:5px;padding:2px 7px;font-size:11px;color:#9aa1ac">{{ row.version }}</span></span>
+<span style="text-align:right;color:#4ef08c">{{ row.score }}</span>
+<span style="text-align:right;color:#c6ccd4">{{ row.tokens }}</span>
+<span style="text-align:right;color:#8b929c;font-size:12px">{{ row.size }}</span>
+<span style="text-align:right;color:#6b7280;font-size:12px">{{ row.updated }}</span>
+<button onClick="{{ copy }}" data-cmd="{{ row.cmd }}" data-key="{{ row.key }}" style="justify-self:end;cursor:pointer;border:1px solid #262b33;background:#111317;border-radius:7px;padding:6px 10px;font:400 11px 'JetBrains Mono',monospace;color:#8b929c;white-space:nowrap" style-hover="border-color:rgba(78,240,140,.4);color:#4ef08c">
+<sc-if value="{{ row.copied }}" hint-placeholder-val="{{ false }}"><span style="color:#4ef08c">✓ copied</span></sc-if>
+<sc-if value="{{ row.notCopied }}" hint-placeholder-val="{{ true }}">⧉ {{ row.cmd }}</sc-if>
+</button>
+</div>
+</sc-for>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:13px 20px;font:400 12px 'JetBrains Mono',monospace;color:#5c636e">
+<span>39 libraries ready · 106k tracked</span>
+<a href="#" style="color:#4ef08c">Browse all →</a>
+</div>
+</div>
+</section>
+
+<section style="padding:20px 48px 64px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div style="padding:30px;background:#111317;border:1px solid #1c2027;border-radius:14px">
+<div style="font:500 12px 'JetBrains Mono',monospace;color:#8b929c;margin-bottom:14px">01 · MARKDOWN</div>
+<h3 style="font:600 22px 'JetBrains Mono',monospace;margin:0 0 12px">Docs as Markdown</h3>
+<p style="font:400 15px/1.65 system-ui;color:#9aa1ac;margin:0">Every page of the official docs, downloaded as clean Markdown you can grep, feed, and version — pinned to the exact release you install.</p>
+</div>
+<div style="padding:30px;background:linear-gradient(180deg,rgba(78,240,140,.07),#111317);border:1px solid rgba(78,240,140,.25);border-radius:14px">
+<div style="font:500 12px 'JetBrains Mono',monospace;color:#4ef08c;margin-bottom:14px">02 · THE VALUE</div>
+<h3 style="font:600 22px 'JetBrains Mono',monospace;margin:0 0 12px">Knowledge graph</h3>
+<p style="font:400 15px/1.65 system-ui;color:#c6ccd4;margin:0">A pre-built graph of concepts, APIs, and how they connect — as an interactive view and a machine-readable <span style="font-family:'JetBrains Mono',monospace;color:#4ef08c">graph.json</span>. This is the context your AI actually needs.</p>
+</div>
+</div>
+</section>
+
+<section style="padding:0 48px 64px">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+<sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+<div style="padding:22px;background:#0d0f12;border:1px solid #1c2027;border-radius:12px">
+<div style="font:700 30px 'JetBrains Mono',monospace;color:#4ef08c;letter-spacing:-1px">{{ s.value }}</div>
+<div style="font:500 13px 'JetBrains Mono',monospace;color:#e6e8eb;margin:8px 0 4px">{{ s.label }}</div>
+<div style="font:400 12px/1.4 system-ui;color:#6b7280">{{ s.sub }}</div>
+</div>
+</sc-for>
+</div>
+<div style="font:400 11px 'JetBrains Mono',monospace;color:#5c636e;text-align:center;margin-top:14px">// numbers illustrative</div>
+</section>
+
+<section style="padding:20px 48px 64px;border-top:1px solid #1c2027">
+<h2 style="font:600 30px 'JetBrains Mono',monospace;letter-spacing:-1px;margin:24px 0 32px;text-align:center">How it works</h2>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px">
+<sc-for list="{{ steps }}" as="st" hint-placeholder-count="4">
+<div>
+<div style="font:700 14px 'JetBrains Mono',monospace;color:#4ef08c;margin-bottom:12px">{{ st.n }}</div>
+<h4 style="font:600 16px 'JetBrains Mono',monospace;margin:0 0 8px">{{ st.title }}</h4>
+<p style="font:400 14px/1.55 system-ui;color:#9aa1ac;margin:0">{{ st.body }}</p>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="padding:52px 48px;border-top:1px solid #1c2027;background:radial-gradient(70% 120% at 50% 0%,rgba(78,240,140,.06),transparent)">
+<div style="max-width:720px;margin:0 auto;text-align:center">
+<div style="font:500 12px 'JetBrains Mono',monospace;color:#4ef08c;margin-bottom:16px">WHY A KNOWLEDGE GRAPH</div>
+<h2 style="font:600 30px/1.25 'JetBrains Mono',monospace;letter-spacing:-1px;margin:0 0 16px">Raw docs are flat. A graph knows how things connect.</h2>
+<p style="font:400 16px/1.7 system-ui;color:#9aa1ac;margin:0">The graph encodes relationships — which API calls which, what depends on what, which concepts connect — so your AI retrieves the right context instead of dumping whole pages. Cheaper prompts, sharper answers, fewer hallucinations.</p>
+</div>
+</section>
+
+<section style="padding:56px 48px;border-top:1px solid #1c2027;text-align:center">
+<h2 style="font:600 26px 'JetBrains Mono',monospace;letter-spacing:-.5px;margin:0 0 8px">Support the project</h2>
+<p style="font:400 15px system-ui;color:#9aa1ac;margin:0 0 28px">Free and open source. No paid plans — ever.</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font:500 14px 'JetBrains Mono',monospace">
+<a href="#" style="padding:12px 20px;border-radius:9px;background:#4ef08c;color:#06120b;font-weight:600">★ Star on GitHub</a>
+<a href="#" style="padding:12px 20px;border-radius:9px;border:1px solid #262b33">♥ GitHub Sponsors</a>
+<a href="#" style="padding:12px 20px;border-radius:9px;border:1px solid #262b33">☕ Buy Me a Coffee</a>
+</div>
+</section>
+
+<footer style="padding:32px 48px;border-top:1px solid #1c2027;display:flex;align-items:center;justify-content:space-between;font:400 13px 'JetBrains Mono',monospace;color:#6b7280">
+<span>docs<span style="color:#4ef08c">-</span>kg · Free &amp; open source · MIT</span>
+<span style="display:flex;gap:20px"><a href="#">Catalog</a><a href="#">Docs</a><a href="#">GitHub</a></span>
+</footer>
+
+</div>
+</div>
+
+<!-- ============ FRAME B — CLEAN DOCS-LIGHT ============ -->
+<div style="display:flex;flex-direction:column;gap:18px;flex:none">
+<div style="display:flex;align-items:baseline;gap:12px">
+<span style="font:700 24px/1 'Plus Jakarta Sans',sans-serif;color:#17150f">B</span>
+<span style="font:500 13px/1 system-ui;color:#6b6558">Clean docs-light</span>
+</div>
+<div style="width:1240px;border-radius:16px;overflow:hidden;box-shadow:0 40px 100px rgba(30,30,60,.18);background:#ffffff;color:#0f1222;font-family:'Plus Jakarta Sans',system-ui,sans-serif">
+
+<nav style="display:flex;align-items:center;justify-content:space-between;padding:16px 34px;border-bottom:1px solid #edeff4;background:rgba(255,255,255,.85);backdrop-filter:blur(8px)">
+<div style="display:flex;align-items:center;gap:32px">
+<span style="font:800 18px 'Plus Jakarta Sans';color:#0f1222">docs-kg</span>
+<div style="display:flex;gap:26px;font:500 14px system-ui;color:#5b6172"><a href="#b-cat">Catalog</a><a href="#">Docs</a><a href="#">GitHub</a></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;font:500 14px system-ui">
+<a href="#" style="display:flex;align-items:center;gap:7px;padding:9px 14px;border:1px solid #e6e8ee;border-radius:9px;color:#0f1222">★ Star 2.4k</a>
+<a href="#" style="padding:9px 16px;border-radius:9px;background:#4f46e5;color:#fff;font-weight:600">Sign in with GitHub</a>
+</div>
+</nav>
+
+<section style="padding:84px 48px 64px;text-align:center;background:linear-gradient(180deg,#fbfbfe,#ffffff)">
+<span style="display:inline-block;font:600 12px system-ui;color:#4f46e5;background:#eef0fe;border-radius:20px;padding:6px 14px;margin-bottom:26px;letter-spacing:.3px">FREE &amp; OPEN SOURCE</span>
+<h1 style="font:800 56px/1.06 'Plus Jakarta Sans';letter-spacing:-2px;margin:0 0 20px;max-width:820px;margin-inline:auto">Give your AI the docs<br>and the <span style="color:#4f46e5">knowledge graph.</span></h1>
+<p style="font:400 19px/1.6 system-ui;color:#5b6172;max-width:610px;margin:0 auto 36px">One command downloads a library's docs as Markdown plus a pre-built knowledge graph, pinned to a release. Better context for your AI, at a fraction of the tokens.</p>
+<div style="display:inline-flex;align-items:center;gap:14px;padding:8px 8px 8px 18px;background:#f7f8fb;border:1px solid #e6e8ee;border-radius:12px;font-family:'JetBrains Mono',monospace;margin-bottom:24px">
+<span style="color:#9aa0af">$</span><span style="color:#0f1222;font-size:15px">npx docs-kg react</span>
+<button onClick="{{ copy }}" data-cmd="npx docs-kg react" data-key="B" style="border:none;cursor:pointer;background:#4f46e5;color:#fff;font-weight:600;font-size:12px;padding:9px 14px;border-radius:8px;font-family:system-ui"><sc-if value="{{ copiedB }}" hint-placeholder-val="{{ false }}">Copied ✓</sc-if><sc-if value="{{ notCopiedB }}" hint-placeholder-val="{{ true }}">Copy</sc-if></button>
+</div>
+<div style="display:flex;gap:12px;justify-content:center;font:600 15px system-ui">
+<a href="#" style="padding:13px 24px;border-radius:10px;background:#4f46e5;color:#fff;box-shadow:0 8px 24px rgba(79,70,229,.3)">Get started</a>
+<a href="#" style="padding:13px 24px;border-radius:10px;border:1px solid #e6e8ee;color:#0f1222;display:flex;align-items:center;gap:8px">★ Star on GitHub</a>
+</div>
+<div style="max-width:800px;margin:56px auto 0;background:#0f1222;border-radius:14px;overflow:hidden;text-align:left;box-shadow:0 30px 70px rgba(30,30,60,.28)">
+<div style="display:flex;align-items:center;gap:8px;padding:13px 18px;border-bottom:1px solid #23263a">
+<span style="width:11px;height:11px;border-radius:50%;background:#ff5f57"></span><span style="width:11px;height:11px;border-radius:50%;background:#febc2e"></span><span style="width:11px;height:11px;border-radius:50%;background:#28c840"></span>
+<span style="margin-left:10px;font:400 12px 'JetBrains Mono',monospace;color:#8890a8">react — docs-kg</span>
+</div>
+<pre style="margin:0;padding:22px;font:400 13px/1.8 'JetBrains Mono',monospace;color:#c9cee0;white-space:pre-wrap"><span style="color:#6b7290">$</span> npx docs-kg react
+<span style="color:#7dd3a8">✔</span> Resolved <span style="color:#fff"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0d7f686c6e794d3c34233c233d">[email&#160;protected]</a></span> <span style="color:#6b7290">(pinned)</span>
+<span style="color:#7dd3a8">✔</span> Downloaded docs → <span style="color:#a6accb">./docs-kg/react/*.md</span>  <span style="color:#6b7290">(312 files)</span>
+<span style="color:#7dd3a8">✔</span> Fetched knowledge graph → <span style="color:#a6accb">graph.json</span>  <span style="color:#6b7290">(1,204 nodes · 3,880 edges)</span>
+<span style="color:#7dd3a8">✔</span> Aligned to release <span style="color:#fff"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="13617672706753222a3d223d23">[email&#160;protected]</a></span>
+<span style="color:#a5b4fc">Done</span> in 8m 12s · saved ~$0.42 in build cost</pre>
+</div>
+</section>
+
+<section style="padding:24px 48px 68px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
+<div style="padding:32px;background:#fff;border:1px solid #edeff4;border-radius:16px;box-shadow:0 4px 24px rgba(20,20,50,.05)">
+<div style="width:42px;height:42px;border-radius:11px;background:#eef0fe;display:flex;align-items:center;justify-content:center;color:#4f46e5;font-weight:700;margin-bottom:16px;font-family:'JetBrains Mono',monospace">.md</div>
+<h3 style="font:700 21px 'Plus Jakarta Sans';margin:0 0 10px">Docs as Markdown</h3>
+<p style="font:400 15px/1.65 system-ui;color:#5b6172;margin:0">Every page of the official docs, downloaded as clean Markdown you can grep, feed, and version — pinned to the exact release you install.</p>
+</div>
+<div style="padding:32px;background:linear-gradient(180deg,#f5f5ff,#fff);border:1px solid #ddd9fb;border-radius:16px;box-shadow:0 4px 24px rgba(79,70,229,.08)">
+<div style="width:42px;height:42px;border-radius:11px;background:#4f46e5;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;margin-bottom:16px">◆</div>
+<h3 style="font:700 21px 'Plus Jakarta Sans';margin:0 0 10px">Knowledge graph</h3>
+<p style="font:400 15px/1.65 system-ui;color:#5b6172;margin:0">A pre-built graph of concepts, APIs, and how they connect — an interactive view plus machine-readable <span style="font-family:'JetBrains Mono',monospace;color:#4f46e5;font-size:13px">graph.json</span>. The context your AI actually needs.</p>
+</div>
+</div>
+</section>
+
+<section style="padding:0 48px 68px">
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+<sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+<div style="padding:24px;background:#fbfbfe;border:1px solid #edeff4;border-radius:14px">
+<div style="font:800 30px 'Plus Jakarta Sans';color:#4f46e5;letter-spacing:-1px">{{ s.value }}</div>
+<div style="font:600 14px system-ui;color:#0f1222;margin:8px 0 4px">{{ s.label }}</div>
+<div style="font:400 12px/1.45 system-ui;color:#8890a0">{{ s.sub }}</div>
+</div>
+</sc-for>
+</div>
+<div style="font:400 12px system-ui;color:#a0a4b0;text-align:center;margin-top:14px">Numbers illustrative</div>
+</section>
+
+<section style="padding:56px 48px;background:#fbfbfe;border-top:1px solid #edeff4">
+<h2 style="font:800 32px 'Plus Jakarta Sans';letter-spacing:-1px;margin:0 0 36px;text-align:center">How it works</h2>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+<sc-for list="{{ steps }}" as="st" hint-placeholder-count="4">
+<div style="background:#fff;border:1px solid #edeff4;border-radius:14px;padding:24px">
+<div style="width:34px;height:34px;border-radius:9px;background:#eef0fe;color:#4f46e5;display:flex;align-items:center;justify-content:center;font:700 14px 'JetBrains Mono',monospace;margin-bottom:14px">{{ st.n }}</div>
+<h4 style="font:700 17px 'Plus Jakarta Sans';margin:0 0 8px">{{ st.title }}</h4>
+<p style="font:400 14px/1.55 system-ui;color:#5b6172;margin:0">{{ st.body }}</p>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="b-cat" style="padding:60px 48px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 0 24px">
+<h2 style="font:800 32px 'Plus Jakarta Sans';letter-spacing:-1px;margin:0">Catalog</h2>
+<a href="#" style="font:600 15px system-ui;color:#4f46e5">Browse all →</a>
+</div>
+<div style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#fff;border:1px solid #e6e8ee;border-radius:11px;margin-bottom:22px;max-width:440px;box-shadow:0 2px 10px rgba(20,20,50,.04)">
+<span style="color:#9aa0af;font:400 15px system-ui">⌕</span><span style="font:400 15px system-ui;color:#9aa0af">Search libraries…</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+<sc-for list="{{ libs }}" as="lib" hint-placeholder-count="11">
+<a href="#" style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:#fff;border:1px solid #edeff4;border-radius:12px;box-shadow:0 2px 8px rgba(20,20,50,.03)">
+<span style="font:600 15px 'Plus Jakarta Sans';color:#0f1222">{{ lib.name }}</span>
+<span style="font:600 12px system-ui;color:#4f46e5;background:#eef0fe;padding:3px 8px;border-radius:20px">{{ lib.score }}</span>
+</a>
+</sc-for>
+</div>
+</section>
+
+<section style="padding:64px 48px;background:linear-gradient(180deg,#f5f5ff,#fbfbfe);border-top:1px solid #edeff4">
+<div style="max-width:720px;margin:0 auto;text-align:center">
+<div style="font:600 12px system-ui;color:#4f46e5;margin-bottom:16px;letter-spacing:.4px">WHY A KNOWLEDGE GRAPH</div>
+<h2 style="font:800 32px/1.25 'Plus Jakarta Sans';letter-spacing:-1px;margin:0 0 16px">Raw docs are flat. A graph knows how things connect.</h2>
+<p style="font:400 17px/1.7 system-ui;color:#5b6172;margin:0">The graph encodes relationships — which API calls which, what depends on what, which concepts connect — so your AI retrieves the right context instead of dumping whole pages. Cheaper prompts, sharper answers, fewer hallucinations.</p>
+</div>
+</section>
+
+<section style="padding:60px 48px;text-align:center;border-top:1px solid #edeff4">
+<h2 style="font:800 28px 'Plus Jakarta Sans';letter-spacing:-.5px;margin:0 0 8px">Support the project</h2>
+<p style="font:400 16px system-ui;color:#5b6172;margin:0 0 30px">Free and open source. No paid plans — ever.</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font:600 15px system-ui">
+<a href="#" style="padding:13px 22px;border-radius:10px;background:#4f46e5;color:#fff;box-shadow:0 8px 24px rgba(79,70,229,.28)">★ Star on GitHub</a>
+<a href="#" style="padding:13px 22px;border-radius:10px;border:1px solid #e6e8ee;color:#0f1222">♥ GitHub Sponsors</a>
+<a href="#" style="padding:13px 22px;border-radius:10px;border:1px solid #e6e8ee;color:#0f1222">☕ Buy Me a Coffee</a>
+</div>
+</section>
+
+<footer style="padding:34px 48px;border-top:1px solid #edeff4;display:flex;align-items:center;justify-content:space-between;font:400 14px system-ui;color:#8890a0;background:#fbfbfe">
+<span style="font-weight:600;color:#5b6172">docs-kg · Free &amp; open source · MIT</span>
+<span style="display:flex;gap:22px"><a href="#">Catalog</a><a href="#">Docs</a><a href="#">GitHub</a></span>
+</footer>
+
+</div>
+</div>
+
+<!-- ============ FRAME C — MINIMAL MONO / EDITORIAL ============ -->
+<div style="display:flex;flex-direction:column;gap:18px;flex:none">
+<div style="display:flex;align-items:baseline;gap:12px">
+<span style="font:700 24px/1 'Space Grotesk',sans-serif;color:#17150f">C</span>
+<span style="font:500 13px/1 system-ui;color:#6b6558">Minimal mono / editorial</span>
+</div>
+<div style="width:1240px;border-radius:16px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.16);background:#f4f1ea;color:#17150f;font-family:'Space Grotesk',system-ui,sans-serif">
+
+<nav style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid #17150f">
+<div style="display:flex;align-items:center;gap:34px">
+<span style="font:700 18px 'JetBrains Mono',monospace;letter-spacing:-.5px">docs-kg</span>
+<div style="display:flex;gap:26px;font:500 12px 'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase;color:#4a463c"><a href="#c-cat">Catalog</a><a href="#">Docs</a><a href="#">GitHub</a></div>
+</div>
+<div style="display:flex;align-items:center;gap:16px;font:500 12px 'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase">
+<a href="#" style="display:flex;align-items:center;gap:7px;color:#17150f">★ Star 2.4k</a>
+<a href="#" style="padding:9px 15px;background:#17150f;color:#f4f1ea">Sign in with GitHub</a>
+</div>
+</nav>
+
+<section style="padding:72px 40px 60px;border-bottom:1px solid #d8d2c4">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:40px">
+<span style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:#d1402a">Free · Open source · MIT</span>
+<span style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:#6b6558">v1.0 — 2026</span>
+</div>
+<h1 style="font:500 82px/0.98 'Space Grotesk';letter-spacing:-3px;margin:0 0 28px;max-width:1000px">The docs, and the <span style="color:#d1402a">knowledge graph</span>, in one command.</h1>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:40px;border-top:1px solid #d8d2c4;padding-top:28px">
+<p style="font:400 19px/1.55 system-ui;color:#4a463c;max-width:520px;margin:0">One command downloads a library's docs as Markdown plus a pre-built knowledge graph, pinned to a release. Better context for your AI, at a fraction of the tokens.</p>
+<div style="display:flex;flex-direction:column;gap:14px;align-items:flex-end">
+<div style="display:inline-flex;align-items:center;gap:16px;padding:12px 12px 12px 20px;border:1px solid #17150f;font-family:'JetBrains Mono',monospace;background:#faf8f3">
+<span style="color:#d1402a">$</span><span style="font-size:16px">npx docs-kg react</span>
+<button onClick="{{ copy }}" data-cmd="npx docs-kg react" data-key="C" style="border:1px solid #17150f;cursor:pointer;background:#17150f;color:#f4f1ea;font-weight:500;font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:8px 12px"><sc-if value="{{ copiedC }}" hint-placeholder-val="{{ false }}">Copied</sc-if><sc-if value="{{ notCopiedC }}" hint-placeholder-val="{{ true }}">Copy</sc-if></button>
+</div>
+<div style="display:flex;gap:10px;font:500 12px 'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase">
+<a href="#" style="padding:12px 20px;background:#d1402a;color:#f4f1ea">Get started →</a>
+<a href="#" style="padding:12px 20px;border:1px solid #17150f">★ Star on GitHub</a>
+</div>
+</div>
+</div>
+</section>
+
+<section style="padding:0 40px;border-bottom:1px solid #17150f">
+<pre style="margin:0;padding:32px 0;font:400 14px/1.9 'JetBrains Mono',monospace;color:#2a271f;white-space:pre-wrap"><span style="color:#8a8474">$</span> npx docs-kg react
+<span style="color:#d1402a">✔</span> Resolved <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="24564145475064151d0a150a14">[email&#160;protected]</a> <span style="color:#8a8474">(pinned)</span>
+<span style="color:#d1402a">✔</span> Downloaded docs → <span style="color:#8a8474">./docs-kg/react/*.md  (312 files)</span>
+<span style="color:#d1402a">✔</span> Fetched knowledge graph → <span style="color:#8a8474">graph.json  (1,204 nodes · 3,880 edges)</span>
+<span style="color:#d1402a">✔</span> Aligned to release <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0d7f686c6e794d3c34233c233d">[email&#160;protected]</a>
+<span style="color:#d1402a">Done</span> in 8m 12s · saved ~$0.42 in build cost</pre>
+</section>
+
+<section style="border-bottom:1px solid #17150f;display:grid;grid-template-columns:1fr 1fr">
+<div style="padding:44px 40px;border-right:1px solid #d8d2c4">
+<div style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:#8a8474;margin-bottom:20px">01 — Markdown</div>
+<h3 style="font:500 30px 'Space Grotesk';letter-spacing:-1px;margin:0 0 14px">Docs as Markdown</h3>
+<p style="font:400 16px/1.6 system-ui;color:#4a463c;margin:0">Every page of the official docs, downloaded as clean Markdown you can grep, feed, and version — pinned to the exact release you install.</p>
+</div>
+<div style="padding:44px 40px;background:#ece7dc">
+<div style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:#d1402a;margin-bottom:20px">02 — The value</div>
+<h3 style="font:500 30px 'Space Grotesk';letter-spacing:-1px;margin:0 0 14px">Knowledge graph</h3>
+<p style="font:400 16px/1.6 system-ui;color:#4a463c;margin:0">A pre-built graph of concepts, APIs, and how they connect — an interactive view plus machine-readable <span style="font-family:'JetBrains Mono',monospace;font-size:14px">graph.json</span>. The context your AI actually needs.</p>
+</div>
+</section>
+
+<section style="border-bottom:1px solid #17150f;display:grid;grid-template-columns:repeat(4,1fr)">
+<sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+<div style="padding:36px 28px;border-right:1px solid #d8d2c4">
+<div style="font:500 44px 'Space Grotesk';letter-spacing:-2px;margin-bottom:10px">{{ s.value }}</div>
+<div style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase;color:#17150f;margin-bottom:6px">{{ s.label }}</div>
+<div style="font:400 13px/1.4 system-ui;color:#6b6558">{{ s.sub }}</div>
+</div>
+</sc-for>
+</section>
+
+<section style="padding:56px 40px;border-bottom:1px solid #17150f">
+<h2 style="font:500 44px 'Space Grotesk';letter-spacing:-2px;margin:0 0 40px">How it works</h2>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0">
+<sc-for list="{{ steps }}" as="st" hint-placeholder-count="4">
+<div style="padding-right:28px;border-left:1px solid #d8d2c4;padding-left:20px">
+<div style="font:500 13px 'JetBrains Mono',monospace;color:#d1402a;margin-bottom:16px">{{ st.n }}</div>
+<h4 style="font:500 19px 'Space Grotesk';letter-spacing:-.5px;margin:0 0 10px">{{ st.title }}</h4>
+<p style="font:400 14px/1.55 system-ui;color:#4a463c;margin:0">{{ st.body }}</p>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section id="c-cat" style="padding:56px 40px;border-bottom:1px solid #17150f">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;margin:0 0 28px">
+<h2 style="font:500 44px 'Space Grotesk';letter-spacing:-2px;margin:0">Catalog</h2>
+<a href="#" style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase;color:#d1402a">Browse all →</a>
+</div>
+<div style="display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid #17150f;margin-bottom:24px;max-width:440px">
+<span style="color:#8a8474;font:400 15px 'JetBrains Mono',monospace">⌕</span><span style="font:400 14px 'JetBrains Mono',monospace;color:#8a8474;letter-spacing:.5px">Search libraries…</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0">
+<sc-for list="{{ libs }}" as="lib" hint-placeholder-count="11">
+<a href="#" style="display:flex;align-items:baseline;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #d8d2c4;border-right:1px solid #d8d2c4">
+<span style="font:500 16px 'JetBrains Mono',monospace">{{ lib.name }}</span>
+<span style="font:400 13px 'JetBrains Mono',monospace;color:#d1402a">{{ lib.score }}</span>
+</a>
+</sc-for>
+</div>
+</section>
+
+<section style="padding:72px 40px;border-bottom:1px solid #17150f;background:#ece7dc">
+<div style="max-width:820px">
+<div style="font:500 12px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;color:#d1402a;margin-bottom:20px">Why a knowledge graph</div>
+<h2 style="font:500 46px/1.1 'Space Grotesk';letter-spacing:-2px;margin:0 0 20px">Raw docs are flat. A graph knows how things connect.</h2>
+<p style="font:400 18px/1.65 system-ui;color:#4a463c;margin:0;max-width:640px">The graph encodes relationships — which API calls which, what depends on what, which concepts connect — so your AI retrieves the right context instead of dumping whole pages. Cheaper prompts, sharper answers, fewer hallucinations.</p>
+</div>
+</section>
+
+<section style="padding:64px 40px;border-bottom:1px solid #17150f;display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap">
+<div>
+<h2 style="font:500 40px 'Space Grotesk';letter-spacing:-1.5px;margin:0 0 8px">Support the project</h2>
+<p style="font:400 16px system-ui;color:#4a463c;margin:0">Free and open source. No paid plans — ever.</p>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;font:500 12px 'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase">
+<a href="#" style="padding:13px 20px;background:#17150f;color:#f4f1ea">★ Star on GitHub</a>
+<a href="#" style="padding:13px 20px;border:1px solid #17150f">♥ GitHub Sponsors</a>
+<a href="#" style="padding:13px 20px;border:1px solid #17150f">☕ Buy Me a Coffee</a>
+</div>
+</section>
+
+<footer style="padding:28px 40px;display:flex;align-items:center;justify-content:space-between;font:400 12px 'JetBrains Mono',monospace;letter-spacing:.5px;color:#6b6558">
+<span>docs-kg — Free &amp; open source — MIT · Numbers illustrative</span>
+<span style="display:flex;gap:20px"><a href="#">Catalog</a><a href="#">Docs</a><a href="#">GitHub</a></span>
+</footer>
+
+</div>
+</div>
+
+</div>
+</x-dc>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { copied: null, catTab: 'popular', catQuery: '' };
+  setTab = (e) => this.setState({ catTab: e.currentTarget.getAttribute('data-tab') });
+  setQuery = (e) => this.setState({ catQuery: e.target.value });
+  copy = (e) => {
+    const el = e.currentTarget;
+    const cmd = el.getAttribute('data-cmd');
+    const key = el.getAttribute('data-key');
+    try { navigator.clipboard && navigator.clipboard.writeText(cmd); } catch (_) {}
+    this.setState({ copied: key });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ copied: null }), 1500);
+  };
+  renderVals() {
+    const c = this.state.copied;
+    const base = [
+      { slug:'next', name:'next.js', repo:'vercel/next.js', version:'v15.4.0', score:94, tokens:'~71%', nodes:'2.1k', edges:'6.8k', nodesNum:2100, updated:'2h ago', updatedHrs:2 },
+      { slug:'react', name:'react', repo:'reactjs/react.dev', version:'v19.1.0', score:91, tokens:'~68%', nodes:'1.2k', edges:'3.9k', nodesNum:1200, updated:'4h ago', updatedHrs:4 },
+      { slug:'shadcn', name:'shadcn/ui', repo:'shadcn-ui/ui', version:'v0.9.2', score:96, tokens:'~74%', nodes:'840', edges:'2.4k', nodesNum:840, updated:'1d ago', updatedHrs:24 },
+      { slug:'fastapi', name:'fastapi', repo:'tiangolo/fastapi', version:'v0.115.0', score:89, tokens:'~63%', nodes:'1.5k', edges:'4.6k', nodesNum:1500, updated:'6h ago', updatedHrs:6 },
+      { slug:'prisma', name:'prisma', repo:'prisma/docs', version:'v5.18.0', score:88, tokens:'~61%', nodes:'1.7k', edges:'5.1k', nodesNum:1700, updated:'2d ago', updatedHrs:48 },
+      { slug:'playwright', name:'playwright', repo:'microsoft/playwright', version:'v1.46.0', score:90, tokens:'~66%', nodes:'1.3k', edges:'4.1k', nodesNum:1300, updated:'3d ago', updatedHrs:72 },
+      { slug:'vitest', name:'vitest', repo:'vitest-dev/vitest', version:'v2.0.5', score:87, tokens:'~59%', nodes:'610', edges:'1.8k', nodesNum:610, updated:'5h ago', updatedHrs:5 },
+      { slug:'laravel', name:'laravel', repo:'laravel/docs', version:'v11.0.0', score:85, tokens:'~57%', nodes:'2.4k', edges:'7.2k', nodesNum:2400, updated:'1w ago', updatedHrs:168 },
+      { slug:'django', name:'django', repo:'django/django', version:'v5.1.0', score:92, tokens:'~69%', nodes:'2.9k', edges:'8.4k', nodesNum:2900, updated:'12h ago', updatedHrs:12 },
+      { slug:'zod', name:'zod', repo:'colinhacks/zod', version:'v3.23.8', score:93, tokens:'~70%', nodes:'420', edges:'1.1k', nodesNum:420, updated:'8h ago', updatedHrs:8 },
+      { slug:'supabase', name:'supabase', repo:'supabase/supabase', version:'v2.45.0', score:90, tokens:'~64%', nodes:'1.9k', edges:'5.7k', nodesNum:1900, updated:'1d ago', updatedHrs:24 },
+    ];
+    const q = (this.state.catQuery || '').toLowerCase();
+    const tab = this.state.catTab;
+    let rows = base.slice();
+    if (tab === 'smallest') rows.sort((a, b) => a.nodesNum - b.nodesNum);
+    else if (tab === 'recent') rows.sort((a, b) => a.updatedHrs - b.updatedHrs);
+    else rows.sort((a, b) => b.score - a.score);
+    if (q) rows = rows.filter(r => r.name.toLowerCase().includes(q));
+    const catalogRows = rows.map(b => {
+      const key = 'cat-' + b.slug;
+      return { name:b.name, repo:b.repo, version:b.version, score:b.score + '/100', tokens:b.tokens, size:b.nodes + ' nodes · ' + b.edges + ' edges', updated:b.updated, cmd:'npx docs-kg ' + b.slug, key, copied:c === key, notCopied:c !== key };
+    });
+    const catTabs = [
+      { key:'popular', label:'Popular' },
+      { key:'smallest', label:'Smallest first' },
+      { key:'recent', label:'Recently built' },
+    ].map(t => ({ key:t.key, label:t.label, active:tab === t.key, inactive:tab !== t.key }));
+    return {
+      copy: this.copy,
+      setTab: this.setTab, setQuery: this.setQuery, catTabs, catalogRows,
+      copiedA: c === 'A', notCopiedA: c !== 'A',
+      copiedB: c === 'B', notCopiedB: c !== 'B',
+      copiedC: c === 'C', notCopiedC: c !== 'C',
+      stats: [
+        { value: '$0.42', label: 'Build cost saved', sub: 'vs building the graph yourself' },
+        { value: '8m 12s', label: 'Build time done', sub: 'pre-computed, not on your machine' },
+        { value: '91/100', label: 'GraphScore', sub: 'coverage × structure quality' },
+        { value: '~68%', label: 'Fewer tokens for your AI', sub: 'vs feeding raw docs' },
+      ],
+      steps: [
+        { n: '01', title: 'Run one command', body: 'npx docs-kg react — no config, no account to start.' },
+        { n: '02', title: 'Sign in with GitHub', body: 'One click, and only to download the graph. Install, browse and copy stay free.' },
+        { n: '03', title: 'We fetch both', body: 'Docs pulled from the upstream project, the knowledge graph from our backend.' },
+        { n: '04', title: 'Land locally, aligned', body: 'docs/*.md and graph.json on disk, pinned to the same release.' },
+      ],
+      libs: [
+        { name: 'next.js', score: 94 }, { name: 'react', score: 91 }, { name: 'shadcn/ui', score: 96 },
+        { name: 'fastapi', score: 89 }, { name: 'prisma', score: 88 }, { name: 'playwright', score: 90 },
+        { name: 'vitest', score: 87 }, { name: 'laravel', score: 85 }, { name: 'django', score: 92 },
+        { name: 'zod', score: 93 }, { name: 'supabase', score: 90 },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
