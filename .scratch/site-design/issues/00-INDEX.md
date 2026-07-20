@@ -13,16 +13,16 @@ Work the **frontier** with `/implement`, one ticket, fresh context each. Blocker
 01 Foundation (scaffold+shadcn+theme+CF deploy)     ✅ done 2026-07-20
 02 Backend CORS for catalog reads                   ✅ done 2026-07-20
 
-03 Landing top (nav+hero+copy)        ← 01 ✅        [frontier]
-04 Catalog table (view-model+live)    ← 01 ✅, 02 ✅  [frontier]
-05 Landing body + footer              ← 04
-06 GitHub signup + opt-in             ← 01 ✅, 02
-07 Legal pages                        ← 04
+03 Landing top (nav+hero+copy)        ← 01 ✅        ✅ done 2026-07-20
+04 Catalog table (view-model+live)    ← 01 ✅, 02 ✅  ✅ done 2026-07-20
+05 Landing body + footer              ← 04 ✅         ✅ done 2026-07-21
+06 GitHub signup + opt-in             ← 01 ✅, 02 ✅   [frontier]
+07 Legal pages                        ← 04 ✅         [frontier]
 08 (optional) Catalog size/date ext   ← 02   → fills 04's Graph-size + Updated columns
 ```
 
 ## Frontier now
-- **03** — unblocked (needs only the `web/` scaffold). **04** and **06** — unblocked now that **02** (CORS) is done.
+- **06** (signup + opt-in) and **07** (legal pages) — both unblocked. **08** optional (fills 04's `—` columns).
 
 ## Order of value
 01 → 02 → 03 → 04 → 05, then 06 (signup), 07 (legal), 08 (optional column data).

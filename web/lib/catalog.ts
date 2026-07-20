@@ -1,4 +1,5 @@
 import { buildInstallCommand } from "./command";
+import { round1 } from "./utils";
 
 /**
  * The catalog view-model — the ONE seam (spec Testing Decisions). Pure map from
@@ -89,11 +90,6 @@ function compact(n: number): string {
   if (n < 1000) return String(n);
   if (n < 1_000_000) return `${round1(n / 1000)}k`;
   return `${round1(n / 1_000_000)}M`;
-}
-
-/** One decimal, trailing .0 dropped (2.0 → "2", 2.1 → "2.1"). */
-function round1(x: number): string {
-  return (Math.round(x * 10) / 10).toString();
 }
 
 // Sort comparators — null/undefined always sort last, whatever the direction.
