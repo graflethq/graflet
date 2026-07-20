@@ -20,6 +20,10 @@ export interface CatalogDoc {
   hero_savings: number | null;
   repo_url: string | null;
   graphscore: number | null;
+  /** Savings metric #4 — "usage token savings", a median % reduction (spec line 74;
+   *  research/savings-metrics/REQUIREMENTS.md). NOT yet computed (CONTEXT.md), so it
+   *  is absent from the API today → the Tokens saved column shows "—" until it lands. */
+  usage_token_reduction_pct?: number | null;
   nodes?: number | null;
   edges?: number | null;
   built_at?: string | null;
@@ -60,8 +64,10 @@ export function buildCatalogRows(docs: CatalogDoc[], tab: CatalogTab, query = ""
       repo: repoSlug(d.repo_url),
       version: d.latest_version,
       score: d.graphscore == null ? DASH : `${d.graphscore}/100`,
-      tokens: d.hero_savings == null ? DASH : compact(d.hero_savings),
+      // Metric #4 is a "typical" % reduction — show "~N%", never a fabricated number.
+      tokens: d.usage_token_reduction_pct == null ? DASH : `~${Math.round(d.usage_token_reduction_pct)}%`,
       size: d.nodes == null || d.edges == null ? DASH : `${compact(d.nodes)} nodes · ${compact(d.edges)} edges`,
+      // Passthrough; ticket 08 lands built_at and formats it (design shows "2h ago").
       updated: d.built_at ?? DASH,
       command: buildInstallCommand(d.slug),
       key: `cat-${d.slug}`,
@@ -91,23 +97,15 @@ function round1(x: number): string {
 }
 
 // Sort comparators — null/undefined always sort last, whatever the direction.
-function numDesc(a: number | null | undefined, b: number | null | undefined): number {
-  if (a == null && b == null) return 0;
-  if (a == null) return 1;
-  if (b == null) return -1;
-  return b - a;
+function nullsLast<T>(cmp: (a: T, b: T) => number) {
+  return (a: T | null | undefined, b: T | null | undefined): number => {
+    if (a == null && b == null) return 0;
+    if (a == null) return 1;
+    if (b == null) return -1;
+    return cmp(a, b);
+  };
 }
 
-function numAsc(a: number | null | undefined, b: number | null | undefined): number {
-  if (a == null && b == null) return 0;
-  if (a == null) return 1;
-  if (b == null) return -1;
-  return a - b;
-}
-
-function strDesc(a: string | null | undefined, b: string | null | undefined): number {
-  if (!a && !b) return 0;
-  if (!a) return 1;
-  if (!b) return -1;
-  return a < b ? 1 : a > b ? -1 : 0;
-}
+const numDesc = nullsLast<number>((a, b) => b - a);
+const numAsc = nullsLast<number>((a, b) => a - b);
+const strDesc = nullsLast<string>((a, b) => (a < b ? 1 : a > b ? -1 : 0));

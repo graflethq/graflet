@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { buildCatalogRows, type CatalogDoc } from "./catalog";
 
 // Fixture catalog JSON — the shape GET /catalog returns. `vitest` deliberately
-// lacks graphscore / hero_savings / nodes / built_at to exercise the honesty rule.
+// lacks graphscore / usage_token_reduction_pct / nodes / built_at to exercise the
+// honesty rule (each absent metric must render "—").
 const DOCS: CatalogDoc[] = [
   {
     slug: "react",
@@ -11,6 +12,7 @@ const DOCS: CatalogDoc[] = [
     popularity_rank: 2,
     latest_version: "v19.1.0",
     hero_savings: 120000,
+    usage_token_reduction_pct: 68,
     repo_url: "https://github.com/reactjs/react.dev",
     graphscore: 99,
     nodes: 1200,
@@ -94,7 +96,7 @@ describe("buildCatalogRows — present metrics render real values", () => {
       repo: "reactjs/react.dev",
       version: "v19.1.0",
       score: "99/100",
-      tokens: "120k",
+      tokens: "~68%",
       size: "1.2k nodes · 3.9k edges",
       command: "npx docs-kg react",
       key: "cat-react",

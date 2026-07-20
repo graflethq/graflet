@@ -32,9 +32,13 @@ export function CopyButton({
       aria-label={`Copy command: ${value}`}
       data-copied={copied || undefined}
       onClick={() => {
-        // Pure clipboard write — no fetch, no sign-in (ADR-0005).
-        navigator.clipboard?.writeText(value).catch(() => {});
-        setCopied(true);
+        // Pure clipboard write — no fetch, no sign-in (ADR-0005). Only flip to the
+        // "copied" label when the write actually succeeds, so it never lies (e.g. on
+        // a non-secure context where navigator.clipboard is undefined).
+        navigator.clipboard?.writeText(value).then(
+          () => setCopied(true),
+          () => {},
+        );
       }}
       className={className}
     >

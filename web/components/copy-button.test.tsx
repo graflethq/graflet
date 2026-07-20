@@ -21,6 +21,6 @@ describe("CopyButton (ADR-0005: copying makes no network request)", () => {
     expect(writeText).toHaveBeenCalledTimes(1);
     expect(writeText).toHaveBeenCalledWith("npx docs-kg react");
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(screen.getByText("Copied ✓")).toBeInTheDocument();
+    expect(await screen.findByText("Copied ✓")).toBeInTheDocument();
   });
 });
