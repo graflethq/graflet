@@ -15,7 +15,10 @@
     // Watcher email (ticket 08). RESEND_FROM must be a Resend-verified sender;
     // MARKETING_POSTAL_ADDRESS is the CAN-SPAM postal address in promo footers.
     "RESEND_FROM": "docs-kg <updates@REPLACE_WITH_VERIFIED_DOMAIN>",
-    "MARKETING_POSTAL_ADDRESS": "REPLACE_WITH_POSTAL_ADDRESS"
+    "MARKETING_POSTAL_ADDRESS": "REPLACE_WITH_POSTAL_ADDRESS",
+    // {owner}/{repo} of the private KG-bundle repo the download broker reads (ticket 05).
+    // The repo name isn't secret; only PRIVATE_REPO_TOKEN (a secret) authorizes the read.
+    "PRIVATE_KG_REPO": "REPLACE_WITH_PRIVATE_KG_REPO"
   },
 
   // Catalog store (ADR-0004), bound as env.CATALOG. Tickets 02 (catalog store)

@@ -11,7 +11,7 @@ Tracker: local files (one ticket per file). Work the **frontier** — any ticket
 | 02 | Catalog store + read/upsert API + seed ✅ **done 2026-07-20** (backend `catalog.ts`; sha/docs_path fill via upsert when P1 lands; 1 box operator-gated) | 01, P1, P3 |
 | 03 | GitHub OAuth + CLI login/logout ✅ **done 2026-07-20** (backend `backend/` + CLI `cli/`; 2 boxes operator-gated) | 01 |
 | 04 | CLI md-fetch module (codeload at pinned sha) ✅ **done 2026-07-20** (`cli/src/md-fetch.ts`; in-process pax tar reader, no runtime deps; integration-verified) | 02 |
-| 05 | KG download broker + full `cli <slug>` download **(spine)** | 02, 03, 04, P1 |
+| 05 | KG download broker + full `cli <slug>` download **(spine)** ✅ **done 2026-07-20** (backend `broker.ts` `GET /kg/{slug}` + CLI `download.ts`; built ahead of P1 contract-driven; operator-gated: `PRIVATE_KG_REPO`/`PRIVATE_REPO_TOKEN` + P1 pushes `{kg_ref}.tar.gz`) | 02, 03, 04, P1 |
 | 06 | Website catalog + savings hero + free copy-command | 02, P2 |
 | 07 | Website signup + unchecked marketing opt-in | 03, 06 |
 | 08 | `cli watch` + Resend notifications + CLI consent ✅ **done 2026-07-20** (backend `watch.ts`/`notify.ts` + migration `0003`; CLI `watch.ts`; 4 boxes operator-gated: Resend key + verified sender + postal address + unsubscribe secret) | 02, 03 |
@@ -38,8 +38,8 @@ P2 ─► 06
 
 ## Frontier
 
-- **Done:** `01` ✅, `02` ✅, `03` ✅, `04` ✅, `08` ✅, `P3` ✅. `02`/`04` shipped ahead of P1 — the catalog seeds/serves with `sha`/`docs_path`/`kg_ref` NULL and md-fetch is contract-driven; P1's re-graphify fills the pins via `/catalog/upsert`, then md-fetch has real shas to pull. `08` shipped ahead of P1 too — the ready-signal it emails on comes from `/catalog/upsert`, which P1's builds drive.
+- **Done:** `01` ✅, `02` ✅, `03` ✅, `04` ✅, `05` ✅ **(spine)**, `08` ✅, `P3` ✅. `02`/`04`/`05`/`08` all shipped ahead of P1 — contract-driven. The catalog seeds/serves with `sha`/`docs_path`/`kg_ref` NULL until P1's re-graphify fills the pins via `/catalog/upsert`; then the spine `05` resolves real pins, md-fetch pulls the `.md`, and the broker streams the `{kg_ref}.tar.gz` bundle. The whole two-source delivery path is code-complete; P1 provides the data.
 - **Startable now:** `P1` `P2` (kg-pipeline); `06` needs `P2`.
-- **Blocked on P1's real pins:** the spine `05` (needs `02`+`03`+`04`+P1 — has everything but P1) and `09`.
+- **Blocked on P1's real pins:** `09` (poller). The spine `05` is built but only exercises real bundles once P1 pushes them.
 
-Realistic path: `01`+`02`+`03`+`04` ✅ done; next `P1/P2` (kg-pipeline) fill the pins + savings → spine `05`; `06`/`07`/`08`/`10` on the site/CLI side.
+Realistic path: `01`+`02`+`03`+`04`+`05`(spine)+`08` ✅ done; next `P1/P2` (kg-pipeline) fill the pins + savings so the spine serves real data → `06`/`07`/`10` on the site side, `09` poller last.

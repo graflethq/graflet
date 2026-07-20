@@ -57,6 +57,52 @@ export async function registerWatch(
   return (await res.json()) as WatchResponse;
 }
 
+export interface Resolve {
+  version: string;
+  repo_url: string;
+  sha: string;
+  docs_path: string | null;
+  kg_ref: string | null;
+}
+
+/** GET /catalog/{slug}[?version=] — resolve the pin the CLI feeds codeload + the
+ *  broker (ticket 05). Public (no auth). Returns null when the version is browsable
+ *  but not yet deliverable (no recorded pin, e.g. the pre-P1 seeded state). */
+export async function resolveDoc(
+  apiBase: string,
+  slug: string,
+  version: string | null,
+  fetchImpl: typeof fetch = fetch,
+): Promise<Resolve | null> {
+  const res = await fetchImpl(`${apiBase}/catalog/${encodeURIComponent(slug)}${versionQuery(version)}`);
+  if (res.status === 404) throw new Error(`No doc named "${slug}". Browse the catalog for the right slug.`);
+  if (!res.ok) throw new Error(`could not resolve "${slug}" (HTTP ${res.status})`);
+  return ((await res.json()) as { resolve: Resolve | null }).resolve;
+}
+
+/** GET /kg/{slug}[?version=] — the auth-gated KG download (ticket 05). Returns the
+ *  bundle `.tar.gz` bytes and the sha the backend recorded with it (X-KG-Sha), so
+ *  the caller can confirm the KG aligns with the .md snapshot (ADR-0002). */
+export async function downloadKg(
+  apiBase: string,
+  token: string,
+  slug: string,
+  version: string | null,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ bytes: Uint8Array; sha: string | null }> {
+  const res = await fetchImpl(`${apiBase}/kg/${encodeURIComponent(slug)}${versionQuery(version)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.status === 401 || res.status === 403) throw new Error("Your sign-in has expired. Run `docs-kg login` again.");
+  if (res.status === 404) throw new Error(`No downloadable KG for "${slug}"${version ? `@${version}` : ""} yet.`);
+  if (!res.ok) throw new Error(`KG download failed (HTTP ${res.status})`);
+  return { bytes: new Uint8Array(await res.arrayBuffer()), sha: res.headers.get("X-KG-Sha") };
+}
+
+function versionQuery(version: string | null): string {
+  return version ? `?version=${encodeURIComponent(version)}` : "";
+}
+
 /** POST /consent — record the marketing opt-in answer (ticket 08). */
 export async function setConsent(
   apiBase: string,

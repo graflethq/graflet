@@ -18,7 +18,9 @@ import { dirname, join, resolve, sep } from "node:path";
 export interface ResolvedSource {
   repo_url: string;
   sha: string;
-  docs_path: string;
+  // Nullable: the catalog resolve carries null until P1 records it; fetchMarkdown
+  // guards it and fails cleanly (before any network) rather than fetching.
+  docs_path: string | null;
 }
 
 export interface FetchMarkdownOptions {
@@ -78,6 +80,28 @@ export async function fetchMarkdown(
     const outPath = safeJoin(destDir, entry.path.slice(prefix.length));
     await mkdir(dirname(outPath), { recursive: true });
     await writeFile(outPath, entry.data); // byte-for-byte, unmodified
+    written.push(outPath);
+  }
+  return written;
+}
+
+/**
+ * Extract every regular file from a gzipped tarball into `destDir`, byte-for-byte,
+ * path-traversal-guarded. Returns the paths written. This is how the KG bundle
+ * lands (ticket 05): the broker streams one `.tar.gz` and the CLI unpacks its
+ * files (graph.json, graph.html, GRAPH_REPORT.md, savings.json, LICENSE) here.
+ * `fetchMarkdown` above is the same shape over a filtered upstream subtree.
+ */
+export async function extractTarGz(gzBytes: Uint8Array, destDir: string): Promise<string[]> {
+  const tar = gunzipSync(gzBytes);
+  const written: string[] = [];
+  for (const entry of readTar(tar)) {
+    // `tar czf - -C dir .` prefixes entries with `./`; a wrapping dir is possible too.
+    const rel = entry.path.replace(/^\.\//, "");
+    if (!rel || rel.endsWith("/")) continue; // skip the archive root / any dir entry
+    const outPath = safeJoin(destDir, rel);
+    await mkdir(dirname(outPath), { recursive: true });
+    await writeFile(outPath, entry.data); // byte-for-byte
     written.push(outPath);
   }
   return written;

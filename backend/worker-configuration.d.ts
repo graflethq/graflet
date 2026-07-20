@@ -15,6 +15,9 @@ declare namespace Cloudflare {
     // Verified Resend sender + the postal address shown in promo email footers (ticket 08).
     RESEND_FROM: string;
     MARKETING_POSTAL_ADDRESS: string;
+    // `{owner}/{repo}` of the private repo holding the KG bundles (ticket 05). Not a
+    // secret (only the token that reads it is); the broker fetches `{kg_ref}.tar.gz` from it.
+    PRIVATE_KG_REPO: string;
 
     // Secrets: set via `wrangler secret put` (prod) / .dev.vars (local). Never
     // in wrangler.jsonc; present on env as plain strings at runtime.

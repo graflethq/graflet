@@ -8,6 +8,7 @@
 
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline/promises";
+import { download } from "./download.js";
 import { login, logout } from "./login.js";
 import { watch } from "./watch.js";
 
@@ -19,10 +20,11 @@ const apiBase = () => process.env.DOCS_KG_API || DEFAULT_API;
 const HELP = `docs-kg — download docs + knowledge graphs
 
 Usage:
-  docs-kg login         Sign in with GitHub
-  docs-kg logout        Forget the stored sign-in
-  docs-kg watch <slug>  Get emailed when a doc's graph updates (needs sign-in)
-  docs-kg --help        Show this help
+  docs-kg <slug>[@<version>]  Download a doc's Markdown + knowledge graph (needs sign-in)
+  docs-kg login               Sign in with GitHub
+  docs-kg logout              Forget the stored sign-in
+  docs-kg watch <slug>        Get emailed when a doc's graph updates (needs sign-in)
+  docs-kg --help              Show this help
 
 Env:
   DOCS_KG_API       Override the backend URL
@@ -55,8 +57,9 @@ async function main(): Promise<number> {
     case "watch":
       return watch(process.argv[3], { apiBase: apiBase(), prompt: askLine });
     default:
-      process.stderr.write(`Unknown command: ${cmd}\n\n${HELP}`);
-      return 1;
+      // Anything that isn't a reserved subcommand IS a slug — `docs-kg <slug>` is
+      // the core command (a bad slug 404s with a clear message from the broker).
+      return download(cmd, { apiBase: apiBase() });
   }
 }
 
@@ -72,4 +75,12 @@ async function askLine(question: string): Promise<string | null> {
   }
 }
 
-main().then((code) => process.exit(code));
+// Commands throw an Error with a user-facing message on any expected failure
+// (unknown slug, expired sign-in, …). Print just the message — never a stack —
+// and exit 1, so a bad slug reads as one clear line, not an unhandled rejection.
+main()
+  .then((code) => process.exit(code))
+  .catch((err) => {
+    process.stderr.write(`${err instanceof Error ? err.message : String(err)}\n`);
+    process.exit(1);
+  });

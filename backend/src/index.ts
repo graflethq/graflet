@@ -16,6 +16,7 @@
  */
 
 import { handleCliCallback, handleCliPoll, handleCliStart } from "./auth";
+import { handleKgDownload } from "./broker";
 import { handleCatalogDoc, handleCatalogList, handleCatalogUpsert } from "./catalog";
 import { handleConsent, handleUnsubscribe, handleWatch } from "./watch";
 
@@ -57,6 +58,13 @@ export default {
     if (pathname.startsWith("/catalog/") && req.method === "GET") {
       const slug = decodeURIComponent(pathname.slice("/catalog/".length));
       return handleCatalogDoc(env, slug, new URL(req.url).searchParams.get("version"));
+    }
+
+    // KG download broker (ticket 05) — the ONE auth-gated action (ADR-0005):
+    // verify the caller's bearer, then stream the private-repo KG bytes.
+    if (pathname.startsWith("/kg/") && req.method === "GET") {
+      const slug = decodeURIComponent(pathname.slice("/kg/".length));
+      return handleKgDownload(env, req, slug, new URL(req.url).searchParams.get("version"));
     }
 
     // Watch + consent (ticket 08). Both auth-gated (user bearer, ADR-0005 gates

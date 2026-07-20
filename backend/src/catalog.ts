@@ -73,23 +73,46 @@ export async function handleCatalogDoc(env: Env, slug: string, wantVersion: stri
     savings: parseSavings(r.savings_json),
   }));
 
-  // Resolve target: the requested version, else the latest alias. Only a `ready`
-  // version with a recorded commit pin resolves — a provisional/graphifying one, or
-  // a seeded row whose {sha} the re-graphify (P1) hasn't filled yet, is not deliverable
-  // (a KG is delivered by its pin, ADR-0002), so it hands back null (ADR-0005).
-  const target = wantVersion ? rows.find((r) => r.version_label === wantVersion) : rows.find((r) => r.is_latest === 1);
-  const resolve =
-    target && target.status === "ready" && target.sha
-      ? {
-          version: target.version_label,
-          repo_url: doc.repo_url,
-          sha: target.sha,
-          docs_path: target.docs_path,
-          kg_ref: target.kg_ref,
-        }
-      : null;
-
+  const resolve = resolveTarget(doc.repo_url, rows, wantVersion);
   return Response.json({ ...doc, versions, resolve });
+}
+
+/** The deliverable pin for one version, or null. */
+export interface ResolvedTarget {
+  version: string;
+  repo_url: string;
+  sha: string;
+  docs_path: string | null;
+  kg_ref: string | null;
+}
+
+type VersionRow = { version_label: string; is_latest: number; status: string; sha: string | null; docs_path: string | null; kg_ref: string | null };
+
+/**
+ * Resolve {slug, version|latest} to its deliverable pin (ADR-0002/0005), or null.
+ * Only a `ready` version with a recorded commit pin resolves — a provisional /
+ * graphifying one, or a seeded row whose {sha} the re-graphify (P1) hasn't filled
+ * yet, is browsable but not deliverable (a KG is delivered by its pin). Pure over
+ * already-fetched rows so the catalog detail endpoint and the download broker
+ * (ticket 05) apply ONE rule from ONE place.
+ */
+export function resolveTarget(repoUrl: string, rows: VersionRow[], wantVersion: string | null): ResolvedTarget | null {
+  const target = wantVersion ? rows.find((r) => r.version_label === wantVersion) : rows.find((r) => r.is_latest === 1);
+  if (!target || target.status !== "ready" || !target.sha) return null;
+  return { version: target.version_label, repo_url: repoUrl, sha: target.sha, docs_path: target.docs_path, kg_ref: target.kg_ref };
+}
+
+/** DB-backed resolve for a slug — the broker's entry point (ticket 05). Reads the
+ *  doc's repo_url + version rows, then applies {@link resolveTarget}. */
+export async function resolveVersion(env: Env, slug: string, wantVersion: string | null): Promise<ResolvedTarget | null> {
+  const doc = await env.CATALOG.prepare("SELECT repo_url FROM docs WHERE slug = ?").bind(slug).first<{ repo_url: string }>();
+  if (!doc) return null;
+  const { results } = await env.CATALOG.prepare(
+    "SELECT version_label, is_latest, status, sha, docs_path, kg_ref FROM doc_versions WHERE slug = ?",
+  )
+    .bind(slug)
+    .all<VersionRow>();
+  return resolveTarget(doc.repo_url, results, wantVersion);
 }
 
 /** POST /catalog/upsert — shared-secret; the pipeline/poller keep the catalog live. */

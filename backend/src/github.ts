@@ -18,6 +18,7 @@ const AUTHORIZE = "https://github.com/login/oauth/authorize";
 const ACCESS_TOKEN = "https://github.com/login/oauth/access_token";
 const API_USER = "https://api.github.com/user";
 const API_EMAILS = "https://api.github.com/user/emails";
+const API_REPOS = "https://api.github.com/repos";
 
 // Identity only: who they are + their email. No repo/write scopes.
 export const SCOPES = "read:user user:email";
@@ -78,6 +79,25 @@ export async function fetchIdentity(accessToken: string): Promise<GitHubIdentity
   const user = (await userRes.json()) as { id: number; login: string; email: string | null };
 
   return { github_id: user.id, login: user.login, email: await bestEmail(headers, user.email) };
+}
+
+/**
+ * Fetch one file's raw bytes from a private repo (the pruned KG bundle tarball),
+ * authenticated with the server-side token (ticket 05 / ADR-0002). The `raw` media
+ * type returns the file bytes directly (up to 100 MB) — GitHub follows its own
+ * internal signed-URL redirect server-side, so the caller only ever sees bytes.
+ * Returns the raw Response so the broker can stream `res.body` straight through
+ * under its OWN headers; the server token never leaves the backend.
+ */
+export function fetchPrivateBundle(repo: string, path: string, token: string): Promise<Response> {
+  const url = `${API_REPOS}/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
+  return fetchImpl(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github.raw",
+      "User-Agent": "docs-kg-backend",
+    },
+  });
 }
 
 // /user.email is often null (dev hid it). /user/emails (needs user:email scope)

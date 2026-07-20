@@ -30,6 +30,7 @@ export default defineConfig({
           RESEND_FROM: "docs-kg <updates@test.dev>",
           MARKETING_POSTAL_ADDRESS: "123 Test St, Testville",
           UNSUBSCRIBE_SECRET: "test-unsubscribe-secret",
+          PRIVATE_KG_REPO: "docs-kg/kg-bundles",
           TEST_MIGRATIONS: migrations,
         },
       },
