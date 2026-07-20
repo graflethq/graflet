@@ -1,0 +1,15 @@
+# 08 — `cli watch` + Resend notifications + CLI consent
+
+**What to build:** A signed-in user runs `<cli> watch <slug>` to subscribe to a doc's updates; the CLI records a subscription `(user, doc)` via the backend. Watching is one of the two gated actions, so it requires a GitHub sign-in first (ticket 03) — everything else stays free. Because CLI notification-setup is one of the two consent capture points, at the moment of watching — and only if the user's `marketing_consent` is still `unset` — the CLI shows a single unchecked marketing opt-in prompt (declines by default), stores the answer as `yes`/`no` with `consent_at` and `consent_source`, and never asks again once answered. Later, whenever any version of a watched doc goes `ready` (reported to the backend via `/catalog/upsert`, ticket 02 — each new version is its own frozen `(repo, sha)` KG), the backend emails every watcher of that doc through Resend as a service notification — sent regardless of marketing consent — and renders the product-promo footer only in copies going to `marketing_consent = yes` recipients. Operator alerts stay on Telegram; watchers only ever receive email.
+
+**Blocked by:** 03 (login/token — watch is auth-gated), 02 (the `/catalog/upsert` → ready signal that fires the email). *Does NOT depend on the download broker (05).*
+
+**Status:** ready-for-agent
+
+- [ ] Running `<cli> watch <slug>` while signed in registers a subscription `(user, doc)` in the backend, idempotent for the same doc (no duplicate); running it signed out requires a GitHub login first (auth-gated, ADR-0005).
+- [ ] On the first watch, if `marketing_consent` is `unset`, the CLI shows exactly one opt-in prompt that is unchecked / declines by default: stored `yes` only if the user actively opts in, otherwise `no`, written with `consent_at` and `consent_source = CLI`.
+- [ ] If `marketing_consent` is already `yes` or `no`, `watch` registers the subscription without showing the opt-in prompt again.
+- [ ] When `/catalog/upsert` reports a watched doc's status going `ready`, the backend sends a Resend email to every subscriber as a service notification — delivered regardless of the recipient's `marketing_consent` (including `no` and `unset`).
+- [ ] The notification email includes the product-promo footer only for `marketing_consent = yes` recipients; `no`/`unset` recipients get the same notification with no promo block.
+- [ ] Every promo-bearing email carries a postal address and a working one-click unsubscribe; using it records suppression so the recipient gets no further marketing footer (service notifications still allowed).
+- [ ] Watcher notifications go to the user's email only — no watch/ready event is pushed to the operator's Telegram (user and operator channels stay separate).

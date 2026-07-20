@@ -1,0 +1,3 @@
+[submodule "kg-pipeline"]
+	path = kg-pipeline
+	url = git@github.com:mrpmohiburrahman/kg-pipeline.git
