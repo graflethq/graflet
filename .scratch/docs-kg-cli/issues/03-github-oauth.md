@@ -4,11 +4,16 @@
 
 **Blocked by:** 01.
 
-**Status:** ready-for-agent
+**Status:** done (branch `cloudflare-workers-ai-kg`). Backend in `backend/` (auth-code
+flow, `src/auth.ts` + `src/github.ts` + `migrations/0001`), CLI in `cli/`
+(`src/login.ts` + `src/credential-store.ts`). Chose the **auth-code** flow over
+device flow so the client secret is genuinely used at the code exchange. Two
+operator-gated steps need the live Cloudflare account + a real GitHub OAuth App
+(README §Deploy), same pattern as ticket 01.
 
-- [ ] `docs-kg login` completes a GitHub OAuth device/browser flow end-to-end: browser handoff to GitHub, backend-side code exchange and identity verification (the client secret lives only on the backend, absent from the OSS CLI), and the terminal reports signed-in.
-- [ ] First-time login creates exactly one user row `{github_id, email, created_at}`; a second login by the same GitHub account updates that row rather than duplicating it (upsert keyed by `github_id`).
-- [ ] The issued bearer token is stored in the OS keyring; on a host/CI with no keyring it falls back to a plaintext file; and a `--token`/env-var path authenticates with no browser and no keyring write.
-- [ ] `docs-kg logout` removes the stored token from both the keyring and the plaintext fallback, so the next call is unauthenticated.
-- [ ] The login flow never prompts for marketing consent — a freshly signed-in user persists with `marketing_consent = unset` (ADR-0006); consent is captured only later at website signup (07) or CLI watch-setup (08).
-- [ ] Neither `login` nor `logout` adds an auth requirement to any other command: `--help` runs signed-out, honoring gate-only-the-download (ADR-0005).
+- [x] `docs-kg login` completes the flow end-to-end: `POST /auth/cli/start` → open browser → GitHub → `GET /auth/cli/callback` (backend-side code exchange with the secret, `/user`+`/user/emails` verify) → CLI polls `/auth/cli/poll` → "Signed in as <login>". Client secret is backend-only (never imported by `cli/`). *Integration-tested in workerd (`backend/src/auth.test.ts`) with GitHub stubbed; live GitHub App is operator-gated.*
+- [x] First login creates exactly one `users` row `{github_id, email, created_at}`; a repeat login by the same `github_id` updates it (email refreshed, `created_at` preserved) — no duplicate. *`ON CONFLICT(github_id) DO UPDATE`; asserted both ways.*
+- [x] The bearer is stored in the OS keyring (`@napi-rs/keyring`), falling back to a `0600` `~/.config/docs-kg/token` where no keyring exists; `--token`/`DOCS_KG_TOKEN` authenticate with no browser and no keyring write. *`cli/src/credential-store.ts`; `credential-store.test.ts` covers keyring path, file-mode fallback, and resolveToken precedence + no-write.*
+- [x] `docs-kg logout` clears both the keyring and the plaintext file. *`clearToken()`; tested.*
+- [x] Login never prompts for marketing consent — a freshly signed-in user persists with `marketing_consent = 'unset'` (default, untouched by the upsert). *Asserted on the DB row + on login output.*
+- [x] No other command gains an auth requirement: `--help` (and unknown-command usage) run signed-out. *Verified by running the built `dist/index.js --help` → exit 0; no token read on that path.*

@@ -10,7 +10,12 @@
  *   GET /ready   Readiness. Does a trivial D1 read (SELECT 1) to prove the
  *                CATALOG binding answers, and confirms both secrets are present.
  *                Returns booleans only — never a secret value.
+ *
+ * Ticket 03 adds the GitHub OAuth auth-code flow (see ./auth):
+ *   POST /auth/cli/start   GET /auth/cli/callback   POST /auth/cli/poll
  */
+
+import { handleCliCallback, handleCliPoll, handleCliStart } from "./auth";
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -25,6 +30,18 @@ export default {
     // tickets 02/03/05 can assume them with no re-wiring.
     if (pathname === "/ready") {
       return handleReady(env);
+    }
+
+    // GitHub OAuth (ticket 03). All public: login is the path TO an identity,
+    // not gated by one (ADR-0005 gates only the KG download).
+    if (pathname === "/auth/cli/start" && req.method === "POST") {
+      return handleCliStart(env, req);
+    }
+    if (pathname === "/auth/cli/callback" && req.method === "GET") {
+      return handleCliCallback(env, req);
+    }
+    if (pathname === "/auth/cli/poll" && req.method === "POST") {
+      return handleCliPoll(env, req);
     }
 
     return new Response("not found", { status: 404 });

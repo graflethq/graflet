@@ -8,16 +8,23 @@
   // user-facing backend lives on Workers; the VPS runs only the daily poller).
   "observability": { "enabled": true },
 
+  // Public, non-secret config. The OAuth client_id is public by design (it ends
+  // up in the browser authorize URL); only the client SECRET stays a secret.
+  "vars": {
+    "GITHUB_OAUTH_CLIENT_ID": "REPLACE_WITH_OAUTH_APP_CLIENT_ID"
+  },
+
   // Catalog store (ADR-0004), bound as env.CATALOG. Tickets 02 (catalog store)
-  // and 05 (download broker) read + write it. A trivial `SELECT 1` in /ready
-  // proves it is reachable; ticket 02 adds the real schema + migrations_dir.
+  // and 05 (download broker) read + write it. Ticket 03 adds the first
+  // migration (users + tokens + pending_auth); ticket 02 adds the catalog tables.
   // database_id is a placeholder until `wrangler d1 create docs-kg-catalog`;
   // local dev + tests run against a Miniflare-backed SQLite DB and ignore it.
   "d1_databases": [
     {
       "binding": "CATALOG",
       "database_name": "docs-kg-catalog",
-      "database_id": "00000000-0000-0000-0000-000000000000"
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
     }
   ]
 

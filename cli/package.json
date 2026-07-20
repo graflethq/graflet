@@ -1,0 +1,22 @@
+{
+  "name": "docs-kg-cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "docs-kg CLI — sign in with GitHub and download docs + knowledge graphs (ticket 03: login/logout).",
+  "type": "module",
+  "bin": { "docs-kg": "dist/index.js" },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@napi-rs/keyring": "^1.1.9"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "4.1.10"
+  }
+}

@@ -9,7 +9,7 @@ Tracker: local files (one ticket per file). Work the **frontier** — any ticket
 |---|---|---|
 | 01 | Backend skeleton + secrets + health ✅ **done 2026-07-20** (commit `d5386a6`; 2 boxes operator-gated) | — |
 | 02 | Catalog store + read/upsert API + seed | 01, P1, P3 |
-| 03 | GitHub OAuth + CLI login/logout | 01 |
+| 03 | GitHub OAuth + CLI login/logout ✅ **done 2026-07-20** (backend `backend/` + CLI `cli/`; 2 boxes operator-gated) | 01 |
 | 04 | CLI md-fetch module (codeload at pinned sha) | 02 |
 | 05 | KG download broker + full `cli <slug>` download **(spine)** | 02, 03, 04, P1 |
 | 06 | Website catalog + savings hero + free copy-command | 02, P2 |
@@ -38,8 +38,8 @@ P2 ─► 06
 
 ## Frontier
 
-- **Done:** `01` ✅, `P3` ✅.
-- **Startable now:** `03` (needs only `01`); `P1` `P2` (kg-pipeline).
-- **After P1 + P3 + 01:** `02` — then `04`, `06`, `08`, `09` open up, and the spine `05` after `03`+`04`.
+- **Done:** `01` ✅, `03` ✅, `P3` ✅.
+- **Startable now:** `P1` `P2` (kg-pipeline).
+- **After P1 + P3 + 01:** `02` — then `04`, `06`, `08`, `09` open up, and the spine `05` after `04` (`03` already done).
 
-Realistic path: `01` ✅ done; next `03` (this repo) + `P1/P2` (kg-pipeline); then `02` → the rest.
+Realistic path: `01`+`03` ✅ done; next `P1/P2` (kg-pipeline) → then `02` → the rest.
