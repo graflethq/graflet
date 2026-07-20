@@ -4,9 +4,13 @@
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done 2026-07-20
 
-- [ ] `GET /catalog` and `GET /catalog/{slug}` return CORS headers that allow the site origin(s), including the local dev origin, so a browser fetch from the site succeeds with no CORS error.
-- [ ] CORS is scoped to the read-only endpoints only — `/catalog/upsert`, the OAuth exchange, and the download broker are NOT opened to arbitrary origins.
-- [ ] Any required preflight (`OPTIONS`) on the read endpoints is handled.
-- [ ] A backend vitest test asserts the CORS headers on the read endpoints (prior art: `backend/src/catalog.test.ts`).
+- [x] `GET /catalog` and `GET /catalog/{slug}` return CORS headers that allow the site origin(s), including the local dev origin, so a browser fetch from the site succeeds with no CORS error.
+- [x] CORS is scoped to the read-only endpoints only — `/catalog/upsert`, the OAuth exchange, and the download broker are NOT opened to arbitrary origins.
+- [x] Any required preflight (`OPTIONS`) on the read endpoints is handled.
+- [x] A backend vitest test asserts the CORS headers on the read endpoints (prior art: `backend/src/catalog.test.ts`).
+
+## Comments
+
+Landed as `backend/src/cors.ts` (allow-list `withCors`/`corsPreflight`/`isCatalogReadPath`), wired into `src/index.ts` for `OPTIONS` + the two GET reads only. Allow-list is `env.SITE_ORIGINS` (comma-separated, prod + local dev) — off-list Origin fails closed with no header; reads are already public (ADR-0005) so this is browser-reachability, not a new gate. 8 tests in `backend/src/cors.test.ts` (all 6 backend files, 50 tests pass).

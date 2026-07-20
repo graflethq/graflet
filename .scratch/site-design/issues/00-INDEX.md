@@ -11,10 +11,10 @@ Work the **frontier** with `/implement`, one ticket, fresh context each. Blocker
 
 ```
 01 Foundation (scaffold+shadcn+theme+CF deploy)     ✅ done 2026-07-20
-02 Backend CORS for catalog reads                   [frontier]
+02 Backend CORS for catalog reads                   ✅ done 2026-07-20
 
 03 Landing top (nav+hero+copy)        ← 01 ✅        [frontier]
-04 Catalog table (view-model+live)    ← 01 ✅, 02
+04 Catalog table (view-model+live)    ← 01 ✅, 02 ✅  [frontier]
 05 Landing body + footer              ← 04
 06 GitHub signup + opt-in             ← 01 ✅, 02
 07 Legal pages                        ← 04
@@ -22,8 +22,7 @@ Work the **frontier** with `/implement`, one ticket, fresh context each. Blocker
 ```
 
 ## Frontier now
-- **02** — no blockers. **03** — unblocked now that 01 is done (needs only the `web/` scaffold).
-- **04** and **06** unblock once **02** (CORS) lands alongside 01.
+- **03** — unblocked (needs only the `web/` scaffold). **04** and **06** — unblocked now that **02** (CORS) is done.
 
 ## Order of value
 01 → 02 → 03 → 04 → 05, then 06 (signup), 07 (legal), 08 (optional column data).

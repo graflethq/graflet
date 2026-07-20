@@ -31,6 +31,8 @@ export default defineConfig({
           MARKETING_POSTAL_ADDRESS: "123 Test St, Testville",
           UNSUBSCRIBE_SECRET: "test-unsubscribe-secret",
           PRIVATE_KG_REPO: "docs-kg/kg-bundles",
+          // Allow-list the CORS test asserts against (site origin + local dev).
+          SITE_ORIGINS: "https://site.test,http://localhost:3000",
           TEST_MIGRATIONS: migrations,
         },
       },

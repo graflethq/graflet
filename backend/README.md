@@ -72,9 +72,9 @@ Three **secrets**, never committed:
 - `GITHUB_OAUTH_CLIENT_SECRET` — GitHub OAuth App client secret, backend-only (ticket 03).
 - `CATALOG_UPSERT_SECRET` — bearer the pipeline + poller present to `/catalog/upsert` (ticket 02).
 
-One public **var** (in `wrangler.jsonc`, not a secret — it ends up in the browser
-authorize URL): `GITHUB_OAUTH_CLIENT_ID`. Replace the placeholder with your
-OAuth App's client id.
+Public **vars** live in `wrangler.jsonc` (not secrets — browser-visible by design):
+- `GITHUB_OAUTH_CLIENT_ID` — ends up in the browser authorize URL; replace the placeholder with your OAuth App's client id.
+- `SITE_ORIGINS` — comma-separated allow-list of website origins granted CORS on the read-only catalog endpoints (`GET /catalog`, `GET /catalog/{slug}`); prod origin + local dev. No other route is CORS-opened (ticket 02 site slice).
 
 Local dev: `cp .dev.vars.example .dev.vars` and fill the secrets. `.dev.vars` is
 gitignored; `wrangler dev` auto-loads it.

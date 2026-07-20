@@ -18,6 +18,7 @@
 import { handleCliCallback, handleCliPoll, handleCliStart } from "./auth";
 import { handleKgDownload } from "./broker";
 import { handleCatalogDoc, handleCatalogList, handleCatalogUpsert } from "./catalog";
+import { corsPreflight, isCatalogReadPath, withCors } from "./cors";
 import { handleConsent, handleUnsubscribe, handleWatch } from "./watch";
 
 export default {
@@ -47,17 +48,24 @@ export default {
       return handleCliPoll(env, req);
     }
 
+    // CORS preflight for the two public read endpoints only (site slice, ticket 02).
+    // The site fetches the catalog cross-origin; every other route stays same-origin.
+    if (req.method === "OPTIONS" && isCatalogReadPath(pathname)) {
+      return corsPreflight(env, req);
+    }
+
     // Catalog (ticket 02). Reads are public (ADR-0005 gates only the KG download);
     // /catalog/upsert is shared-secret (the pipeline + poller keep it live).
     if (pathname === "/catalog/upsert" && req.method === "POST") {
       return handleCatalogUpsert(env, req);
     }
+    // The two read endpoints carry CORS for the site origin; upsert (above) does not.
     if (pathname === "/catalog" && req.method === "GET") {
-      return handleCatalogList(env);
+      return withCors(await handleCatalogList(env), env, req);
     }
     if (pathname.startsWith("/catalog/") && req.method === "GET") {
       const slug = decodeURIComponent(pathname.slice("/catalog/".length));
-      return handleCatalogDoc(env, slug, new URL(req.url).searchParams.get("version"));
+      return withCors(await handleCatalogDoc(env, slug, new URL(req.url).searchParams.get("version")), env, req);
     }
 
     // KG download broker (ticket 05) — the ONE auth-gated action (ADR-0005):

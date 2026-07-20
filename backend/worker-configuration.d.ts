@@ -18,6 +18,9 @@ declare namespace Cloudflare {
     // `{owner}/{repo}` of the private repo holding the KG bundles (ticket 05). Not a
     // secret (only the token that reads it is); the broker fetches `{kg_ref}.tar.gz` from it.
     PRIVATE_KG_REPO: string;
+    // Comma-separated allow-list of site origins permitted CORS on the read-only
+    // catalog endpoints (prod + local dev). Not a secret; browser-visible by design.
+    SITE_ORIGINS: string;
 
     // Secrets: set via `wrangler secret put` (prod) / .dev.vars (local). Never
     // in wrangler.jsonc; present on env as plain strings at runtime.

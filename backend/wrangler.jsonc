@@ -18,7 +18,10 @@
     "MARKETING_POSTAL_ADDRESS": "REPLACE_WITH_POSTAL_ADDRESS",
     // {owner}/{repo} of the private KG-bundle repo the download broker reads (ticket 05).
     // The repo name isn't secret; only PRIVATE_REPO_TOKEN (a secret) authorizes the read.
-    "PRIVATE_KG_REPO": "REPLACE_WITH_PRIVATE_KG_REPO"
+    "PRIVATE_KG_REPO": "REPLACE_WITH_PRIVATE_KG_REPO",
+    // Site origins allowed CORS on the read-only catalog endpoints (ticket 02 site
+    // slice). Comma-separated: local Next dev + the production site origin.
+    "SITE_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://REPLACE_WITH_SITE_ORIGIN"
   },
 
   // Catalog store (ADR-0004), bound as env.CATALOG. Tickets 02 (catalog store)
