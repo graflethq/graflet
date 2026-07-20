@@ -1,0 +1,12 @@
+node_modules/
+.wrangler/
+
+# Local secrets — never commit. Keep only the .example template.
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.env
+.env.*
+!.env.example
+
+*.log

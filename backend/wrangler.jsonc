@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "docs-kg-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-14",
+
+  // Deploy target is Cloudflare Workers, never the VPS (ADR-0004: the always-up
+  // user-facing backend lives on Workers; the VPS runs only the daily poller).
+  "observability": { "enabled": true },
+
+  // Catalog store (ADR-0004), bound as env.CATALOG. Tickets 02 (catalog store)
+  // and 05 (download broker) read + write it. A trivial `SELECT 1` in /ready
+  // proves it is reachable; ticket 02 adds the real schema + migrations_dir.
+  // database_id is a placeholder until `wrangler d1 create docs-kg-catalog`;
+  // local dev + tests run against a Miniflare-backed SQLite DB and ignore it.
+  "d1_databases": [
+    {
+      "binding": "CATALOG",
+      "database_name": "docs-kg-catalog",
+      "database_id": "00000000-0000-0000-0000-000000000000"
+    }
+  ]
+
+  // Secrets are NOT declared here (that would leak them). Set in prod with
+  // `wrangler secret put`, and locally via a gitignored .dev.vars file:
+  //   PRIVATE_REPO_TOKEN            — reads the private KG repo (ticket 05)
+  //   GITHUB_OAUTH_CLIENT_SECRET    — GitHub OAuth exchange, backend-only (ticket 03)
+}

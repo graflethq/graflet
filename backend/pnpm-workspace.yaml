@@ -1,0 +1,7 @@
+# pnpm blocks dependency build scripts by default. Allow the ones the test/dev
+# runtime needs: workerd (workerd runtime) and esbuild (Vite/Vitest transforms).
+# sharp (image resizing) is unused here.
+allowBuilds:
+  esbuild: true
+  sharp: false
+  workerd: true
