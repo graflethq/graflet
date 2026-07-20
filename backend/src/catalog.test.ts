@@ -53,12 +53,16 @@ describe("catalog API (ticket 02)", () => {
     expect(res.status).toBe(200);
     const { docs } = (await res.json()) as { docs: any[] };
     const nx = docs.find((d) => d.slug === "next.js");
+    // The list carries repo_url + graphscore too, so the site table renders the
+    // Library sub-label + GraphScore column without a per-row detail fetch.
     expect(nx).toMatchObject({
       slug: "next.js",
       name: "Next.js",
+      repo_url: "https://github.com/vercel/next.js",
       license: "MIT",
       popularity_rank: 1,
       latest_version: "16",
+      graphscore: 87.5,
       hero_savings: 123456,
     });
   });

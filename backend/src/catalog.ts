@@ -5,7 +5,9 @@
  * sign-in — the gate is only the KG download (ADR-0005). Three routes:
  *
  *   GET  /catalog          Public. Docs with a servable (ready) latest version,
- *                          ordered by popularity — each with its hero savings number.
+ *                          ordered by popularity — each with its repo, GraphScore
+ *                          and hero savings, so the site table (ticket 04) renders
+ *                          those columns without a per-row detail fetch.
  *   GET  /catalog/{slug}   Public. Every tracked version (old ones kept, ADR-0003)
  *                          + a resolve for {slug, version} → {repo_url, sha, docs_path,
  *                          kg_ref} (the pin the CLI feeds codeload; never KG bytes).
@@ -21,17 +23,19 @@ import { sha256Hex } from "./tokens";
 /** GET /catalog — the public, sign-in-free doc list. */
 export async function handleCatalogList(env: Env): Promise<Response> {
   const { results } = await env.CATALOG.prepare(
-    `SELECT d.slug, d.name, d.license_id AS license, d.popularity_rank,
-            v.version_label AS latest_version, v.hero_savings
+    `SELECT d.slug, d.name, d.repo_url, d.license_id AS license, d.popularity_rank,
+            v.version_label AS latest_version, v.graphscore, v.hero_savings
        FROM docs d
        JOIN doc_versions v ON v.slug = d.slug AND v.is_latest = 1 AND v.status = 'ready'
       ORDER BY d.popularity_rank ASC`,
   ).all<{
     slug: string;
     name: string;
+    repo_url: string;
     license: string;
     popularity_rank: number;
     latest_version: string;
+    graphscore: number | null;
     hero_savings: number | null;
   }>();
   return Response.json({ docs: results });

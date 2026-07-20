@@ -11,8 +11,13 @@ server logic of its own beyond rendering. See `../CONTEXT.md` and `../docs/adr/`
 pnpm install
 pnpm dev          # next dev (Turbopack) → http://localhost:3000
 pnpm typecheck    # next typegen && tsc --noEmit
+pnpm test         # vitest run (view-model + behavior checks)
 pnpm build        # next build
 ```
+
+The catalog table reads the backend Worker's public `/catalog` API. Point it with
+`NEXT_PUBLIC_CATALOG_API_URL` (in `.env.local` for dev, or the deploy env);
+it defaults to `http://localhost:8787` (the local `wrangler dev` port).
 
 ## Preview / deploy (Cloudflare, via OpenNext)
 
