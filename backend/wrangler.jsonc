@@ -11,7 +11,11 @@
   // Public, non-secret config. The OAuth client_id is public by design (it ends
   // up in the browser authorize URL); only the client SECRET stays a secret.
   "vars": {
-    "GITHUB_OAUTH_CLIENT_ID": "REPLACE_WITH_OAUTH_APP_CLIENT_ID"
+    "GITHUB_OAUTH_CLIENT_ID": "REPLACE_WITH_OAUTH_APP_CLIENT_ID",
+    // Watcher email (ticket 08). RESEND_FROM must be a Resend-verified sender;
+    // MARKETING_POSTAL_ADDRESS is the CAN-SPAM postal address in promo footers.
+    "RESEND_FROM": "docs-kg <updates@REPLACE_WITH_VERIFIED_DOMAIN>",
+    "MARKETING_POSTAL_ADDRESS": "REPLACE_WITH_POSTAL_ADDRESS"
   },
 
   // Catalog store (ADR-0004), bound as env.CATALOG. Tickets 02 (catalog store)
@@ -33,4 +37,6 @@
   //   PRIVATE_REPO_TOKEN            — reads the private KG repo (ticket 05)
   //   GITHUB_OAUTH_CLIENT_SECRET    — GitHub OAuth exchange, backend-only (ticket 03)
   //   CATALOG_UPSERT_SECRET         — bearer for POST /catalog/upsert (ticket 02)
+  //   RESEND_API_KEY                — send watcher email via Resend (ticket 08)
+  //   UNSUBSCRIBE_SECRET            — signing secret for one-click unsubscribe links (ticket 08)
 }

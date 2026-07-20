@@ -9,9 +9,12 @@ declare namespace Cloudflare {
     // D1 binding from wrangler.jsonc -> d1_databases[].binding
     CATALOG: D1Database;
 
-    // Public var from wrangler.jsonc -> vars. Not a secret (it ends up in the
-    // browser authorize URL); only the client SECRET below is a Worker secret.
+    // Public vars from wrangler.jsonc -> vars. Not secrets (the client_id ends up
+    // in the browser authorize URL; the others are just config).
     GITHUB_OAUTH_CLIENT_ID: string;
+    // Verified Resend sender + the postal address shown in promo email footers (ticket 08).
+    RESEND_FROM: string;
+    MARKETING_POSTAL_ADDRESS: string;
 
     // Secrets: set via `wrangler secret put` (prod) / .dev.vars (local). Never
     // in wrangler.jsonc; present on env as plain strings at runtime.
@@ -19,6 +22,10 @@ declare namespace Cloudflare {
     GITHUB_OAUTH_CLIENT_SECRET: string;
     // Shared secret the pipeline + poller present to POST /catalog/upsert (ticket 02).
     CATALOG_UPSERT_SECRET: string;
+    // Resend API key for watcher email; signing secret for one-click unsubscribe
+    // tokens (SHA-256 of `unsub:<id>:<secret>`, secret last) (ticket 08).
+    RESEND_API_KEY: string;
+    UNSUBSCRIBE_SECRET: string;
   }
 }
 

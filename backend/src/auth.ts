@@ -134,6 +134,34 @@ export async function upsertUserAndMintToken(
   return raw;
 }
 
+/** Tri-state marketing consent (ADR-0006). One source of truth for the union. */
+export type MarketingConsent = "unset" | "yes" | "no";
+
+export interface SessionUser {
+  github_id: number;
+  email: string | null;
+  marketing_consent: MarketingConsent;
+}
+
+/**
+ * Verify a caller's `Authorization: Bearer <token>` (a user token minted at
+ * sign-in, ticket 03) and return the user row, or null if the token is
+ * missing/unknown. This is the ONLY per-user gate: the download broker (05) and
+ * `watch`/`consent` (08) both authenticate through here. Tokens are matched by
+ * SHA-256 hash, never the raw value.
+ */
+export async function authenticateUser(env: Env, req: Request): Promise<SessionUser | null> {
+  const provided = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!provided) return null;
+  return env.CATALOG.prepare(
+    `SELECT u.github_id, u.email, u.marketing_consent
+       FROM tokens t JOIN users u ON u.github_id = t.github_id
+      WHERE t.token_hash = ?`,
+  )
+    .bind(await sha256Hex(provided))
+    .first<SessionUser>();
+}
+
 async function failPending(env: Env, state: string, error: string): Promise<void> {
   await env.CATALOG.prepare("UPDATE pending_auth SET error = ? WHERE state = ?").bind(error, state).run();
 }

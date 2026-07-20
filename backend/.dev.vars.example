@@ -12,3 +12,9 @@ GITHUB_OAUTH_CLIENT_SECRET="replace_me"
 
 # Shared secret the pipeline + poller present as a bearer to POST /catalog/upsert (ticket 02).
 CATALOG_UPSERT_SECRET="replace_me"
+
+# Resend API key — sends watcher notification email (ticket 08).
+RESEND_API_KEY="re_replace_me"
+
+# Signing secret for one-click unsubscribe links (ticket 08). Any long random string.
+UNSUBSCRIBE_SECRET="replace_me"

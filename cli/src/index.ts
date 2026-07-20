@@ -7,7 +7,9 @@
  */
 
 import { spawn } from "node:child_process";
+import { createInterface } from "node:readline/promises";
 import { login, logout } from "./login.js";
+import { watch } from "./watch.js";
 
 // Backend base URL. Prod URL is operator-provisioned (Cloudflare account not yet
 // live) — override with $DOCS_KG_API until it's pinned. TODO: bake the real URL.
@@ -17,9 +19,10 @@ const apiBase = () => process.env.DOCS_KG_API || DEFAULT_API;
 const HELP = `docs-kg — download docs + knowledge graphs
 
 Usage:
-  docs-kg login     Sign in with GitHub
-  docs-kg logout    Forget the stored sign-in
-  docs-kg --help    Show this help
+  docs-kg login         Sign in with GitHub
+  docs-kg logout        Forget the stored sign-in
+  docs-kg watch <slug>  Get emailed when a doc's graph updates (needs sign-in)
+  docs-kg --help        Show this help
 
 Env:
   DOCS_KG_API       Override the backend URL
@@ -49,9 +52,23 @@ async function main(): Promise<number> {
       return login({ apiBase: apiBase(), openBrowser });
     case "logout":
       return logout();
+    case "watch":
+      return watch(process.argv[3], { apiBase: apiBase(), prompt: askLine });
     default:
       process.stderr.write(`Unknown command: ${cmd}\n\n${HELP}`);
       return 1;
+  }
+}
+
+/** Ask one line on the terminal, or null when there's no TTY (piped/CI) — the
+ *  caller leaves consent unset rather than recording a silent answer (ADR-0006). */
+async function askLine(question: string): Promise<string | null> {
+  if (!process.stdin.isTTY) return null;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    return await rl.question(question);
+  } finally {
+    rl.close();
   }
 }
 

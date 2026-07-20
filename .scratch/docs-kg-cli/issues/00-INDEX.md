@@ -14,7 +14,7 @@ Tracker: local files (one ticket per file). Work the **frontier** — any ticket
 | 05 | KG download broker + full `cli <slug>` download **(spine)** | 02, 03, 04, P1 |
 | 06 | Website catalog + savings hero + free copy-command | 02, P2 |
 | 07 | Website signup + unchecked marketing opt-in | 03, 06 |
-| 08 | `cli watch` + Resend notifications + CLI consent | 02, 03 |
+| 08 | `cli watch` + Resend notifications + CLI consent ✅ **done 2026-07-20** (backend `watch.ts`/`notify.ts` + migration `0003`; CLI `watch.ts`; 4 boxes operator-gated: Resend key + verified sender + postal address + unsubscribe secret) | 02, 03 |
 | 09 | Release poller (VPS) + Telegram ping *(v1-optional, last)* | 02 |
 | 10 | Legal pages (Terms / Privacy / attribution) | 06 |
 | P1 | **[kg-pipeline]** Re-graphify 39 from pinned HEADs + push private | — |
@@ -38,8 +38,8 @@ P2 ─► 06
 
 ## Frontier
 
-- **Done:** `01` ✅, `02` ✅, `03` ✅, `04` ✅, `P3` ✅. `02`/`04` shipped ahead of P1 — the catalog seeds/serves with `sha`/`docs_path`/`kg_ref` NULL and md-fetch is contract-driven; P1's re-graphify fills the pins via `/catalog/upsert`, then md-fetch has real shas to pull.
-- **Startable now:** `P1` `P2` (kg-pipeline); `08` (`cli watch` — needs `02`+`03`, both done); `06` needs `P2`.
+- **Done:** `01` ✅, `02` ✅, `03` ✅, `04` ✅, `08` ✅, `P3` ✅. `02`/`04` shipped ahead of P1 — the catalog seeds/serves with `sha`/`docs_path`/`kg_ref` NULL and md-fetch is contract-driven; P1's re-graphify fills the pins via `/catalog/upsert`, then md-fetch has real shas to pull. `08` shipped ahead of P1 too — the ready-signal it emails on comes from `/catalog/upsert`, which P1's builds drive.
+- **Startable now:** `P1` `P2` (kg-pipeline); `06` needs `P2`.
 - **Blocked on P1's real pins:** the spine `05` (needs `02`+`03`+`04`+P1 — has everything but P1) and `09`.
 
 Realistic path: `01`+`02`+`03`+`04` ✅ done; next `P1/P2` (kg-pipeline) fill the pins + savings → spine `05`; `06`/`07`/`08`/`10` on the site/CLI side.

@@ -17,6 +17,7 @@
 
 import { handleCliCallback, handleCliPoll, handleCliStart } from "./auth";
 import { handleCatalogDoc, handleCatalogList, handleCatalogUpsert } from "./catalog";
+import { handleConsent, handleUnsubscribe, handleWatch } from "./watch";
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -56,6 +57,19 @@ export default {
     if (pathname.startsWith("/catalog/") && req.method === "GET") {
       const slug = decodeURIComponent(pathname.slice("/catalog/".length));
       return handleCatalogDoc(env, slug, new URL(req.url).searchParams.get("version"));
+    }
+
+    // Watch + consent (ticket 08). Both auth-gated (user bearer, ADR-0005 gates
+    // watch); consent captures the CLI marketing opt-in.
+    if (pathname === "/watch" && req.method === "POST") {
+      return handleWatch(env, req);
+    }
+    if (pathname === "/consent" && req.method === "POST") {
+      return handleConsent(env, req);
+    }
+    // Public, token-verified: the one-click unsubscribe link in promo emails.
+    if (pathname === "/unsubscribe" && (req.method === "GET" || req.method === "POST")) {
+      return handleUnsubscribe(env, req);
     }
 
     return new Response("not found", { status: 404 });

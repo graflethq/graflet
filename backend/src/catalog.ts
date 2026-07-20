@@ -15,6 +15,7 @@
  */
 
 import { isGreenLicense } from "./license";
+import { notifyWatchers } from "./notify";
 import { sha256Hex } from "./tokens";
 
 /** GET /catalog — the public, sign-in-free doc list. */
@@ -124,6 +125,15 @@ export async function handleCatalogUpsert(env: Env, req: Request): Promise<Respo
     status = "graphifying";
   }
 
+  // Prior status of this exact version, read before the write, so we can tell a
+  // real graphifying→ready transition (notify watchers) from an idempotent
+  // re-POST of an already-ready row (notify nobody — ticket 08 fires on "going ready").
+  const prior = await env.CATALOG.prepare(
+    "SELECT status FROM doc_versions WHERE slug = ? AND version_label = ?",
+  )
+    .bind(slug, versionLabel)
+    .first<{ status: string }>();
+
   const isLatest = body.is_latest ? 1 : 0;
   // ponytail: every real payload (seed/pipeline/poller) carries the popularity rank;
   // the fallback only guards a malformed one so it sorts last rather than 500-ing.
@@ -177,6 +187,17 @@ export async function handleCatalogUpsert(env: Env, req: Request): Promise<Respo
   );
 
   await env.CATALOG.batch(stmts);
+
+  // Version just became `ready` — email its watchers (ADR-0006 service notify).
+  // Best-effort: a Resend outage must never fail the catalog write.
+  if (status === "ready" && prior?.status !== "ready") {
+    try {
+      await notifyWatchers(env, new URL(req.url).origin, slug, versionLabel);
+    } catch {
+      // swallow — notifying is a side-effect, not part of the upsert contract
+    }
+  }
+
   return Response.json({ ok: true, slug, version_label: versionLabel, status });
 }
 
