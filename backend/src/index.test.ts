@@ -13,13 +13,14 @@ describe("docs-kg-backend skeleton (ticket 01)", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
       ok: boolean;
-      checks: { catalog: boolean; private_repo_token: boolean; oauth_client_secret: boolean };
+      checks: { catalog: boolean; private_repo_token: boolean; oauth_client_secret: boolean; catalog_upsert_secret: boolean };
     };
     expect(body.ok).toBe(true);
     expect(body.checks).toEqual({
       catalog: true,
       private_repo_token: true,
       oauth_client_secret: true,
+      catalog_upsert_secret: true,
     });
   });
 

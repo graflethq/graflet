@@ -8,7 +8,7 @@ Tracker: local files (one ticket per file). Work the **frontier** — any ticket
 | # | Title | Blocked by |
 |---|---|---|
 | 01 | Backend skeleton + secrets + health ✅ **done 2026-07-20** (commit `d5386a6`; 2 boxes operator-gated) | — |
-| 02 | Catalog store + read/upsert API + seed | 01, P1, P3 |
+| 02 | Catalog store + read/upsert API + seed ✅ **done 2026-07-20** (backend `catalog.ts`; sha/docs_path fill via upsert when P1 lands; 1 box operator-gated) | 01, P1, P3 |
 | 03 | GitHub OAuth + CLI login/logout ✅ **done 2026-07-20** (backend `backend/` + CLI `cli/`; 2 boxes operator-gated) | 01 |
 | 04 | CLI md-fetch module (codeload at pinned sha) | 02 |
 | 05 | KG download broker + full `cli <slug>` download **(spine)** | 02, 03, 04, P1 |
@@ -38,8 +38,8 @@ P2 ─► 06
 
 ## Frontier
 
-- **Done:** `01` ✅, `03` ✅, `P3` ✅.
-- **Startable now:** `P1` `P2` (kg-pipeline).
-- **After P1 + P3 + 01:** `02` — then `04`, `06`, `08`, `09` open up, and the spine `05` after `04` (`03` already done).
+- **Done:** `01` ✅, `02` ✅, `03` ✅, `P3` ✅. `02`'s code shipped ahead of P1 — the catalog seeds/serves now with `sha`/`docs_path`/`kg_ref` NULL; P1's re-graphify fills those pins via `/catalog/upsert`.
+- **Startable now:** `P1` `P2` (kg-pipeline); `04` (CLI md-fetch — depends only on the `02` resolve contract, now defined); `06` needs `P2`.
+- **After P1:** the resolve returns real pins → the spine `05` (needs `04`), and `04`/`06`/`08`/`09` proceed.
 
-Realistic path: `01`+`03` ✅ done; next `P1/P2` (kg-pipeline) → then `02` → the rest.
+Realistic path: `01`+`03`+`02` ✅ done; next `P1/P2` (kg-pipeline) fill the pins + savings → `04` → spine `05`; `06`/`07`/`10` on the website side.

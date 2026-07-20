@@ -25,6 +25,7 @@ export default defineConfig({
           PRIVATE_REPO_TOKEN: "test-private-repo-token",
           GITHUB_OAUTH_CLIENT_SECRET: "test-oauth-client-secret",
           GITHUB_OAUTH_CLIENT_ID: "test-oauth-client-id",
+          CATALOG_UPSERT_SECRET: "test-catalog-upsert-secret",
           TEST_MIGRATIONS: migrations,
         },
       },

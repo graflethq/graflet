@@ -16,6 +16,7 @@
  */
 
 import { handleCliCallback, handleCliPoll, handleCliStart } from "./auth";
+import { handleCatalogDoc, handleCatalogList, handleCatalogUpsert } from "./catalog";
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -44,6 +45,19 @@ export default {
       return handleCliPoll(env, req);
     }
 
+    // Catalog (ticket 02). Reads are public (ADR-0005 gates only the KG download);
+    // /catalog/upsert is shared-secret (the pipeline + poller keep it live).
+    if (pathname === "/catalog/upsert" && req.method === "POST") {
+      return handleCatalogUpsert(env, req);
+    }
+    if (pathname === "/catalog" && req.method === "GET") {
+      return handleCatalogList(env);
+    }
+    if (pathname.startsWith("/catalog/") && req.method === "GET") {
+      const slug = decodeURIComponent(pathname.slice("/catalog/".length));
+      return handleCatalogDoc(env, slug, new URL(req.url).searchParams.get("version"));
+    }
+
     return new Response("not found", { status: 404 });
   },
 } satisfies ExportedHandler<Env>;
@@ -65,6 +79,7 @@ async function handleReady(env: Env): Promise<Response> {
     catalog,
     private_repo_token: isSet(env.PRIVATE_REPO_TOKEN),
     oauth_client_secret: isSet(env.GITHUB_OAUTH_CLIENT_SECRET),
+    catalog_upsert_secret: isSet(env.CATALOG_UPSERT_SECRET),
   };
   const ok = Object.values(checks).every(Boolean);
 

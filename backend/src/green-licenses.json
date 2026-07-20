@@ -1,0 +1,6 @@
+{
+  "_source": "Canonical: research/content-license-rubric/RUBRIC.md 'Green allow-list'. Single source of truth for the green-license gate — BOTH backend/src/license.ts and backend/scripts/seed_catalog.py read THIS file. Do not hardcode the list in either. Eval: uppercase+trim the id; reject if it contains any excludeIfContains token; else green if it's in `exact` or matches any `patterns` regex.",
+  "exact": ["MIT", "ISC", "0BSD", "APACHE-2.0", "CC0-1.0", "CC0", "UNLICENSE"],
+  "patterns": ["^BSD-[23]-CLAUSE$", "^CC-BY(-[0-9])"],
+  "excludeIfContains": ["-SA", "-NC", "-ND"]
+}

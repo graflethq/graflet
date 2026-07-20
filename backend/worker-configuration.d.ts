@@ -17,6 +17,8 @@ declare namespace Cloudflare {
     // in wrangler.jsonc; present on env as plain strings at runtime.
     PRIVATE_REPO_TOKEN: string;
     GITHUB_OAUTH_CLIENT_SECRET: string;
+    // Shared secret the pipeline + poller present to POST /catalog/upsert (ticket 02).
+    CATALOG_UPSERT_SECRET: string;
   }
 }
 

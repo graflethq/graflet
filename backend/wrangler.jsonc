@@ -32,4 +32,5 @@
   // `wrangler secret put`, and locally via a gitignored .dev.vars file:
   //   PRIVATE_REPO_TOKEN            — reads the private KG repo (ticket 05)
   //   GITHUB_OAUTH_CLIENT_SECRET    — GitHub OAuth exchange, backend-only (ticket 03)
+  //   CATALOG_UPSERT_SECRET         — bearer for POST /catalog/upsert (ticket 02)
 }

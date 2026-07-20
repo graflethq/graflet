@@ -9,3 +9,6 @@ PRIVATE_REPO_TOKEN="ghp_replace_me"
 
 # GitHub OAuth App client secret — backend-only, never shipped in the CLI (ticket 03).
 GITHUB_OAUTH_CLIENT_SECRET="replace_me"
+
+# Shared secret the pipeline + poller present as a bearer to POST /catalog/upsert (ticket 02).
+CATALOG_UPSERT_SECRET="replace_me"
