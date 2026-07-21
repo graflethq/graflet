@@ -1,5 +1,5 @@
 {
-  "name": "graflet",
+  "name": "@graflet/cli",
   "version": "0.0.1",
   "description": "Precomputed knowledge graphs of versioned library docs, for AI agents. Docs as a graph, not snippets.",
   "keywords": [
@@ -23,6 +23,9 @@
   },
   "bin": {
     "graflet": "index.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "files": [
     "index.js",
