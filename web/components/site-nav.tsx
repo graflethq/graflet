@@ -4,8 +4,8 @@ import { LINKS } from "@/lib/links";
 /**
  * Sticky top nav (ticket 03): wordmark, section links, Star + Sign-in buttons.
  * Middle links collapse on mobile so the bar never overflows horizontally.
- * "Sign in with GitHub" is a placeholder anchor until ticket 06 wires the OAuth
- * exchange — no client secret ships here.
+ * "Sign in with GitHub" links to the /join signup flow (ticket 06); the OAuth
+ * exchange runs on the backend, so no client secret ships here.
  */
 export function SiteNav() {
   return (
@@ -25,9 +25,8 @@ export function SiteNav() {
           <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
             <a href={LINKS.github}>★ Star</a>
           </Button>
-          {/* ticket 06 replaces this with the backend OAuth start */}
           <Button asChild size="sm">
-            <a href="#signin">Sign in with GitHub</a>
+            <a href="/join">Sign in with GitHub</a>
           </Button>
         </div>
       </nav>

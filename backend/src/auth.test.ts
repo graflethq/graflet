@@ -157,3 +157,110 @@ describe("GitHub OAuth (ticket 03)", () => {
     expect(users?.n).toBe(0);
   });
 });
+
+const SITE = "https://site.test/join";
+const fragment = (location: string) => new URLSearchParams(new URL(location).hash.slice(1));
+
+// Drive a full WEBSITE sign-in (ticket 06): start (302 → GitHub) then callback
+// (302 → back to the site). Redirects are read manually so we can inspect Location.
+async function webSignIn(
+  identity: Identity,
+  consent: "yes" | "no",
+  returnTo = SITE,
+  emails?: { email: string; primary: boolean; verified: boolean }[],
+) {
+  stubGitHub(identity, emails);
+  const start = await SELF.fetch(
+    `${BASE}/auth/web/start?consent=${consent}&return_to=${encodeURIComponent(returnTo)}`,
+    { redirect: "manual" },
+  );
+  const state = new URL(start.headers.get("Location")!).searchParams.get("state")!;
+  const cb = await SELF.fetch(`${BASE}/auth/web/callback?code=abc123&state=${state}`, { redirect: "manual" });
+  return { start, cb, cbLocation: cb.headers.get("Location")! };
+}
+
+describe("website sign-in + opt-in (ticket 06 / ADR-0006)", () => {
+  beforeEach(async () => {
+    await env.CATALOG.exec("DELETE FROM tokens; DELETE FROM pending_auth; DELETE FROM users;");
+  });
+
+  it("start redirects to GitHub carrying only public params — no client secret", async () => {
+    const res = await SELF.fetch(`${BASE}/auth/web/start?consent=no&return_to=${encodeURIComponent(SITE)}`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(302);
+    const loc = res.headers.get("Location")!;
+    const url = new URL(loc);
+    expect(url.origin + url.pathname).toBe("https://github.com/login/oauth/authorize");
+    expect(url.searchParams.get("client_id")).toBe("test-oauth-client-id");
+    expect(url.searchParams.get("redirect_uri")).toBe(`${BASE}/auth/web/callback`);
+    // The secret is used only server-side at the exchange — it must not leak into
+    // the browser-visible authorize URL (ADR-0001, DevTools-verifiable).
+    expect(loc).not.toContain("test-oauth-client-secret");
+
+    // The opt-in answer + destination were stashed on the state row for the callback.
+    const pending = await env.CATALOG.prepare("SELECT return_to, consent FROM pending_auth WHERE state = ?")
+      .bind(url.searchParams.get("state"))
+      .first<{ return_to: string; consent: string }>();
+    expect(pending?.consent).toBe("no");
+    expect(pending?.return_to).toBe(SITE);
+  });
+
+  it("an unchecked opt-in records marketing_consent = no, stamped from the website — and mints no token", async () => {
+    const { cb, cbLocation } = await webSignIn({ id: 100, login: "octo", email: "octo@example.com" }, "no");
+
+    expect(cb.status).toBe(302);
+    expect(new URL(cbLocation).origin + new URL(cbLocation).pathname).toBe(SITE);
+    expect(fragment(cbLocation).get("login")).toBe("octo");
+    expect(fragment(cbLocation).get("consent")).toBe("no");
+
+    const user = (await env.CATALOG.prepare("SELECT * FROM users WHERE github_id = 100").first())! as Record<
+      string,
+      unknown
+    >;
+    expect(user.marketing_consent).toBe("no"); // unchecked → no, never treated as consent
+    expect(user.consent_at).toBeTruthy(); // stamped
+    expect(user.consent_source).toBe("website");
+
+    // The website flow needs no bearer token (it records consent server-side).
+    const tokens = await env.CATALOG.prepare("SELECT COUNT(*) AS n FROM tokens").first<{ n: number }>();
+    expect(tokens?.n).toBe(0);
+  });
+
+  it("a ticked opt-in records marketing_consent = yes", async () => {
+    const { cbLocation } = await webSignIn({ id: 101, login: "yes-please", email: "y@example.com" }, "yes");
+    expect(fragment(cbLocation).get("consent")).toBe("yes");
+
+    const user = (await env.CATALOG.prepare("SELECT * FROM users WHERE github_id = 101").first())! as Record<
+      string,
+      unknown
+    >;
+    expect(user.marketing_consent).toBe("yes");
+    expect(user.consent_source).toBe("website");
+  });
+
+  it("a returning user who already answered is never re-asked or overwritten", async () => {
+    await webSignIn({ id: 102, login: "back", email: "b@example.com" }, "no");
+    const first = (await env.CATALOG.prepare("SELECT consent_at FROM users WHERE github_id = 102").first())! as {
+      consent_at: string;
+    };
+
+    // Second signup ticks the box — the guard must keep the earlier 'no' answer.
+    const { cbLocation } = await webSignIn({ id: 102, login: "back", email: "b@example.com" }, "yes");
+    expect(fragment(cbLocation).get("consent")).toBe("no"); // reports the STORED value, so the site won't re-prompt
+
+    const user = (await env.CATALOG.prepare("SELECT * FROM users WHERE github_id = 102").first())! as Record<
+      string,
+      unknown
+    >;
+    expect(user.marketing_consent).toBe("no"); // unchanged
+    expect(user.consent_at).toBe(first.consent_at); // not re-stamped
+  });
+
+  it("an off-list return_to falls back to a safe on-list destination (no open redirect)", async () => {
+    const { cbLocation } = await webSignIn({ id: 103, login: "evil-target", email: "e@example.com" }, "yes", "https://evil.example/steal");
+    // The redirect back never lands on the attacker origin.
+    expect(new URL(cbLocation).origin).toBe("https://site.test");
+    expect(cbLocation).not.toContain("evil.example");
+  });
+});

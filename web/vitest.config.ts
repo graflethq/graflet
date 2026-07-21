@@ -10,6 +10,10 @@ export default defineConfig({
   esbuild: { jsx: "automatic" },
   test: {
     environment: "jsdom",
+    // A concrete origin (not the opaque about:blank default) so localStorage +
+    // window.location work — the signup panel reads both (ticket 06). Matches the
+    // dev origin the CORS allow-list + api.ts default already use.
+    environmentOptions: { jsdom: { url: "http://localhost:3000" } },
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     include: ["{app,lib,components}/**/*.test.{ts,tsx}"],

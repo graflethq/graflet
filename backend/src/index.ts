@@ -15,7 +15,7 @@
  *   POST /auth/cli/start   GET /auth/cli/callback   POST /auth/cli/poll
  */
 
-import { handleCliCallback, handleCliPoll, handleCliStart } from "./auth";
+import { handleCliCallback, handleCliPoll, handleCliStart, handleWebCallback, handleWebStart } from "./auth";
 import { handleKgDownload } from "./broker";
 import { handleCatalogDoc, handleCatalogList, handleCatalogUpsert } from "./catalog";
 import { corsPreflight, isCatalogReadPath, withCors } from "./cors";
@@ -46,6 +46,18 @@ export default {
     }
     if (pathname === "/auth/cli/poll" && req.method === "POST") {
       return handleCliPoll(env, req);
+    }
+
+    // Website sign-in (ticket 06). Same OAuth exchange as the CLI, but the browser
+    // navigates through these directly (no CORS) and is redirected back to the site;
+    // the opt-in answer rides through and is recorded server-side (ADR-0006).
+    // Deploy note: the GitHub OAuth app's callback URL must cover BOTH /auth/cli/
+    // and /auth/web/ — register the parent `…/auth/` so both redirect_uris match.
+    if (pathname === "/auth/web/start" && req.method === "GET") {
+      return handleWebStart(env, req);
+    }
+    if (pathname === "/auth/web/callback" && req.method === "GET") {
+      return handleWebCallback(env, req);
     }
 
     // CORS preflight for the two public read endpoints only (site slice, ticket 02).

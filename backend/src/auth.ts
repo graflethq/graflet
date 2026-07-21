@@ -19,6 +19,7 @@ import { randomToken, sha256Hex } from "./tokens";
 const PENDING_TTL_MS = 10 * 60 * 1000; // a browser sign-in has 10 minutes to complete
 
 const callbackUri = (req: Request) => new URL("/auth/cli/callback", req.url).toString();
+const webCallbackUri = (req: Request) => new URL("/auth/web/callback", req.url).toString();
 
 /** POST /auth/cli/start — begin a browser sign-in; hand the CLI the URL to open. */
 export async function handleCliStart(env: Env, req: Request): Promise<Response> {
@@ -110,26 +111,158 @@ export async function handleCliPoll(env: Env, req: Request): Promise<Response> {
 }
 
 /**
- * Upsert the user (keyed by github_id, so a repeat login updates instead of
- * duplicating) and mint a fresh bearer token, stored only as a hash. Returns
- * the raw token. Never touches marketing_consent — that stays 'unset'.
+ * GET /auth/web/start?consent=yes|no&return_to=<site-url> — begin a WEBSITE
+ * sign-in (ticket 06 / ADR-0001). A top-level browser navigation lands here, so
+ * no CORS is needed. We create a CSRF `state`, stash the opt-in answer + the site
+ * URL to return to on it, then 302 to GitHub. The client secret is never in play
+ * on this leg — it is used only server-side at the callback's code exchange.
+ */
+export async function handleWebStart(env: Env, req: Request): Promise<Response> {
+  const params = new URL(req.url).searchParams;
+  // Unchecked-by-default (ADR-0006): only an explicit "yes" is consent; anything
+  // else — including a missing param — is 'no'.
+  const consent = params.get("consent") === "yes" ? "yes" : "no";
+  const returnTo = siteReturnUrl(env, params.get("return_to"));
+
+  const state = randomToken();
+  const now = Date.now();
+  const nowIso = new Date(now).toISOString();
+  const expiresIso = new Date(now + PENDING_TTL_MS).toISOString();
+
+  await env.CATALOG.prepare("DELETE FROM pending_auth WHERE expires_at < ?").bind(nowIso).run();
+  await env.CATALOG.prepare(
+    "INSERT INTO pending_auth (state, created_at, expires_at, return_to, consent) VALUES (?, ?, ?, ?, ?)",
+  )
+    .bind(state, nowIso, expiresIso, returnTo, consent)
+    .run();
+
+  return Response.redirect(authorizeUrl(env.GITHUB_OAUTH_CLIENT_ID, webCallbackUri(req), state), 302);
+}
+
+/**
+ * GET /auth/web/callback — GitHub redirects the browser here. The backend does
+ * the code exchange (client secret, backend-only), upserts the user, records the
+ * website opt-in ONLY while consent is still 'unset' (never re-asked / never
+ * overwritten, ADR-0006), then redirects the browser back to the site with the
+ * login + resulting consent in the URL fragment (a fragment is never sent to a
+ * server / logged — no bearer token ever reaches the browser).
+ */
+export async function handleWebCallback(env: Env, req: Request): Promise<Response> {
+  const params = new URL(req.url).searchParams;
+  const state = params.get("state");
+  const code = params.get("code");
+  const denied = params.get("error");
+
+  if (!state) return page("Sign-in link is missing its state — start again from the site.");
+  const pending = await env.CATALOG.prepare(
+    "SELECT expires_at, return_to, consent FROM pending_auth WHERE state = ?",
+  )
+    .bind(state)
+    .first<{ expires_at: string; return_to: string | null; consent: string | null }>();
+  // A web row always has return_to; its absence means this state belongs to the
+  // CLI flow (or is unknown) — reject either way.
+  if (!pending || !pending.return_to || Date.parse(pending.expires_at) < Date.now()) {
+    return page("This sign-in link has expired or was already used. Start again from the site.");
+  }
+  const returnTo = pending.return_to;
+
+  if (denied || !code) {
+    await deletePending(env, state);
+    return redirectBack(returnTo, { error: denied ?? "no_code" });
+  }
+
+  try {
+    const accessToken = await exchangeCode(
+      env.GITHUB_OAUTH_CLIENT_ID,
+      env.GITHUB_OAUTH_CLIENT_SECRET,
+      code,
+      webCallbackUri(req),
+    );
+    const id = await fetchIdentity(accessToken);
+    await upsertUser(env, id.github_id, id.email);
+
+    const answer = pending.consent === "yes" ? "yes" : "no";
+    // Guarded to 'unset': the website opt-in is recorded once and never overwrites
+    // an answer already given here or in the CLI (ADR-0006). consent_source stamps
+    // that this answer came from the website.
+    await env.CATALOG.prepare(
+      `UPDATE users SET marketing_consent = ?, consent_at = ?, consent_source = 'website'
+        WHERE github_id = ? AND marketing_consent = 'unset'`,
+    )
+      .bind(answer, new Date().toISOString(), id.github_id)
+      .run();
+    // Report the STORED value back (a returning user keeps their prior answer), so
+    // the site never re-prompts a user who already answered.
+    const stored = await env.CATALOG.prepare("SELECT marketing_consent FROM users WHERE github_id = ?")
+      .bind(id.github_id)
+      .first<{ marketing_consent: string }>();
+
+    await deletePending(env, state);
+    return redirectBack(returnTo, { login: id.login, consent: stored?.marketing_consent ?? answer });
+  } catch (e) {
+    // Parity with the CLI callback: keep server-side observability of exchange
+    // failures. The fragment can't carry detail, so log it (observability is on).
+    console.error("web sign-in failed:", e instanceof Error ? e.message : e);
+    await deletePending(env, state);
+    return redirectBack(returnTo, { error: "signin_failed" });
+  }
+}
+
+/**
+ * Resolve the site URL to return the browser to, guarding against open redirect:
+ * a `return_to` is honored only when its origin is on the SITE_ORIGINS allow-list.
+ * Anything else (missing, off-list, unparseable) falls back to the first allowed
+ * origin's /join — always a safe, on-list destination, never attacker-controlled.
+ */
+function siteReturnUrl(env: Env, raw: string | null): string {
+  const allow = (env.SITE_ORIGINS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (raw) {
+    try {
+      if (allow.includes(new URL(raw).origin)) return raw;
+    } catch {
+      // unparseable — fall through to the safe default
+    }
+  }
+  return allow[0] ? `${allow[0]}/join` : "/join";
+}
+
+/** 302 back to the site, carrying non-secret result data in the URL fragment. */
+function redirectBack(returnTo: string, fragment: Record<string, string>): Response {
+  return Response.redirect(`${returnTo}#${new URLSearchParams(fragment)}`, 302);
+}
+
+/**
+ * Upsert the user keyed by github_id, so a repeat login updates instead of
+ * duplicating. Never touches marketing_consent — that stays 'unset' until a
+ * deliberate opt-in (website signup or CLI) sets it (ADR-0006). A NULL email
+ * never clobbers a stored one (the users row is the core asset).
+ */
+export async function upsertUser(env: Env, githubId: number, email: string | null): Promise<void> {
+  await env.CATALOG.prepare(
+    `INSERT INTO users (github_id, email, created_at) VALUES (?, ?, ?)
+     ON CONFLICT(github_id) DO UPDATE SET email = COALESCE(excluded.email, users.email)`,
+  )
+    .bind(githubId, email, new Date().toISOString())
+    .run();
+}
+
+/**
+ * Upsert the user (above) and mint a fresh bearer token, stored only as a hash.
+ * Returns the raw token. Used by the CLI flow; the website flow needs no token
+ * (it records consent server-side and only redirects the browser back).
  */
 export async function upsertUserAndMintToken(
   env: Env,
   githubId: number,
   email: string | null,
 ): Promise<string> {
-  const nowIso = new Date().toISOString();
-  await env.CATALOG.prepare(
-    `INSERT INTO users (github_id, email, created_at) VALUES (?, ?, ?)
-     ON CONFLICT(github_id) DO UPDATE SET email = COALESCE(excluded.email, users.email)`,
-  )
-    .bind(githubId, email, nowIso)
-    .run();
-
+  await upsertUser(env, githubId, email);
   const raw = randomToken();
   await env.CATALOG.prepare("INSERT INTO tokens (token_hash, github_id, created_at) VALUES (?, ?, ?)")
-    .bind(await sha256Hex(raw), githubId, nowIso)
+    .bind(await sha256Hex(raw), githubId, new Date().toISOString())
     .run();
   return raw;
 }
