@@ -17,12 +17,12 @@ Work the **frontier** with `/implement`, one ticket, fresh context each. Blocker
 04 Catalog table (view-model+live)    ← 01 ✅, 02 ✅  ✅ done 2026-07-20
 05 Landing body + footer              ← 04 ✅         ✅ done 2026-07-21
 06 GitHub signup + opt-in             ← 01 ✅, 02 ✅   ✅ done 2026-07-21
-07 Legal pages                        ← 04 ✅         [frontier]
+07 Legal pages                        ← 04 ✅         ✅ done 2026-07-21
 08 (optional) Catalog size/date ext   ← 02   → fills 04's Graph-size + Updated columns
 ```
 
 ## Frontier now
-- **07** (legal pages) — unblocked; the /join page already links `/privacy` + `/terms`, which 07 creates. **08** optional (fills 04's `—` columns).
+- **08** (optional) — fills 04's `—` Graph-size + Updated columns from the pipeline build record. Everything else shipped.
 
 ## Order of value
 01 → 02 → 03 → 04 → 05, then 06 (signup), 07 (legal), 08 (optional column data).

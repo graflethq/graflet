@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,13 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CopyButton } from "@/components/copy-button";
-import { fetchCatalog } from "@/lib/api";
-import { buildCatalogRows, type CatalogDoc, type CatalogTab } from "@/lib/catalog";
-
-type Load =
-  | { status: "loading" }
-  | { status: "error" }
-  | { status: "ready"; docs: CatalogDoc[] };
+import { useCatalog } from "@/lib/use-catalog";
+import { buildCatalogRows, type CatalogTab } from "@/lib/catalog";
 
 const TABS: { key: CatalogTab; label: string }[] = [
   { key: "popular", label: "Popular" },
@@ -34,19 +29,9 @@ const TABS: { key: CatalogTab; label: string }[] = [
  * the pure view-model (`buildCatalogRows`); missing metrics show "—" (ADR-0006).
  */
 export function CatalogSection() {
-  const [load, setLoad] = useState<Load>({ status: "loading" });
+  const load = useCatalog();
   const [tab, setTab] = useState<CatalogTab>("popular");
   const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    const ac = new AbortController();
-    fetchCatalog(ac.signal)
-      .then((docs) => setLoad({ status: "ready", docs }))
-      .catch(() => {
-        if (!ac.signal.aborted) setLoad({ status: "error" });
-      });
-    return () => ac.abort();
-  }, []);
 
   const rows = useMemo(
     () => (load.status === "ready" ? buildCatalogRows(load.docs, tab, query) : []),

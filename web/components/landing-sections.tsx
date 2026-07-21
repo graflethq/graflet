@@ -117,10 +117,13 @@ export function SiteFooter() {
         <span>
           docs<span className="text-primary">-</span>kg · Free &amp; open source · MIT
         </span>
-        <div className="flex items-center gap-6">
-          <a href="#catalog" className="hover:text-foreground">Catalog</a>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <a href="/#catalog" className="hover:text-foreground">Catalog</a>
           <a href={LINKS.docs} className="hover:text-foreground">Docs</a>
           <a href={LINKS.github} className="hover:text-foreground">GitHub</a>
+          <a href="/privacy" className="hover:text-foreground">Privacy</a>
+          <a href="/terms" className="hover:text-foreground">Terms</a>
+          <a href="/attribution" className="hover:text-foreground">Attribution</a>
         </div>
       </div>
     </footer>

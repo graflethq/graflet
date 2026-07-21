@@ -75,8 +75,9 @@ export function buildCatalogRows(docs: CatalogDoc[], tab: CatalogTab, query = ""
     }));
 }
 
-/** github URL → "owner/repo" for the row's dim sub-label. */
-function repoSlug(url: string | null | undefined): string {
+/** github URL → "owner/repo" for the row's dim sub-label. Shared with the
+ *  attribution page (ticket 07), which lists the same upstream repos. */
+export function repoSlug(url: string | null | undefined): string {
   if (!url) return "";
   return url
     .replace(/^https?:\/\//i, "")

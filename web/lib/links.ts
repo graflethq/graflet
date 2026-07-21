@@ -6,6 +6,7 @@
 export const LINKS = {
   github: "https://github.com/docs-kg/docs-kg",
   docs: "https://github.com/docs-kg/docs-kg#readme",
+  license: "https://github.com/docs-kg/docs-kg/blob/main/LICENSE",
   sponsors: "https://github.com/sponsors/docs-kg",
   buyMeACoffee: "https://buymeacoffee.com/docs-kg",
 } as const;
