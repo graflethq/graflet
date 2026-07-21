@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "graflet"
+version = "0.0.1"
+description = "Precomputed knowledge graphs of versioned library docs, for AI agents. Docs as a graph, not snippets."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "MD. MOHIBUR RAHMAN", email = "mrpmohiburrahman@gmail.com" }]
+keywords = ["knowledge-graph", "docs", "documentation", "llm", "mcp", "rag", "graphrag", "graphify"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/mrpmohiburrahman/graflet"
+Repository = "https://github.com/mrpmohiburrahman/graflet"
+
+[project.scripts]
+graflet = "graflet:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/graflet"]

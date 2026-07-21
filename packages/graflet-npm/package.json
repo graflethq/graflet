@@ -1,0 +1,34 @@
+{
+  "name": "graflet",
+  "version": "0.0.1",
+  "description": "Precomputed knowledge graphs of versioned library docs, for AI agents. Docs as a graph, not snippets.",
+  "keywords": [
+    "knowledge-graph",
+    "docs",
+    "documentation",
+    "llm",
+    "mcp",
+    "ai",
+    "rag",
+    "graphrag",
+    "context",
+    "graphify"
+  ],
+  "license": "MIT",
+  "author": "MD. MOHIBUR RAHMAN <mrpmohiburrahman@gmail.com>",
+  "homepage": "https://github.com/mrpmohiburrahman/graflet",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrpmohiburrahman/graflet.git"
+  },
+  "bin": {
+    "graflet": "index.js"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
