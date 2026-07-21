@@ -64,9 +64,12 @@ The availability table above was wrong about npm. Publishing surfaced a hard blo
   `@graflethq`). The installed command is still **`graflet`** (set via `bin`), so only the install string changes:
   `npx @graflethq/cli` (was `npx graflet`). ADR line "Brand == npm pkg == `graflet`" is amended: **PyPI == `graflet`,
   npm == `@graflethq/cli`**, command == `graflet` on both.
-- **Distribution is live + automated.** Repo: https://github.com/mrpmohiburrahman/graflet (public). npm publishing runs
-  from CI via **OpenID Connect trusted publishing** (no tokens): `.github/workflows/publish.yml` fires on `v*` tags and
-  `npm publish`es with provenance. Release ritual, forever: bump `packages/graflet-npm/package.json` version → commit →
-  `git tag vX.Y.Z && git push --tags`. Verified with `@graflethq/cli@0.0.2` (published by CI, signed). npm 2FA on this
-  account is a **security key (WebAuthn) only** — npm dropped TOTP, so any *manual* npm publish needs a browser + key tap;
-  CI (OIDC) needs neither.
+- **Distribution is live + automated.** Repo: https://github.com/graflethq/graflet (public), owned by the **`graflethq`
+  GitHub org** (created 2026-07-21 to consolidate the brand: GitHub org + npm scope + X handle all = `graflethq`; the
+  bare `graflet` GitHub org was dormant/unavailable). Both npm **and PyPI** publish from CI via **OpenID Connect trusted
+  publishing** (no tokens): `.github/workflows/publish.yml` fires on `v*` tags — an `npm` job (`@graflethq/cli`, provenance)
+  and a `pypi` job (`graflet`, via `pypa/gh-action-pypi-publish`). Both trusted-publisher configs point at
+  `graflethq/graflet` + `publish.yml`. Release ritual, forever: bump **both** `packages/graflet-npm/package.json` and
+  `packages/graflet-pypi/pyproject.toml` to the same version → commit → `git tag vX.Y.Z && git push origin main --tags`.
+  npm 2FA on this account is a **security key (WebAuthn) only** — npm dropped TOTP, so any *manual* npm publish needs a
+  browser + key tap; CI (OIDC) needs neither.

@@ -16,10 +16,10 @@
   ],
   "license": "MIT",
   "author": "MD. MOHIBUR RAHMAN <mrpmohiburrahman@gmail.com>",
-  "homepage": "https://github.com/mrpmohiburrahman/graflet",
+  "homepage": "https://github.com/graflethq/graflet",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mrpmohiburrahman/graflet.git"
+    "url": "git+https://github.com/graflethq/graflet.git"
   },
   "bin": {
     "graflet": "index.js"

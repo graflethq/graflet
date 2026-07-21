@@ -4,7 +4,7 @@ __version__ = "0.0.1"
 
 
 def main() -> None:
-    print("graflet — coming soon. Docs as a graph, not snippets. https://github.com/mrpmohiburrahman/graflet")
+    print("graflet — coming soon. Docs as a graph, not snippets. https://github.com/graflethq/graflet")
 
 
 if __name__ == "__main__":

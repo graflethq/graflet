@@ -18,8 +18,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mrpmohiburrahman/graflet"
-Repository = "https://github.com/mrpmohiburrahman/graflet"
+Homepage = "https://github.com/graflethq/graflet"
+Repository = "https://github.com/graflethq/graflet"
 
 [project.scripts]
 graflet = "graflet:main"
