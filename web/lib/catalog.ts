@@ -23,7 +23,7 @@ export interface CatalogDoc {
   repo_url: string | null;
   graphscore: number | null;
   /** Savings metric #4 — "usage token savings", a median % reduction (spec line 74;
-   *  research/savings-metrics/REQUIREMENTS.md). NOT yet computed (CONTEXT.md), so it
+   *  kg-product-research/savings-metrics/REQUIREMENTS.md). NOT yet computed (CONTEXT.md), so it
    *  is absent from the API today → the Tokens saved column shows "—" until it lands. */
   usage_token_reduction_pct?: number | null;
   nodes?: number | null;

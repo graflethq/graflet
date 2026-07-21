@@ -25,7 +25,7 @@ export function buildStatTiles(docs: CatalogDoc[]): StatTile[] {
   return [
     {
       // hero_savings = build cost saved in USD (savings metric #1; the terminal's
-      // "saved ~$0.42 in build cost"). research/savings-metrics/REQUIREMENTS.md.
+      // "saved ~$0.42 in build cost"). kg-product-research/savings-metrics/REQUIREMENTS.md.
       value: rep?.hero_savings == null ? DASH : fmtUsd(rep.hero_savings),
       label: "Build cost saved",
       sub: "vs building the graph yourself",

@@ -1,3 +1,9 @@
 [submodule "kg-pipeline"]
 	path = kg-pipeline
 	url = git@github.com:mrpmohiburrahman/kg-pipeline.git
+[submodule "kg-product-research"]
+	path = kg-product-research
+	url = git@github.com:mrpmohiburrahman/kg-product-research.git
+[submodule "data"]
+	path = data
+	url = git@github.com:mrpmohiburrahman/kg-data.git

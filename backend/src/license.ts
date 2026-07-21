@@ -1,5 +1,5 @@
 /**
- * The green-license gate (research/content-license-rubric/RUBRIC.md).
+ * The green-license gate (kg-product-research/content-license-rubric/RUBRIC.md).
  *
  * A doc's KG may only be served when its content license is on the green
  * allow-list — permissive OSS or CC-BY (NOT share-alike/non-commercial/no-derivs).
