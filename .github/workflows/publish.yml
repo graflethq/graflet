@@ -1,15 +1,15 @@
-name: Publish npm
+name: Publish
 
 on:
   push:
     tags: ['v*']
 
 permissions:
-  id-token: write   # lets Actions mint the OIDC token for npm trusted publishing
+  id-token: write   # mint the OIDC token used by both npm and PyPI trusted publishing
   contents: read
 
 jobs:
-  publish:
+  npm:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,3 +20,17 @@ jobs:
       - run: npm install -g npm@latest   # trusted publishing needs npm >= 11.5.1
       - run: npm publish
         working-directory: packages/graflet-npm
+
+  pypi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install build
+      - run: python -m build
+        working-directory: packages/graflet-pypi
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/graflet-pypi/dist/
