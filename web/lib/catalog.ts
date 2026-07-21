@@ -3,11 +3,12 @@ import { round1 } from "./utils";
 
 /**
  * The catalog view-model — the ONE seam (spec Testing Decisions). Pure map from
- * (catalog API response, active tab, search query) → the exact rendered rows:
+ * (catalog API response, active tab, search query, now) → the exact rendered rows:
  * sorted, filtered, with `—` for every metric the data lacks (ADR-0006 honesty —
- * never a fabricated number) and the correct install command. The table is a
- * thin renderer over this; all sort/filter/format logic lives here so it is unit
- * tested against fixture JSON, not against markup.
+ * never a fabricated number) and the correct install command. `now` is an injected
+ * clock (default `Date.now()`) so the "Updated" freshness labels are deterministic
+ * under test. The table is a thin renderer over this; all sort/filter/format logic
+ * lives here so it is unit tested against fixture JSON, not against markup.
  */
 
 /** A doc as GET /catalog returns it. graphscore + repo_url come from the list;
@@ -48,7 +49,7 @@ export type CatalogTab = "popular" | "smallest" | "recent";
 
 const DASH = "—";
 
-export function buildCatalogRows(docs: CatalogDoc[], tab: CatalogTab, query = ""): CatalogRow[] {
+export function buildCatalogRows(docs: CatalogDoc[], tab: CatalogTab, query = "", now = Date.now()): CatalogRow[] {
   const q = query.trim().toLowerCase();
 
   const sorted = docs.slice().sort((a, b) => {
@@ -68,8 +69,7 @@ export function buildCatalogRows(docs: CatalogDoc[], tab: CatalogTab, query = ""
       // Metric #4 is a "typical" % reduction — show "~N%", never a fabricated number.
       tokens: d.usage_token_reduction_pct == null ? DASH : `~${Math.round(d.usage_token_reduction_pct)}%`,
       size: d.nodes == null || d.edges == null ? DASH : `${compact(d.nodes)} nodes · ${compact(d.edges)} edges`,
-      // Passthrough; ticket 08 lands built_at and formats it (design shows "2h ago").
-      updated: d.built_at ?? DASH,
+      updated: relativeTime(d.built_at, now),
       command: buildInstallCommand(d.slug),
       key: `cat-${d.slug}`,
     }));
@@ -84,6 +84,24 @@ export function repoSlug(url: string | null | undefined): string {
     .replace(/^(www\.)?github\.com\//i, "")
     .replace(/\.git$/i, "")
     .replace(/\/$/, "");
+}
+
+/** ISO build time → freshness label the design shows ("3h ago", "2d ago", "1w ago").
+ *  Null/unparseable → "—" (honesty rule). A future stamp clamps to "just now". */
+export function relativeTime(iso: string | null | undefined, now: number): string {
+  if (!iso) return DASH;
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) return DASH;
+  const mins = Math.floor((now - then) / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
 }
 
 /** 840 → "840", 2100 → "2.1k", 3_900_000 → "3.9M". */

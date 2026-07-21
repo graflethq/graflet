@@ -24,7 +24,8 @@ import { sha256Hex } from "./tokens";
 export async function handleCatalogList(env: Env): Promise<Response> {
   const { results } = await env.CATALOG.prepare(
     `SELECT d.slug, d.name, d.repo_url, d.license_id AS license, d.popularity_rank,
-            v.version_label AS latest_version, v.graphscore, v.hero_savings
+            v.version_label AS latest_version, v.graphscore, v.hero_savings,
+            v.nodes, v.edges, v.built_at
        FROM docs d
        JOIN doc_versions v ON v.slug = d.slug AND v.is_latest = 1 AND v.status = 'ready'
       ORDER BY d.popularity_rank ASC`,
@@ -37,6 +38,9 @@ export async function handleCatalogList(env: Env): Promise<Response> {
     latest_version: string;
     graphscore: number | null;
     hero_savings: number | null;
+    nodes: number | null;
+    edges: number | null;
+    built_at: string | null;
   }>();
   return Response.json({ docs: results });
 }
@@ -51,7 +55,8 @@ export async function handleCatalogDoc(env: Env, slug: string, wantVersion: stri
   if (!doc) return new Response("not found", { status: 404 });
 
   const { results: rows } = await env.CATALOG.prepare(
-    `SELECT version_label, is_latest, status, sha, docs_path, kg_ref, graphscore, hero_savings, savings_json
+    `SELECT version_label, is_latest, status, sha, docs_path, kg_ref, graphscore, hero_savings, savings_json,
+            nodes, edges, built_at
        FROM doc_versions WHERE slug = ?
       ORDER BY is_latest DESC, version_label DESC`,
   )
@@ -66,6 +71,9 @@ export async function handleCatalogDoc(env: Env, slug: string, wantVersion: stri
       graphscore: number | null;
       hero_savings: number | null;
       savings_json: string | null;
+      nodes: number | null;
+      edges: number | null;
+      built_at: string | null;
     }>();
 
   const versions = rows.map((r) => ({
@@ -74,6 +82,9 @@ export async function handleCatalogDoc(env: Env, slug: string, wantVersion: stri
     status: r.status,
     graphscore: r.graphscore,
     hero_savings: r.hero_savings,
+    nodes: r.nodes,
+    edges: r.edges,
+    built_at: r.built_at,
     savings: parseSavings(r.savings_json),
   }));
 
@@ -189,13 +200,14 @@ export async function handleCatalogUpsert(env: Env, req: Request): Promise<Respo
   stmts.push(
     env.CATALOG.prepare(
       `INSERT INTO doc_versions
-         (slug, version_label, is_latest, status, sha, docs_path, kg_ref, license_id, savings_json, graphscore, hero_savings, needs_human)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         (slug, version_label, is_latest, status, sha, docs_path, kg_ref, license_id, savings_json, graphscore, hero_savings, nodes, edges, built_at, needs_human)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(slug, version_label) DO UPDATE SET
          is_latest = excluded.is_latest, status = excluded.status,
          sha = excluded.sha, docs_path = excluded.docs_path, kg_ref = excluded.kg_ref,
          license_id = excluded.license_id, savings_json = excluded.savings_json,
          graphscore = excluded.graphscore, hero_savings = excluded.hero_savings,
+         nodes = excluded.nodes, edges = excluded.edges, built_at = excluded.built_at,
          needs_human = excluded.needs_human`,
     ).bind(
       slug,
@@ -209,6 +221,9 @@ export async function handleCatalogUpsert(env: Env, req: Request): Promise<Respo
       body.savings != null ? JSON.stringify(body.savings) : null,
       num(body.graphscore),
       num(body.hero_savings),
+      num(body.nodes),
+      num(body.edges),
+      str(body.built_at) || null,
       body.needs_human ? 1 : 0,
     ),
   );
@@ -243,6 +258,9 @@ type UpsertBody = {
   savings?: unknown;
   graphscore?: unknown;
   hero_savings?: unknown;
+  nodes?: unknown;
+  edges?: unknown;
+  built_at?: unknown;
   needs_human?: unknown;
 };
 

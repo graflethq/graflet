@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildCatalogRows, type CatalogDoc } from "./catalog";
+import { buildCatalogRows, relativeTime, type CatalogDoc } from "./catalog";
 
 // Fixture catalog JSON — the shape GET /catalog returns. `vitest` deliberately
 // lacks graphscore / usage_token_reduction_pct / nodes / built_at to exercise the
@@ -107,5 +107,29 @@ describe("buildCatalogRows — present metrics render real values", () => {
     for (const row of buildCatalogRows(DOCS, "popular")) {
       expect(row.command).toBe(`npx docs-kg ${row.slug}`);
     }
+  });
+
+  it("formats built_at as a freshness label relative to `now`", () => {
+    // react built_at = 2026-07-20T10:00:00Z; fix `now` 3h later for a stable string.
+    const now = Date.parse("2026-07-20T13:00:00Z");
+    const react = buildCatalogRows(DOCS, "popular", "", now).find((r) => r.slug === "react")!;
+    expect(react.updated).toBe("3h ago");
+  });
+});
+
+describe("relativeTime", () => {
+  const now = Date.parse("2026-07-20T12:00:00Z");
+  it("scales the unit m → h → d → w → mo → y and floors", () => {
+    expect(relativeTime("2026-07-20T11:30:00Z", now)).toBe("30m ago");
+    expect(relativeTime("2026-07-20T09:00:00Z", now)).toBe("3h ago");
+    expect(relativeTime("2026-07-18T12:00:00Z", now)).toBe("2d ago");
+    expect(relativeTime("2026-07-06T12:00:00Z", now)).toBe("2w ago");
+    expect(relativeTime("2026-05-01T12:00:00Z", now)).toBe("2mo ago");
+    expect(relativeTime("2024-07-20T12:00:00Z", now)).toBe("2y ago");
+  });
+  it("null/unparseable → —, future → just now", () => {
+    expect(relativeTime(null, now)).toBe("—");
+    expect(relativeTime("not-a-date", now)).toBe("—");
+    expect(relativeTime("2026-07-20T12:05:00Z", now)).toBe("just now");
   });
 });

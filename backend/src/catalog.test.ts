@@ -32,6 +32,9 @@ function readyDoc(over: UpsertBody = {}): UpsertBody {
     license: "MIT",
     graphscore: 87.5,
     hero_savings: 123456,
+    nodes: 1200,
+    edges: 3900,
+    built_at: "2026-07-20T10:00:00Z",
     ...over,
   };
 }
@@ -64,6 +67,11 @@ describe("catalog API (ticket 02)", () => {
       latest_version: "16",
       graphscore: 87.5,
       hero_savings: 123456,
+      // Ticket 08 — the list carries graph size + build time so the table's
+      // "Graph size" and "Updated" columns render without a per-row detail fetch.
+      nodes: 1200,
+      edges: 3900,
+      built_at: "2026-07-20T10:00:00Z",
     });
   });
 
@@ -146,6 +154,25 @@ describe("catalog API (ticket 02)", () => {
     // ...and its detail resolve is refused (not ready).
     const body = (await (await SELF.fetch("https://backend.test/catalog/prov")).json()) as any;
     expect(body.resolve).toBeNull();
+  });
+
+  it("upsert stores per-version {nodes, edges, built_at}, exposed on doc detail (ticket 08)", async () => {
+    await upsert(readyDoc());
+    const body = (await (await SELF.fetch("https://backend.test/catalog/next.js")).json()) as any;
+    expect(body.versions[0]).toMatchObject({
+      version_label: "16",
+      nodes: 1200,
+      edges: 3900,
+      built_at: "2026-07-20T10:00:00Z",
+    });
+  });
+
+  it("graph metrics are nullable — a build that omits them reads back null, not 0 (ticket 08)", async () => {
+    await upsert(readyDoc({ slug: "nometrics", name: "NoMetrics", repo_url: "https://github.com/x/nm", kg_ref: "nm", nodes: undefined, edges: undefined, built_at: undefined }));
+    const { docs } = (await (await SELF.fetch("https://backend.test/catalog")).json()) as { docs: any[] };
+    expect(docs.find((d) => d.slug === "nometrics")).toMatchObject({ nodes: null, edges: null, built_at: null });
+    const body = (await (await SELF.fetch("https://backend.test/catalog/nometrics")).json()) as any;
+    expect(body.versions[0]).toMatchObject({ nodes: null, edges: null, built_at: null });
   });
 
   it("a new version appends a row, flips is_latest, and the old frozen version stays resolvable unchanged", async () => {
