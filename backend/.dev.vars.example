@@ -1,20 +1,10 @@
-# .dev.vars.example — committed template. Copy to .dev.vars and fill real values:
+# .dev.vars.example — committed template. Copy to .dev.vars and fill real values.
 #   cp .dev.vars.example .dev.vars
-# .dev.vars is gitignored; `wrangler dev` auto-loads it. Never commit real values.
-# Tests do NOT use this file — they inject test values in vitest.config.ts.
-# Format: dotenv KEY=value (quotes optional but safe for tokens).
+# .dev.vars is gitignored; wrangler dev auto-loads it. Never commit real values.
+# Format is dotenv (KEY=value); quotes optional but safe for tokens.
 
-# GitHub token that can read the PRIVATE KG repo (download broker, ticket 05).
+# GitHub personal-access / installation token used to read the private repo.
 PRIVATE_REPO_TOKEN="ghp_replace_me"
 
-# GitHub OAuth App client secret — backend-only, never shipped in the CLI (ticket 03).
+# GitHub OAuth App client secret (paired with your OAuth client ID).
 GITHUB_OAUTH_CLIENT_SECRET="replace_me"
-
-# Shared secret the pipeline + poller present as a bearer to POST /catalog/upsert (ticket 02).
-CATALOG_UPSERT_SECRET="replace_me"
-
-# Resend API key — sends watcher notification email (ticket 08).
-RESEND_API_KEY="re_replace_me"
-
-# Signing secret for one-click unsubscribe links (ticket 08). Any long random string.
-UNSUBSCRIBE_SECRET="replace_me"
