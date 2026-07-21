@@ -3,3 +3,6 @@
 _audio/
 
 # Big DB blobs live in the `kg-data/` submodule (private, Git LFS), never here
+
+# Session handoff notes — local only, never committed (public repo)
+handoffs/
