@@ -132,4 +132,14 @@ describe("relativeTime", () => {
     expect(relativeTime("not-a-date", now)).toBe("—");
     expect(relativeTime("2026-07-20T12:05:00Z", now)).toBe("just now");
   });
+
+  it("reads the pipeline's zone-less UTC stamp as UTC, not local", () => {
+    // kg-pipeline state.now() → "%Y-%m-%dT%H:%M:%S.%f" (UTC, no Z). Must match the
+    // Z-tagged instant, i.e. NOT be shifted by the runner's local offset.
+    expect(relativeTime("2026-07-20T09:00:00.123456", now)).toBe(
+      relativeTime("2026-07-20T09:00:00.123456Z", now),
+    );
+    // zone-less, no sub-second: exactly 3h before `now`, not skewed to local.
+    expect(relativeTime("2026-07-20T09:00:00", now)).toBe("3h ago");
+  });
 });

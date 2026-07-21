@@ -87,10 +87,14 @@ export function repoSlug(url: string | null | undefined): string {
 }
 
 /** ISO build time → freshness label the design shows ("3h ago", "2d ago", "1w ago").
- *  Null/unparseable → "—" (honesty rule). A future stamp clamps to "just now". */
+ *  Null/unparseable → "—" (honesty rule). A future stamp clamps to "just now".
+ *  The pipeline stores built_at as UTC with no zone marker (kg-pipeline state.now(),
+ *  "%Y-%m-%dT%H:%M:%S.%f"). `Date.parse` reads an unmarked stamp as LOCAL, which would
+ *  skew the label by the viewer's offset — so treat a zone-less stamp as the UTC it is. */
 export function relativeTime(iso: string | null | undefined, now: number): string {
   if (!iso) return DASH;
-  const then = Date.parse(iso);
+  const hasZone = /[Zz]|[+-]\d{2}:?\d{2}$/.test(iso);
+  const then = Date.parse(hasZone ? iso : `${iso}Z`);
   if (Number.isNaN(then)) return DASH;
   const mins = Math.floor((now - then) / 60_000);
   if (mins < 1) return "just now";
