@@ -2,4 +2,4 @@
 *.wav
 _audio/
 
-# Big DB blobs live in the `data/` submodule (private kg-data, Git LFS), never here
+# Big DB blobs live in the `kg-data/` submodule (private, Git LFS), never here

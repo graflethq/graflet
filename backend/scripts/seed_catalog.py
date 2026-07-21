@@ -3,7 +3,7 @@
 
 Joins the two authoritative sources and emits idempotent INSERT ... ON CONFLICT SQL:
   * kg-pipeline/manifest.jsonl            — the `done` docs (status, license, popularity)
-  * data/programming-docs.db              — repo_url, version_label, is_latest, needs_human
+  * kg-data/programming-docs.db           — repo_url, version_label, is_latest, needs_human
       (programming_docs table, keyed by org/repo)
 
 The immutable pin ({sha, docs_path, kg_ref}) and the savings numbers are NOT seeded —
@@ -23,7 +23,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 MANIFEST = REPO / "kg-pipeline" / "manifest.jsonl"
-DB = REPO / "data" / "programming-docs.db"
+DB = REPO / "kg-data" / "programming-docs.db"
 OUT = REPO / "backend" / "catalog-seed.sql"
 # Single source of truth for the green-license gate, shared with backend/src/license.ts.
 GREEN = json.loads((REPO / "backend" / "src" / "green-licenses.json").read_text())

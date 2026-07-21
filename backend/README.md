@@ -43,7 +43,7 @@ immutable pin `{sha, docs_path, kg_ref}` is `NULL` until a build records it via
 ### Seed the catalog (bootstrap)
 
 `scripts/seed_catalog.py` joins `kg-pipeline/manifest.jsonl` (the `done` docs) with
-`data/programming-docs.db` (repo_url, version_label, needs_human)
+`kg-data/programming-docs.db` (repo_url, version_label, needs_human)
 and writes an idempotent `catalog-seed.sql`. Only green-licensed docs seed `ready`;
 `needs_human`/non-green are held `provisional` and never served. Re-running never
 clobbers a pin/savings a later upsert filled in.
