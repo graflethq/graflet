@@ -53,3 +53,20 @@ the name signals both real graph structure and honest kinship to graphify (which
 - Brand direction: lit-triad mark (small induced subgraph highlighted inside a dim larger graph), lowercase
   `graf`·`let` wordmark color-split, palette Graphite Ink `#14161D` + Filament Amber `#F6A821` (only warm play in a
   cool-toned category — context7 emerald, graphify blue/violet).
+
+## Update (2026-07-21) — publishing reality: npm forces a scope
+The availability table above was wrong about npm. Publishing surfaced a hard block:
+- **npm rejects the bare name `graflet`** — its typosquat filter flags it as *"too similar to existing package `leaflet`"*
+  (403 on publish). The same filter **also blocks the org/scope `@graflet`** (*"organization name 'graflet' is not
+  available"*). This block applies to everyone, so `graflet`/`@graflet` are unusable-but-unsquattable on npm.
+- **PyPI has no such filter** — `graflet` published unscoped and is ours: https://pypi.org/project/graflet/
+- **npm resolution:** package is scoped **`@graflethq/cli`** (new npm org `graflethq`, matching the planned X handle
+  `@graflethq`). The installed command is still **`graflet`** (set via `bin`), so only the install string changes:
+  `npx @graflethq/cli` (was `npx graflet`). ADR line "Brand == npm pkg == `graflet`" is amended: **PyPI == `graflet`,
+  npm == `@graflethq/cli`**, command == `graflet` on both.
+- **Distribution is live + automated.** Repo: https://github.com/mrpmohiburrahman/graflet (public). npm publishing runs
+  from CI via **OpenID Connect trusted publishing** (no tokens): `.github/workflows/publish.yml` fires on `v*` tags and
+  `npm publish`es with provenance. Release ritual, forever: bump `packages/graflet-npm/package.json` version → commit →
+  `git tag vX.Y.Z && git push --tags`. Verified with `@graflethq/cli@0.0.2` (published by CI, signed). npm 2FA on this
+  account is a **security key (WebAuthn) only** — npm dropped TOTP, so any *manual* npm publish needs a browser + key tap;
+  CI (OIDC) needs neither.

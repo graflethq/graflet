@@ -9,9 +9,11 @@ Precomputed knowledge graphs of versioned library docs, for AI agents. One grafl
 ## Run with no install
 
 ```bash
-npx graflet     # Node
-uvx graflet     # Python (uv) — same tool, published to PyPI
+npx @graflethq/cli   # Node — installs command `graflet`
+uvx graflet          # Python (uv) — same tool, published to PyPI
 ```
+
+> npm blocks the bare name `graflet` (too similar to `leaflet`), so the npm package is scoped `@graflethq/cli`; the command it installs is still `graflet`. PyPI keeps the bare `graflet`.
 
 > Spelled **g-r-a-f-l-e-t**, no p-h.
 
