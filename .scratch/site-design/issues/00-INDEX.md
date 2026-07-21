@@ -18,11 +18,11 @@ Work the **frontier** with `/implement`, one ticket, fresh context each. Blocker
 05 Landing body + footer              ← 04 ✅         ✅ done 2026-07-21
 06 GitHub signup + opt-in             ← 01 ✅, 02 ✅   ✅ done 2026-07-21
 07 Legal pages                        ← 04 ✅         ✅ done 2026-07-21
-08 (optional) Catalog size/date ext   ← 02   → fills 04's Graph-size + Updated columns
+08 (optional) Catalog size/date ext   ← 02   ✅ done 2026-07-21
 ```
 
 ## Frontier now
-- **08** (optional) — fills 04's `—` Graph-size + Updated columns from the pipeline build record. Everything else shipped.
+- **None** — all 8 tickets shipped. 08 filled 04's Graph-size + Updated columns; the pipeline emitting `{nodes, edges, built_at}` to `/catalog/upsert` is separate (kg-pipeline).
 
 ## Order of value
 01 → 02 → 03 → 04 → 05, then 06 (signup), 07 (legal), 08 (optional column data).
