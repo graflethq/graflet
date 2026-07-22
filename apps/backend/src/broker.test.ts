@@ -90,7 +90,7 @@ describe("KG download broker (ticket 05)", () => {
 
     // The broker fetched the PRIVATE repo's {kg_ref}.tar.gz with the SERVER token.
     expect(calls).toHaveLength(1);
-    expect(calls[0].url).toBe(`https://api.github.com/repos/docs-kg/kg-bundles/contents/${KG_REF}.tar.gz`);
+    expect(calls[0].url).toBe(`https://api.github.com/repos/graflethq/kg-bundles/contents/${KG_REF}.tar.gz`);
     expect(calls[0].headers.get("Authorization")).toBe("Bearer test-private-repo-token");
   });
 

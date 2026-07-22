@@ -1,6 +1,6 @@
-# docs-kg-backend
+# graflet-backend
 
-The always-up Cloudflare Worker backend for the docs-KG CLI (ADR-0004). It holds
+The always-up Cloudflare Worker backend for the Graflet CLI (ADR-0004). It holds
 the private-repo token, runs GitHub OAuth, and brokers KG downloads. Deploys to
 Cloudflare Workers — **never** the VPS (the VPS runs only the daily poller).
 
@@ -50,7 +50,7 @@ clobbers a pin/savings a later upsert filled in.
 
 ```sh
 python3 scripts/seed_catalog.py                                  # writes catalog-seed.sql
-pnpm exec wrangler d1 execute docs-kg-catalog --file=catalog-seed.sql --remote
+pnpm exec wrangler d1 execute graflet-catalog --file=catalog-seed.sql --remote
 ```
 
 ## Develop & test (no Cloudflare account needed)
@@ -86,10 +86,10 @@ The two acceptance checks that need a live account are run here:
 ```sh
 # 1. Create the D1 database, then paste the printed database_id into
 #    wrangler.jsonc -> d1_databases[0].database_id (replacing the zeros).
-pnpm exec wrangler d1 create docs-kg-catalog
+pnpm exec wrangler d1 create graflet-catalog
 
 # 2. Apply the migrations to the remote DB (creates users/tokens/pending_auth).
-pnpm exec wrangler d1 migrations apply docs-kg-catalog --remote
+pnpm exec wrangler d1 migrations apply graflet-catalog --remote
 
 # 3. Register a GitHub OAuth App (operator): Authorization callback URL =
 #    https://<worker-url>/auth/cli/callback . Put its Client ID into

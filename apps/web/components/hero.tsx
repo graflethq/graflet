@@ -61,16 +61,16 @@ function TerminalPanel() {
         <span className="size-2.5 rounded-full bg-[#ff5f57]" />
         <span className="size-2.5 rounded-full bg-[#febc2e]" />
         <span className="size-2.5 rounded-full bg-[#28c840]" />
-        <span className="ml-2.5 font-mono text-xs text-muted-foreground">react — docs-kg · example output</span>
+        <span className="ml-2.5 font-mono text-xs text-muted-foreground">react — graflet · example output</span>
       </div>
       <pre className="overflow-x-auto px-5 py-4 font-mono text-[13px] leading-[1.75] text-[#cdd3da]">
-        <span className="text-muted-foreground">$</span> npx docs-kg react
+        <span className="text-muted-foreground">$</span> uvx graflet react
         {"\n"}
         <span className="text-primary">✔</span> Resolved <span className="text-foreground">react@19.1.0</span>{" "}
         <span className="text-muted-foreground">(pinned)</span>
         {"\n"}
         <span className="text-primary">✔</span> Downloaded docs →{" "}
-        <span className="text-muted-foreground">./docs-kg/react/*.md (312 files)</span>
+        <span className="text-muted-foreground">./graflet/react/*.md (312 files)</span>
         {"\n"}
         <span className="text-primary">✔</span> Fetched knowledge graph →{" "}
         <span className="text-muted-foreground">graph.json (1,204 nodes · 3,880 edges)</span>

@@ -1,7 +1,7 @@
 import { SELF, env } from "cloudflare:test";
 import { describe, it, expect } from "vitest";
 
-describe("docs-kg-backend skeleton (ticket 01)", () => {
+describe("graflet-backend skeleton (ticket 01)", () => {
   it("GET /health -> 200 ok, no auth", async () => {
     const res = await SELF.fetch("https://backend.test/health");
     expect(res.status).toBe(200);

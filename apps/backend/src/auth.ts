@@ -305,7 +305,7 @@ async function deletePending(env: Env, state: string): Promise<void> {
 
 // Minimal self-closing confirmation page shown in the user's browser.
 function page(message: string): Response {
-  const html = `<!doctype html><meta charset="utf-8"><title>docs-kg</title>
+  const html = `<!doctype html><meta charset="utf-8"><title>Graflet</title>
 <body style="font:16px system-ui;max-width:32rem;margin:20vh auto;padding:0 1rem;text-align:center">
 <p>${message}</p></body>`;
   return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });

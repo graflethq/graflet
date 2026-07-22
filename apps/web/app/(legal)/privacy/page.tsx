@@ -3,8 +3,8 @@ import { Title, Lede, H2, P, UL, ProseLink } from "@/components/legal-prose";
 import { LINKS } from "@/lib/links";
 
 export const metadata: Metadata = {
-  title: "Privacy · docs-kg",
-  description: "What docs-kg stores, the marketing-consent model, and how to withdraw consent or unsubscribe.",
+  title: "Privacy · Graflet",
+  description: "What Graflet stores, the marketing-consent model, and how to withdraw consent or unsubscribe.",
 };
 
 // Privacy (ticket 07 / ADR-0006). Static, public, captures nothing.
@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     <article>
       <Title>Privacy</Title>
       <Lede>
-        docs-kg is a free, open-source tool. We store the minimum needed to give you the graph you asked for and,
+        Graflet is a free, open-source tool. We store the minimum needed to give you the graph you asked for and,
         only if you opt in, to email you about new releases. This page says exactly what that is and how to undo it.
       </Lede>
 

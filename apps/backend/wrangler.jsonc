@@ -1,8 +1,15 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "docs-kg-backend",
+  "name": "graflet-backend",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-14",
+
+  // Public API domain. custom_domain auto-provisions DNS + cert in the rnui.dev
+  // zone (same account) on deploy. The web build points NEXT_PUBLIC_CATALOG_API_URL
+  // here, and OAuth callbacks resolve to https://api.graflet.rnui.dev/auth/*.
+  "routes": [
+    { "pattern": "api.graflet.rnui.dev", "custom_domain": true }
+  ],
 
   // Deploy target is Cloudflare Workers, never the VPS (ADR-0004: the always-up
   // user-facing backend lives on Workers; the VPS runs only the daily poller).
@@ -11,29 +18,29 @@
   // Public, non-secret config. The OAuth client_id is public by design (it ends
   // up in the browser authorize URL); only the client SECRET stays a secret.
   "vars": {
-    "GITHUB_OAUTH_CLIENT_ID": "REPLACE_WITH_OAUTH_APP_CLIENT_ID",
+    "GITHUB_OAUTH_CLIENT_ID": "Ov23liw70FZvpiiT67nk",
     // Watcher email (ticket 08). RESEND_FROM must be a Resend-verified sender;
     // MARKETING_POSTAL_ADDRESS is the CAN-SPAM postal address in promo footers.
-    "RESEND_FROM": "docs-kg <updates@REPLACE_WITH_VERIFIED_DOMAIN>",
+    "RESEND_FROM": "Graflet <updates@rnui.dev>",
     "MARKETING_POSTAL_ADDRESS": "REPLACE_WITH_POSTAL_ADDRESS",
     // {owner}/{repo} of the private KG-bundle repo the download broker reads (ticket 05).
     // The repo name isn't secret; only PRIVATE_REPO_TOKEN (a secret) authorizes the read.
-    "PRIVATE_KG_REPO": "REPLACE_WITH_PRIVATE_KG_REPO",
+    "PRIVATE_KG_REPO": "graflethq/kg-bundles",
     // Site origins allowed CORS on the read-only catalog endpoints (ticket 02 site
     // slice). Comma-separated: local Next dev + the production site origin.
-    "SITE_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://REPLACE_WITH_SITE_ORIGIN"
+    "SITE_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://graflet.rnui.dev"
   },
 
   // Catalog store (ADR-0004), bound as env.CATALOG. Tickets 02 (catalog store)
   // and 05 (download broker) read + write it. Ticket 03 adds the first
   // migration (users + tokens + pending_auth); ticket 02 adds the catalog tables.
-  // database_id is a placeholder until `wrangler d1 create docs-kg-catalog`;
+  // database_id is a placeholder until `wrangler d1 create graflet-catalog`;
   // local dev + tests run against a Miniflare-backed SQLite DB and ignore it.
   "d1_databases": [
     {
       "binding": "CATALOG",
-      "database_name": "docs-kg-catalog",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_name": "graflet-catalog",
+      "database_id": "947d97d2-a111-4380-919f-ed3bab82ab91",
       "migrations_dir": "migrations"
     }
   ]

@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 (login/token — watch is auth-gated), 02 (the `/catalog/upsert` → ready signal that fires the email). *Does NOT depend on the download broker (05).*
 
-**Status:** ✅ done 2026-07-20 — backend `watch.ts` (`/watch`, `/consent`, `/unsubscribe`) + `notify.ts` (Resend) + migration `0003_subscriptions.sql`; CLI `watch.ts` + `docs-kg watch <slug>`. Non-TTY (CI) leaves consent `unset` instead of a silent `no`. Operator-gated boxes: `RESEND_API_KEY`, `RESEND_FROM` (verified sender), `MARKETING_POSTAL_ADDRESS`, `UNSUBSCRIBE_SECRET`.
+**Status:** ✅ done 2026-07-20 — backend `watch.ts` (`/watch`, `/consent`, `/unsubscribe`) + `notify.ts` (Resend) + migration `0003_subscriptions.sql`; CLI `watch.ts` + `graflet watch <slug>`. Non-TTY (CI) leaves consent `unset` instead of a silent `no`. Operator-gated boxes: `RESEND_API_KEY`, `RESEND_FROM` (verified sender), `MARKETING_POSTAL_ADDRESS`, `UNSUBSCRIBE_SECRET`.
 
 - [x] Running `<cli> watch <slug>` while signed in registers a subscription `(user, doc)` in the backend, idempotent for the same doc (no duplicate); running it signed out requires a GitHub login first (auth-gated, ADR-0005).
 - [x] On the first watch, if `marketing_consent` is `unset`, the CLI shows exactly one opt-in prompt that is unchecked / declines by default: stored `yes` only if the user actively opts in, otherwise `no`, written with `consent_at` and `consent_source = CLI`. (Non-interactive `watch` leaves consent `unset` — the opt-in isn't burned on a silent send, ADR-0006.)

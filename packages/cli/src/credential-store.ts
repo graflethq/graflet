@@ -13,9 +13,9 @@ import * as path from "node:path";
 
 const require = createRequire(import.meta.url);
 
-const SERVICE = "docs-kg";
+const SERVICE = "graflet";
 const ACCOUNT = "token";
-export const TOKEN_ENV = "DOCS_KG_TOKEN";
+export const TOKEN_ENV = "GRAFLET_TOKEN";
 
 /** A minimal secret store. Injected in tests; defaults to the OS keyring. */
 export interface Keyring {
@@ -70,7 +70,7 @@ export function clearToken(opts: StoreOptions = {}): void {
 
 /**
  * The token to authenticate a command with, without triggering a browser or a
- * keyring write: an explicit `--token`, then $DOCS_KG_TOKEN, then whatever is
+ * keyring write: an explicit `--token`, then $GRAFLET_TOKEN, then whatever is
  * stored. Used by the download/watch commands (05/08).
  */
 export function resolveToken(opts: StoreOptions & { flagToken?: string } = {}): string | null {
@@ -84,7 +84,7 @@ export function resolveToken(opts: StoreOptions & { flagToken?: string } = {}): 
 
 function defaultFile(): string {
   const base = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
-  return path.join(base, "docs-kg", "token");
+  return path.join(base, "graflet", "token");
 }
 
 function writeTokenFile(token: string, file: string): void {

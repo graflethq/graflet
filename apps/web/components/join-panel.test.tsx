@@ -45,12 +45,12 @@ describe("JoinPanel (ticket 06 — unchecked opt-in, no secret, no re-ask)", () 
     expect(await screen.findByText("octocat")).toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).toBeNull();
     // Persisted so a later visit isn't re-prompted; the token-free fragment is scrubbed.
-    expect(JSON.parse(localStorage.getItem("docs-kg:session")!)).toEqual({ login: "octocat", consent: "yes" });
+    expect(JSON.parse(localStorage.getItem("graflet:session")!)).toEqual({ login: "octocat", consent: "yes" });
     expect(window.location.hash).toBe("");
   });
 
   it("a returning user who already answered sees no opt-in prompt", async () => {
-    localStorage.setItem("docs-kg:session", JSON.stringify({ login: "octocat", consent: "no" }));
+    localStorage.setItem("graflet:session", JSON.stringify({ login: "octocat", consent: "no" }));
     render(<JoinPanel />);
 
     expect(await screen.findByText(/signed in as/i)).toBeInTheDocument();

@@ -17,7 +17,7 @@ import { LINKS } from "@/lib/links";
  */
 
 type Session = { login: string; consent: "yes" | "no" };
-const SESSION_KEY = "docs-kg:session";
+const SESSION_KEY = "graflet:session";
 
 function readSession(): Session | null {
   try {
@@ -66,7 +66,7 @@ export function JoinPanel() {
           Signed in as <span className="text-primary">{session.login}</span>
         </h1>
         <p className="mt-3 leading-relaxed text-muted-foreground">
-          You&apos;re on the docs-kg audience list.{" "}
+          You&apos;re on the Graflet audience list.{" "}
           {session.consent === "yes"
             ? "We'll email you when a new library ships or a doc's graph is rebuilt."
             : "You opted out of product emails — you'll still get updates for docs you watch via the CLI."}
@@ -84,7 +84,7 @@ export function JoinPanel() {
 
   return (
     <Card>
-      <h1 className="font-mono text-2xl font-semibold tracking-tight">Join the docs-kg audience</h1>
+      <h1 className="font-mono text-2xl font-semibold tracking-tight">Join the Graflet audience</h1>
       <p className="mt-3 leading-relaxed text-muted-foreground">
         Sign in with GitHub — the same identity the CLI uses. It joins the audience and lets you watch docs for
         updates. Installing, browsing, and copying commands never need an account.
@@ -102,7 +102,7 @@ export function JoinPanel() {
           className="mt-0.5 size-4 shrink-0 accent-primary"
         />
         <span>
-          Email me about new docs-kg releases and product updates.{" "}
+          Email me about new Graflet releases and product updates.{" "}
           <span className="text-muted-foreground/70">Optional — leave unticked to sign in without it. Unsubscribe anytime.</span>
         </span>
       </label>

@@ -4,8 +4,8 @@ import { JoinPanel } from "@/components/join-panel";
 import { SiteFooter } from "@/components/landing-sections";
 
 export const metadata: Metadata = {
-  title: "Join · docs-kg",
-  description: "Sign in with GitHub to join the docs-kg audience and watch docs for updates. Free and open source.",
+  title: "Join · Graflet",
+  description: "Sign in with GitHub to join the Graflet audience and watch docs for updates. Free and open source.",
 };
 
 // The signup flow (ticket 06). Kept off the landing page — the opt-in is captured

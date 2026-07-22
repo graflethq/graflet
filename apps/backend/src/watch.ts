@@ -85,7 +85,7 @@ export async function handleUnsubscribe(env: Env, req: Request): Promise<Respons
 // A GET click gets a human page; a one-click POST (RFC 8058) gets a bare 200.
 function textOrJson(req: Request, message: string, status: number): Response {
   if (req.method === "POST") return Response.json({ ok: status === 200 }, { status });
-  const html = `<!doctype html><meta charset="utf-8"><title>docs-kg</title>
+  const html = `<!doctype html><meta charset="utf-8"><title>Graflet</title>
 <body style="font:16px system-ui;max-width:32rem;margin:20vh auto;padding:0 1rem;text-align:center">
 <p>${message}</p></body>`;
   return new Response(html, { status, headers: { "Content-Type": "text/html; charset=utf-8" } });

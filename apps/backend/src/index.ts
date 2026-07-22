@@ -1,5 +1,5 @@
 /**
- * docs-kg-backend — the always-up Cloudflare Worker backend (ADR-0004).
+ * graflet-backend — the always-up Cloudflare Worker backend (ADR-0004).
  *
  * Ticket 01 scope: the deployable shell only. It wires the three runtime deps
  * that tickets 02/03/05 build directly on (the catalog store + two secrets) and

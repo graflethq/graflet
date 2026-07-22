@@ -77,7 +77,7 @@ async function sendReadyEmail(
   const notice =
     `<p>A new version of <strong>${name}</strong> is ready.</p>` +
     `<p>Download the docs + knowledge graph:</p>` +
-    `<pre>docs-kg ${slug}@${versionLabel}</pre>`;
+    `<pre>graflet ${slug}@${versionLabel}</pre>`;
 
   // Promo footer + one-click unsubscribe ONLY for consented recipients (ADR-0006).
   const headers: Record<string, string> = {};
@@ -85,7 +85,7 @@ async function sendReadyEmail(
   if (r.marketing_consent === "yes") {
     const url = `${origin}/unsubscribe?u=${r.github_id}&t=${await unsubscribeToken(r.github_id, env.UNSUBSCRIBE_SECRET)}`;
     html +=
-      `<hr><p>You're getting product updates from docs-kg because you opted in.</p>` +
+      `<hr><p>You're getting product updates from Graflet because you opted in.</p>` +
       `<p>${env.MARKETING_POSTAL_ADDRESS}</p>` +
       `<p><a href="${url}">Unsubscribe</a> from product updates.</p>`;
     // RFC 8058 one-click: mail clients POST to this URL to unsubscribe.

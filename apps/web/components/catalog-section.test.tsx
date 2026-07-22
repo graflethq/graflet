@@ -33,7 +33,7 @@ describe("CatalogSection (ADR-0006: a doc missing a metric still renders, showin
     expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(4);
     // Per-row copy — no sign-in, no KG fetch (ADR-0005).
     expect(
-      screen.getByRole("button", { name: "Copy command: npx docs-kg lonely" }),
+      screen.getByRole("button", { name: "Copy command: uvx graflet lonely" }),
     ).toBeInTheDocument();
   });
 });

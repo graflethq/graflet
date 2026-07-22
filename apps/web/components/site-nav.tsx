@@ -13,7 +13,7 @@ export function SiteNav() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-5 sm:gap-8">
           <a href="/" className="font-mono text-base font-bold whitespace-nowrap">
-            docs<span className="text-primary">-</span>kg
+            graflet
           </a>
           <div className="hidden items-center gap-6 font-mono text-[13px] text-muted-foreground sm:flex">
             <a href="#catalog" className="hover:text-foreground">Catalog</a>

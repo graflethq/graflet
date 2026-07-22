@@ -51,7 +51,7 @@ export async function registerWatch(
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({ slug }),
   });
-  if (res.status === 401) throw new Error("Your sign-in has expired. Run `docs-kg login` again.");
+  if (res.status === 401) throw new Error("Your sign-in has expired. Run `graflet login` again.");
   if (res.status === 404) throw new Error(`No doc named "${slug}". Check the slug with the catalog.`);
   if (!res.ok) throw new Error(`watch failed (HTTP ${res.status})`);
   return (await res.json()) as WatchResponse;
@@ -93,7 +93,7 @@ export async function downloadKg(
   const res = await fetchImpl(`${apiBase}/kg/${encodeURIComponent(slug)}${versionQuery(version)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (res.status === 401 || res.status === 403) throw new Error("Your sign-in has expired. Run `docs-kg login` again.");
+  if (res.status === 401 || res.status === 403) throw new Error("Your sign-in has expired. Run `graflet login` again.");
   if (res.status === 404) throw new Error(`No downloadable KG for "${slug}"${version ? `@${version}` : ""} yet.`);
   if (!res.ok) throw new Error(`KG download failed (HTTP ${res.status})`);
   return { bytes: new Uint8Array(await res.arrayBuffer()), sha: res.headers.get("X-KG-Sha") };

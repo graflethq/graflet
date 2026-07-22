@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * docs-kg CLI entry (ticket 03 scope: login / logout + --help).
+ * graflet CLI entry (ticket 03 scope: login / logout + --help).
  *
  * Auth gates only the KG download (ADR-0005), so `--help` and unknown-command
  * usage run signed-out — no command here reads or requires a token.
@@ -13,22 +13,22 @@ import { login, logout } from "./login.js";
 import { watch } from "./watch.js";
 
 // Backend base URL. Prod URL is operator-provisioned (Cloudflare account not yet
-// live) — override with $DOCS_KG_API until it's pinned. TODO: bake the real URL.
-const DEFAULT_API = "https://docs-kg-backend.example.workers.dev";
-const apiBase = () => process.env.DOCS_KG_API || DEFAULT_API;
+// live) — override with $GRAFLET_API until it's pinned. TODO: bake the real URL.
+const DEFAULT_API = "https://graflet-backend.example.workers.dev";
+const apiBase = () => process.env.GRAFLET_API || DEFAULT_API;
 
-const HELP = `docs-kg — download docs + knowledge graphs
+const HELP = `graflet — download docs + knowledge graphs
 
 Usage:
-  docs-kg <slug>[@<version>]  Download a doc's Markdown + knowledge graph (needs sign-in)
-  docs-kg login               Sign in with GitHub
-  docs-kg logout              Forget the stored sign-in
-  docs-kg watch <slug>        Get emailed when a doc's graph updates (needs sign-in)
-  docs-kg --help              Show this help
+  graflet <slug>[@<version>]  Download a doc's Markdown + knowledge graph (needs sign-in)
+  graflet login               Sign in with GitHub
+  graflet logout              Forget the stored sign-in
+  graflet watch <slug>        Get emailed when a doc's graph updates (needs sign-in)
+  graflet --help              Show this help
 
 Env:
-  DOCS_KG_API       Override the backend URL
-  DOCS_KG_TOKEN     Use a bearer token directly (CI; skips the browser)
+  GRAFLET_API       Override the backend URL
+  GRAFLET_TOKEN     Use a bearer token directly (CI; skips the browser)
 `;
 
 /** Open a URL in the default browser. Best-effort — the caller also prints it. */
@@ -57,7 +57,7 @@ async function main(): Promise<number> {
     case "watch":
       return watch(process.argv[3], { apiBase: apiBase(), prompt: askLine });
     default:
-      // Anything that isn't a reserved subcommand IS a slug — `docs-kg <slug>` is
+      // Anything that isn't a reserved subcommand IS a slug — `graflet <slug>` is
       // the core command (a bad slug 404s with a clear message from the broker).
       return download(cmd, { apiBase: apiBase() });
   }

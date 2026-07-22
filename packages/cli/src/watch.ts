@@ -1,5 +1,5 @@
 /**
- * `docs-kg watch <slug>` (ticket 08).
+ * `graflet watch <slug>` (ticket 08).
  *
  * Subscribe to a doc's updates. Watching is auth-gated (ADR-0005) — signed out,
  * it tells the user to log in and stops. Because CLI notification-setup is one of
@@ -30,13 +30,13 @@ export async function watch(slug: string, deps: WatchDeps): Promise<number> {
   const log = deps.log ?? console.log;
 
   if (!slug) {
-    log("Usage: docs-kg watch <slug>");
+    log("Usage: graflet watch <slug>");
     return 1;
   }
 
   const token = getToken();
   if (!token) {
-    log("Watching a doc needs a sign-in. Run `docs-kg login` first.");
+    log("Watching a doc needs a sign-in. Run `graflet login` first.");
     return 1;
   }
 
@@ -45,7 +45,7 @@ export async function watch(slug: string, deps: WatchDeps): Promise<number> {
 
   // Consent is captured once, here, only if still unset (ADR-0006).
   if (marketing_consent === "unset") {
-    const answer = await prompt("Also email you occasionally about new docs-kg features? [y/N] ");
+    const answer = await prompt("Also email you occasionally about new graflet features? [y/N] ");
     // No terminal to ask on (CI/piped): leave consent unset so a later
     // interactive watch or the website can still capture it — don't burn the
     // one-time opt-in on a silent 'no' (ADR-0006).

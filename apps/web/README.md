@@ -1,6 +1,6 @@
-# docs-kg web
+# graflet web
 
-Marketing site for docs-kg — a Next.js 16 (App Router) + shadcn/ui app, dark-terminal
+Marketing site for graflet — a Next.js 16 (App Router) + shadcn/ui app, dark-terminal
 themed (Frame A), deployed to **Cloudflare Workers** via `@opennextjs/cloudflare`.
 It consumes the read-only catalog API served by the `backend/` Worker; it runs no
 server logic of its own beyond rendering. See `../CONTEXT.md` and `../docs/adr/`.

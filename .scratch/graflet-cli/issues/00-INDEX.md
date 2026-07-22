@@ -1,4 +1,4 @@
-# docs-KG CLI v1 — ticket index
+# Graflet CLI v1 — ticket index
 
 Source of truth: `../../../CONTEXT.md` + `../../../docs/adr/` + `../spec.md`.
 Tracker: local files (one ticket per file). Work the **frontier** — any ticket whose blockers are all done — one at a time with `/implement`, clearing context between tickets.

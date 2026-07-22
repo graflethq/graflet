@@ -1,4 +1,4 @@
-// Env for docs-kg-backend. Hand-written for ticket 01 (no build step yet).
+// Env for graflet-backend. Hand-written for ticket 01 (no build step yet).
 // Once a local .dev.vars exists you can regenerate this with `wrangler types`.
 //
 // Bindings live under Cloudflare.Env so that `env` from cloudflare:test — which

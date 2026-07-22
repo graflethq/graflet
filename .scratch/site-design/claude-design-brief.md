@@ -1,4 +1,4 @@
-# Generating the docs-kg site in Claude Design
+# Generating the graflet site in Claude Design
 
 How to use **Claude Design** (`claude.ai/design`) to generate landing-page directions,
 and the paste-ready prompt. Researched against Anthropic's own docs + the live tool
@@ -38,7 +38,7 @@ chat, inline comments, dragging on the canvas, or custom sliders. Runs on Opus 4
 
 ```
 GOAL
-Design the marketing landing page for "docs-kg" (placeholder name), a free,
+Design the marketing landing page for "graflet" (placeholder name), a free,
 open-source developer CLI. Build it with shadcn/ui components + Tailwind, so the
 output ports cleanly into a React/shadcn codebase. Real, functional layout — not a
 mockup image. Support light AND dark mode.
@@ -48,7 +48,7 @@ Developers — especially people who feed documentation to AI coding tools (Clau
 Cursor). They're skeptical of marketing fluff and reward precision.
 
 WHAT THE PRODUCT IS (content — use this copy, no lorem)
-- One command: `npx docs-kg react`
+- One command: `uvx graflet react`
 - It downloads a library's docs as Markdown AND a pre-built KNOWLEDGE GRAPH of
   those docs (interactive graph + machine-readable graph.json), aligned to a pinned
   release. The knowledge graph is the value: it gives your AI far better, cheaper
@@ -64,7 +64,7 @@ WHAT THE PRODUCT IS (content — use this copy, no lorem)
 
 LAYOUT (sections, in order)
 1. Sticky nav: wordmark, links (Catalog, Docs, GitHub), "★ Star 2.4k", "Sign in with GitHub".
-2. Hero: sharp headline, one-line subhead, a copyable command pill (`npx docs-kg react`)
+2. Hero: sharp headline, one-line subhead, a copyable command pill (`uvx graflet react`)
    with copy button, primary CTA + "Star on GitHub", and a terminal panel showing sample output.
 3. "What you get": two cards — the docs Markdown, and the knowledge graph.
 4. Four metric stat cards (above).
@@ -140,7 +140,7 @@ The table:
     TOKENS SAVED  — e.g.  ~68%
     GRAPH SIZE    — e.g.  1.2k nodes · 3.9k edges
     UPDATED       — relative, e.g.  4h ago
-    (last cell)   — a small "copy command" button showing `npx docs-kg <slug>`
+    (last cell)   — a small "copy command" button showing `uvx graflet <slug>`
 - Rows (use these libraries; numbers illustrative — vary them realistically):
     next.js, react, shadcn/ui, fastapi, prisma, playwright, vitest, laravel, django, zod, supabase
 - A footer row under the table: left "39 libraries ready · 106k tracked",

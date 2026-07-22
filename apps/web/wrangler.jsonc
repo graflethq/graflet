@@ -1,11 +1,16 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"main": ".open-next/worker.js",
-	"name": "docs-kg-web",
+	"name": "graflet-web",
 	"compatibility_date": "2026-07-19",
 	"compatibility_flags": [
 		"nodejs_compat",
 		"global_fetch_strictly_public"
+	],
+	// Public site domain. custom_domain auto-provisions the DNS record + edge cert
+	// in the rnui.dev zone (same Cloudflare account) on `deploy`.
+	"routes": [
+		{ "pattern": "graflet.rnui.dev", "custom_domain": true }
 	],
 	// Parity with backend/wrangler.jsonc — Workers logs/analytics.
 	"observability": { "enabled": true },
@@ -18,7 +23,7 @@
 			// Self-reference service binding, the service name must match the worker name
 			// see https://opennext.js.org/cloudflare/caching
 			"binding": "WORKER_SELF_REFERENCE",
-			"service": "docs-kg-web"
+			"service": "graflet-web"
 		}
 	],
 	"images": {

@@ -72,7 +72,7 @@ export async function fetchIdentity(accessToken: string): Promise<GitHubIdentity
     Authorization: `Bearer ${accessToken}`,
     Accept: "application/vnd.github+json",
     // GitHub requires a User-Agent on API calls or it 403s.
-    "User-Agent": "docs-kg-backend",
+    "User-Agent": "graflet-backend",
   };
   const userRes = await fetchImpl(API_USER, { headers });
   if (!userRes.ok) throw new Error(`GET /user failed: ${userRes.status}`);
@@ -95,7 +95,7 @@ export function fetchPrivateBundle(repo: string, path: string, token: string): P
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github.raw",
-      "User-Agent": "docs-kg-backend",
+      "User-Agent": "graflet-backend",
     },
   });
 }

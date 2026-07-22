@@ -1,5 +1,5 @@
 /**
- * `docs-kg <slug>` / `docs-kg <slug>@<version>` — THE SPINE (ticket 05 / ADR-0002, 0005).
+ * `graflet <slug>` / `graflet <slug>@<version>` — THE SPINE (ticket 05 / ADR-0002, 0005).
  *
  * One command, two sources. Resolves the pin from the catalog, then writes BOTH
  * the doc's Markdown and its knowledge graph to ./<slug>/ together:
@@ -35,14 +35,14 @@ export async function download(arg: string, deps: DownloadDeps): Promise<number>
   const slug = at < 0 ? arg : arg.slice(0, at);
   const version = at < 0 ? null : arg.slice(at + 1);
   if (!slug) {
-    log("Usage: docs-kg <slug>[@<version>]");
+    log("Usage: graflet <slug>[@<version>]");
     return 1;
   }
 
   // The gate (ADR-0005): downloading a KG is the ONE action that needs sign-in.
   const token = getToken();
   if (!token) {
-    log("Downloading a KG needs a sign-in. Run `docs-kg login` first.");
+    log("Downloading a KG needs a sign-in. Run `graflet login` first.");
     return 1;
   }
 

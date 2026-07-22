@@ -8,7 +8,7 @@ const geistSans = Geist({ variable: "--font-sans", subsets: ["latin"] });
 const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "docs-kg — knowledge graphs for your docs",
+  title: "Graflet — knowledge graphs for your docs",
   description:
     "One command to pull any library's docs plus a ready-made knowledge graph, locally aligned for your AI tools. Free and open source.",
 };

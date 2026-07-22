@@ -8,7 +8,7 @@
 
 - [ ] A pure catalog view-model module maps `(catalog API response, activeTab, searchQuery)` → the exact rendered rows — sorted per tab (Popular = GraphScore desc, Smallest first = nodes asc, Recently built = built_at desc), filtered by query, with `—` for every missing metric and the correct command string — and is unit-tested against fixture catalog JSON (prior art: `backend/src/catalog.test.ts`).
 - [ ] The table uses the shadcn `table` primitive plus local component state (NO TanStack / data-table) and lists all `ready` docs from the live catalog API with no sign-in; the search box and all three tabs work.
-- [ ] Each row's copy button copies `npx docs-kg <slug>` with no auth call and no KG fetch (ADR-0005).
+- [ ] Each row's copy button copies `uvx graflet <slug>` with no auth call and no KG fetch (ADR-0005).
 - [ ] A doc missing one or more metrics still renders its row, showing `—` for the missing value rather than a fabricated one (ADR-0006 honesty).
 - [ ] Loading and empty/error states render gracefully if the catalog API is slow, empty, or errors.
 - [ ] The Graph size and Updated columns render `—` until the catalog exposes `nodes/edges/built_at` (ticket 08), then show real values with no other change.

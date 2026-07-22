@@ -83,7 +83,7 @@ describe("buildCatalogRows — honesty (missing metrics render —, never fabric
       tokens: "—",
       size: "—",
       updated: "—",
-      command: "npx docs-kg vitest",
+      command: "uvx graflet vitest",
     });
   });
 });
@@ -98,14 +98,14 @@ describe("buildCatalogRows — present metrics render real values", () => {
       score: "99/100",
       tokens: "~68%",
       size: "1.2k nodes · 3.9k edges",
-      command: "npx docs-kg react",
+      command: "uvx graflet react",
       key: "cat-react",
     });
   });
 
   it("every row's command is the latest bare command (no @version)", () => {
     for (const row of buildCatalogRows(DOCS, "popular")) {
-      expect(row.command).toBe(`npx docs-kg ${row.slug}`);
+      expect(row.command).toBe(`uvx graflet ${row.slug}`);
     }
   });
 

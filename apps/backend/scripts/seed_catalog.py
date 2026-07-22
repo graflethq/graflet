@@ -13,7 +13,7 @@ Only green-licensed docs are seeded `ready`; a non-green or needs_human doc is h
 CONFLICT clauses refresh only the seed-owned columns and never clobber a filled-in pin.
 
 Usage:  python3 backend/scripts/seed_catalog.py   # writes backend/catalog-seed.sql
-Apply:  wrangler d1 execute docs-kg-catalog --file=catalog-seed.sql [--local|--remote]
+Apply:  wrangler d1 execute graflet-catalog --file=catalog-seed.sql [--local|--remote]
 """
 import json
 import re
@@ -21,12 +21,13 @@ import sqlite3
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
+# parents[3] = repo root (this file sits at apps/backend/scripts/ after ADR-0008).
+REPO = Path(__file__).resolve().parents[3]
 MANIFEST = REPO / "kg-pipeline" / "manifest.jsonl"
 DB = REPO / "kg-data" / "programming-docs.db"
-OUT = REPO / "backend" / "catalog-seed.sql"
-# Single source of truth for the green-license gate, shared with backend/src/license.ts.
-GREEN = json.loads((REPO / "backend" / "src" / "green-licenses.json").read_text())
+OUT = REPO / "apps" / "backend" / "catalog-seed.sql"
+# Single source of truth for the green-license gate, shared with apps/backend/src/license.ts.
+GREEN = json.loads((REPO / "apps" / "backend" / "src" / "green-licenses.json").read_text())
 
 
 def is_green(license_id: str | None) -> bool:

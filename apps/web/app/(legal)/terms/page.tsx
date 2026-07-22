@@ -3,8 +3,8 @@ import { Title, Lede, H2, P, ProseLink } from "@/components/legal-prose";
 import { LINKS } from "@/lib/links";
 
 export const metadata: Metadata = {
-  title: "Terms · docs-kg",
-  description: "docs-kg is free and open source, provided as-is with no warranty.",
+  title: "Terms · Graflet",
+  description: "Graflet is free and open source, provided as-is with no warranty.",
 };
 
 // Terms (ticket 07). Static, public, captures nothing.
@@ -13,7 +13,7 @@ export default function TermsPage() {
     <article>
       <Title>Terms of use</Title>
       <Lede>
-        docs-kg is free and <ProseLink href={LINKS.github}>open source</ProseLink>. There are no paid plans, and there
+        Graflet is free and <ProseLink href={LINKS.github}>open source</ProseLink>. There are no paid plans, and there
         never will be. Use it however you like within the terms below.
       </Lede>
 
@@ -35,7 +35,7 @@ export default function TermsPage() {
 
       <H2>Redistributed docs stay under their own licenses</H2>
       <P>
-        The docs docs-kg redistributes belong to their upstream projects and remain under those projects' licenses.
+        The docs Graflet redistributes belong to their upstream projects and remain under those projects' licenses.
         We ship only permissively licensed docs; each library's source repository and license are listed on the{" "}
         <ProseLink href="/attribution">attribution page</ProseLink>.
       </P>

@@ -1,4 +1,4 @@
-# Spec — Docs-KG CLI, v1
+# Spec — Graflet CLI, v1
 
 **Status:** broken into tickets → `issues/` (see `issues/00-INDEX.md` for the DAG + frontier). Work the frontier with `/implement`, fresh context per ticket.
 **Context:** `../../CONTEXT.md` + `../../docs/adr/`. Read those first; this is the build plan only.
@@ -15,14 +15,14 @@ non-programming remainder of the 106k is deferred, not dropped.
 ## Components & scope
 
 ### 1. CLI (open source, its own public repo)
-- `docs-kg <slug>` (name TBD) — the core command. Resolves the doc+version from the catalog API, signs the user
+- `graflet <slug>` (name TBD) — the core command. Resolves the doc+version from the catalog API, signs the user
   in with GitHub if needed, fetches `.md` from upstream (codeload tarball at the pinned SHA → extract `docs/**`)
   and the KG from the backend, writes both locally.
-- `docs-kg login` / `logout` — GitHub OAuth (device/browser flow); token stored in the OS keyring with a
+- `graflet login` / `logout` — GitHub OAuth (device/browser flow); token stored in the OS keyring with a
   plaintext fallback (the gh/supabase pattern). A `--token`/env-var path for CI.
-- `docs-kg watch <slug>` — subscribe to a doc's updates; at this step, prompt for the marketing opt-in **only if
+- `graflet watch <slug>` — subscribe to a doc's updates; at this step, prompt for the marketing opt-in **only if
   consent is unset** (ADR-0006).
-- `docs-kg <slug>@<version>` — pick a specific version; default = `latest`.
+- `graflet <slug>@<version>` — pick a specific version; default = `latest`.
 - Auth is required **only** for the download/watch; `--help` and version listing are free (ADR-0005).
 - No `.md`-only or KG-only path — one download, two sources under the hood (ADR-0002).
 

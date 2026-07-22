@@ -1,7 +1,7 @@
 # Website (shadcn build) — ticket index
 
-Feature: the docs-kg **website**, built from the chosen dark-terminal design (Frame A) as a
-Next.js 16 + shadcn app. Spec: `../spec.md`. Realizes docs-kg-cli tickets 06/07/10.
+Feature: the graflet **website**, built from the chosen dark-terminal design (Frame A) as a
+Next.js 16 + shadcn app. Spec: `../spec.md`. Realizes graflet-cli tickets 06/07/10.
 Build guides: `../../../research/shadcn-mcp-implement/FINDINGS.md` (shadcn MCP),
 `../../../research/nextjs16-docs-access/FINDINGS.md` (Next 16 docs access + gotchas).
 

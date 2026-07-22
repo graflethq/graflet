@@ -1,6 +1,6 @@
 # Map: Downloadable Docs Knowledge-Graph Service (v1)
 
-**Effort:** docs-kg-service
+**Effort:** graflet-service
 **Mode:** Wayfinder chart — planning only, no tickets resolved yet
 **Frontier (open + unblocked now):** 09, 10, 11, 12, 13, 19, 23
 **Total tickets:** 24

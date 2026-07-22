@@ -38,7 +38,7 @@ export function WhatYouGet() {
 }
 
 const STEPS = [
-  { n: "01", title: "Run one command", body: "npx docs-kg react — no config, no account to start." },
+  { n: "01", title: "Run one command", body: "uvx graflet react — no config, no account to start." },
   {
     n: "02",
     title: "Sign in with GitHub",
@@ -115,7 +115,7 @@ export function SiteFooter() {
     <footer className="mt-16 border-t border-border">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-8 font-mono text-xs text-muted-foreground sm:px-6">
         <span>
-          docs<span className="text-primary">-</span>kg · Free &amp; open source · MIT
+          graflet · Free &amp; open source · MIT
         </span>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <a href="/#catalog" className="hover:text-foreground">Catalog</a>

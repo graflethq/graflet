@@ -1,5 +1,5 @@
 /**
- * `docs-kg login` / `docs-kg logout` (ticket 03).
+ * `graflet login` / `graflet logout` (ticket 03).
  *
  * login: start the flow, open the browser, poll until the backend has minted a
  * token, then store it. It NEVER prompts for marketing consent — sign-in is
@@ -53,7 +53,7 @@ export async function login(deps: LoginDeps): Promise<number> {
       return 1;
     }
     if (r.status === "expired") {
-      log("Sign-in link expired. Run `docs-kg login` again.");
+      log("Sign-in link expired. Run `graflet login` again.");
       return 1;
     }
     // pending — keep waiting

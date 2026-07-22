@@ -1,15 +1,15 @@
-# Spec — docs-kg website (shadcn build of the chosen design)
+# Spec — graflet website (shadcn build of the chosen design)
 
 **Status:** ready-for-agent
 **Context:** `../../CONTEXT.md` + `../../docs/adr/` (esp. ADR-0001/0002/0005/0006). Read those first.
-**Supersedes the *presentation* of** `.scratch/docs-kg-cli/issues/` **06 (catalog + savings hero), 07 (signup + opt-in), 10 (legal pages)** — this spec keeps every ADR constraint those tickets encode and replaces their "design when built" placeholder with the concrete, chosen design.
-**Design source:** `.scratch/site-design/export/docs-kg Landing.dc.html` (Frame A — dark terminal, with the catalog table). **Build guide:** `../../research/shadcn-mcp-implement/FINDINGS.md`. **Prompt trail:** `claude-design-brief.md`.
+**Supersedes the *presentation* of** `.scratch/graflet-cli/issues/` **06 (catalog + savings hero), 07 (signup + opt-in), 10 (legal pages)** — this spec keeps every ADR constraint those tickets encode and replaces their "design when built" placeholder with the concrete, chosen design.
+**Design source:** `.scratch/site-design/export/graflet Landing.dc.html` (Frame A — dark terminal, with the catalog table). **Build guide:** `../../research/shadcn-mcp-implement/FINDINGS.md`. **Prompt trail:** `claude-design-brief.md`.
 
 ---
 
 ## Problem Statement
 
-The backend (Cloudflare Worker: catalog API, GitHub OAuth, KG download broker) and the CLI exist, but there is **no website**. A developer who hears about docs-kg has nowhere to land: no page to understand what it does, browse the catalog of ready docs, copy the install command, sign in to join the audience, or read the legal/attribution surface. Without the site there is no top of funnel — no path to the GitHub stars, the consented email list, and the donations that are v1's only success metric.
+The backend (Cloudflare Worker: catalog API, GitHub OAuth, KG download broker) and the CLI exist, but there is **no website**. A developer who hears about graflet has nowhere to land: no page to understand what it does, browse the catalog of ready docs, copy the install command, sign in to join the audience, or read the legal/attribution surface. Without the site there is no top of funnel — no path to the GitHub stars, the consented email list, and the donations that are v1's only success metric.
 
 ## Solution
 
@@ -25,15 +25,15 @@ Every displayed savings/quality value is honest: only what the catalog data actu
 
 ## User Stories
 
-1. As a visitor, I want to open the landing page and immediately understand what docs-kg does, so that I can decide if it's for me.
-2. As a visitor, I want to see the exact one-line command (`npx docs-kg react`) in the hero with a copy button, so that I can try it in seconds.
+1. As a visitor, I want to open the landing page and immediately understand what graflet does, so that I can decide if it's for me.
+2. As a visitor, I want to see the exact one-line command (`uvx graflet react`) in the hero with a copy button, so that I can try it in seconds.
 3. As a visitor, I want a realistic terminal panel showing what the command outputs, so that I trust the tool does what it says.
 4. As a visitor, I want to copy the install command **without signing in or giving an email**, so that trying the tool is frictionless (ADR-0005).
 5. As a visitor, I want to browse a catalog table of every ready doc, so that I can check whether the library I care about is covered.
 6. As a visitor, I want each catalog row to show the doc's name and source repo, pinned version, GraphScore, token savings, graph size, and last-updated, so that I can judge the graph's quality and freshness at a glance.
 7. As a visitor, I want to search/filter the catalog by library name, so that I can find a specific doc fast.
 8. As a visitor, I want to re-sort the catalog (most popular / smallest first / recently built), so that I can browse the way that suits me.
-9. As a visitor, I want a per-row copy-command button, so that I can grab the exact command for any doc (`npx docs-kg <slug>`), no sign-in.
+9. As a visitor, I want a per-row copy-command button, so that I can grab the exact command for any doc (`uvx graflet <slug>`), no sign-in.
 10. As a visitor, I want any doc that is missing a metric to still appear, showing `—` for the missing value rather than a guessed one, so that I can trust every number on the page.
 11. As a visitor, I want a "what you get" section contrasting the Markdown docs and the knowledge graph, so that I understand the two deliverables.
 12. As a visitor, I want a small set of headline stat tiles (build cost saved, build time done, GraphScore, tokens saved), honestly labelled with their basis, so that I grasp the value quickly.
@@ -73,7 +73,7 @@ Every displayed savings/quality value is honest: only what the catalog data actu
 - Data comes from the read-only catalog API (ticket 02, done): `GET /catalog` (list: slug, name, license, popularity, latest version, hero savings) and `GET /catalog/{slug}` (detail: versions, savings, GraphScore, resolve). No auth for reads (ADR-0005).
 - Table columns map to catalog fields: **Library** = name + `repo_url`; **Version** = `version_label`; **GraphScore** = `graphscore`; **Tokens saved** = savings metric #4 (usage token savings). Two columns need data the catalog does not yet expose — **Graph size** (nodes·edges) and **Updated** (last build time): either (a) extend the catalog API with a small per-version `{nodes, edges, built_at}` (sourced from the pipeline build record) — tracked as a backend slice — or (b) drop those columns. Until present, they render `—`.
 - **Honesty rule (from ticket 06):** show only values the data contains; missing → `—`; never fabricate. The export's illustrative numbers are placeholders.
-- **Copy-command** is a pure builder: `{slug, version} → "npx docs-kg <slug>"` (append `@<version_label>` when a non-latest version is chosen). Copying triggers **no network request and no auth** (ADR-0005).
+- **Copy-command** is a pure builder: `{slug, version} → "uvx graflet <slug>"` (append `@<version_label>` when a non-latest version is chosen). Copying triggers **no network request and no auth** (ADR-0005).
 - The four hero **stat tiles** show a real representative doc (or an honestly-labelled aggregate), with the basis labelled — not fabricated.
 - Reuse the **copy and structure** from the design export verbatim where static (headlines, section copy, step text); replace the illustrative dataset with live catalog data.
 
@@ -96,13 +96,13 @@ Every displayed savings/quality value is honest: only what the catalog data actu
 
 - Paid plans, MCP service, charging for the KG; Google sign-in; the CLI and backend internals (built elsewhere); the release poller; the graphify engine (ADR-0005, CONTEXT deferred list).
 - The interactive `graph.html` preview embed (ticket 06 mentioned it) — defer unless trivially cheap; the table + copy-command carry v1.
-- Product name/brand/domain finalization (`rnui.dev` unchosen) — the site ships under the placeholder "docs-kg".
+- Product name/brand/domain finalization (`rnui.dev` unchosen) — the site ships under the placeholder "graflet".
 - Real per-doc numbers for docs missing savings #2/#4 — those depend on the pipeline's savings pass (P2); the site shows `—` until they land.
 - A light theme (Frame A is dark-committed; add later if wanted).
 
 ## Further Notes
 
-- This spec realizes docs-kg-cli tickets **06/07/10**; when tickets are cut from it, they replace those placeholders' presentation. Keep the ADR acceptance criteria from 06/07/10 as the honesty/gate/consent guardrails.
+- This spec realizes graflet-cli tickets **06/07/10**; when tickets are cut from it, they replace those placeholders' presentation. Keep the ADR acceptance criteria from 06/07/10 as the honesty/gate/consent guardrails.
 - The design export holds all three directions (A/B/C) and a `<script>` with the real copy + an illustrative dataset + the exact sort logic (score / nodesNum / updatedHrs) — reuse that logic for the view-model, feed it live catalog data.
 - Deployment host is flexible (Cloudflare Pages/Workers); it must reach the backend Worker's catalog API and be allowed by its CORS.
 - shadcn components come from the shadcn MCP during the build.

@@ -3,7 +3,7 @@
 -- Ticket 01/03 own the identity tables (users/tokens/pending_auth); this owns the
 -- catalog. Kept live by the pipeline + poller POSTing to /catalog/upsert.
 
--- docs: one row per library — the CLI's user-facing key (`docs-kg <slug>`).
+-- docs: one row per library — the CLI's user-facing key (`graflet <slug>`).
 -- Doc-level fields are the moving/current view; the frozen per-version detail
 -- lives in doc_versions.
 CREATE TABLE IF NOT EXISTS docs (

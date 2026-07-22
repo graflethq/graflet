@@ -27,10 +27,10 @@ export default defineConfig({
           GITHUB_OAUTH_CLIENT_ID: "test-oauth-client-id",
           CATALOG_UPSERT_SECRET: "test-catalog-upsert-secret",
           RESEND_API_KEY: "test-resend-key",
-          RESEND_FROM: "docs-kg <updates@test.dev>",
+          RESEND_FROM: "graflet <updates@test.dev>",
           MARKETING_POSTAL_ADDRESS: "123 Test St, Testville",
           UNSUBSCRIBE_SECRET: "test-unsubscribe-secret",
-          PRIVATE_KG_REPO: "docs-kg/kg-bundles",
+          PRIVATE_KG_REPO: "graflethq/kg-bundles",
           // Allow-list the CORS test asserts against (site origin + local dev).
           SITE_ORIGINS: "https://site.test,http://localhost:3000",
           TEST_MIGRATIONS: migrations,

@@ -3,8 +3,8 @@ import { Title, Lede } from "@/components/legal-prose";
 import { AttributionList } from "@/components/attribution-list";
 
 export const metadata: Metadata = {
-  title: "Attribution · docs-kg",
-  description: "Upstream source and license for every doc set docs-kg redistributes.",
+  title: "Attribution · Graflet",
+  description: "Upstream source and license for every doc set Graflet redistributes.",
 };
 
 // Attribution (ticket 07). Lists each redistributed doc's upstream repo + license
@@ -15,7 +15,7 @@ export default function AttributionPage() {
     <article>
       <Title>Attribution</Title>
       <Lede>
-        docs-kg redistributes documentation from the projects below. Each stays under its own license; the graphs we
+        Graflet redistributes documentation from the projects below. Each stays under its own license; the graphs we
         build over them are ours. Here is every source repository and its license.
       </Lede>
       <AttributionList />

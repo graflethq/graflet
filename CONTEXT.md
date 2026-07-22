@@ -1,11 +1,11 @@
-# CONTEXT — Docs-KG CLI (working name TBD)
+# CONTEXT — Graflet CLI (working name TBD)
 
 **Last updated:** 2026-07-20
 **Status:** design settled via grilling; not yet built.
-**Supersedes:** the web-app product mapped in `.scratch/docs-kg-service/` (that map's delivery half is retired; see ADRs).
+**Supersedes:** the web-app product mapped in `.scratch/graflet-service/` (that map's delivery half is retired; see ADRs).
 
 This file is the single source of truth for *what the product is and why*. Hard-to-reverse decisions
-have their own ADR under `docs/adr/`. The build plan is `.scratch/docs-kg-cli/spec.md`.
+have their own ADR under `docs/adr/`. The build plan is `.scratch/graflet-cli/spec.md`.
 
 ---
 
