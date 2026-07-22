@@ -12,6 +12,29 @@ Default five canonical roles (`needs-triage`, `needs-info`, `ready-for-agent`, `
 
 Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
+## Repository layout
+
+Each dir is self-contained (own `package.json` + `node_modules`; no root workspace). See [ADR-0008].
+
+| Path | What it is | Publish / deploy |
+|---|---|---|
+| `apps/web/` | Marketing + catalog **site** — Next.js on Cloudflare (OpenNext) | deployed via wrangler |
+| `apps/backend/` | **API** — Cloudflare Worker (GitHub auth, catalog, KG broker) | deployed via wrangler |
+| `packages/cli/` | The real **`graflet` CLI** (TypeScript) | → npm `@graflethq/cli` (when it ships) |
+| `packages/graflet-npm/` | npm publish **stub** (name-lock placeholder) | → npm `@graflethq/cli` (current) |
+| `packages/graflet-pypi/` | PyPI publish **stub** | → PyPI `graflet` |
+| `kg-pipeline/` | KG build pipeline (submodule) | — |
+| `assets/brand/` | Logo / banner / OG / favicons (public) | — |
+| `.scratch/<feature>/` | Specs + issue tickets (see Issue tracker above) | local |
+| `docs/adr/` | Architecture decision records | — |
+
+**Where skill-work goes** (`/to-spec`, `/to-tickets`, `/implement`): CLI feature → `packages/cli/`;
+site → `apps/web/`; API → `apps/backend/`. New specs/tickets → `.scratch/<feature>/`.
+
+**Release:** bump the SAME version in BOTH `packages/graflet-npm/package.json` and
+`packages/graflet-pypi/pyproject.toml`, then tag `vX.Y.Z` → CI publishes via OIDC. The two publish
+stubs fold into `packages/cli` once the real CLI ships.
+
 ## Private submodules — research & data live outside this repo
 
 This repo is public-facing. Two private submodules hold everything that must NOT be visible to anyone who clones it (both were purged from this repo's git history):
