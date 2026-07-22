@@ -6,3 +6,6 @@ _audio/
 
 # Session handoff notes — local only, never committed (public repo)
 handoffs/
+
+# Brand-asset working files (claude.ai/design prompts, raw design HTML, drafts) — local only, never public
+.scratch/site-design/_brand-work/

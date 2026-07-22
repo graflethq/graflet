@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "graflet"
-version = "0.0.3"
+version = "0.0.4"
 description = "Precomputed knowledge graphs of versioned library docs, for AI agents. Docs as a graph, not snippets."
 readme = "README.md"
 requires-python = ">=3.9"

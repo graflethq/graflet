@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="500" viewBox="0 0 1500 500">
+  <defs>
+    <radialGradient id="topglow" cx="750" cy="0" r="680" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4ef08c" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#4ef08c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="clusterglow" cx="1246" cy="245" r="270" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4ef08c" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#4ef08c" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1500" height="500" fill="#0a0b0d"/>
+  <rect x="0" y="0" width="1500" height="500" fill="url(#topglow)"/>
+  <ellipse cx="1246" cy="245" rx="255" ry="215" fill="url(#clusterglow)"/>
+
+  <!-- g-in-a-web node cluster, right third -->
+  <g transform="translate(1030,30) scale(0.44)">
+    <g stroke="#3d444d" fill="none" stroke-linecap="round" stroke-width="4" opacity="0.9">
+      <line x1="660" y1="300" x2="800" y2="355"/>
+      <line x1="800" y1="355" x2="885" y2="290"/>
+      <line x1="560" y1="300" x2="640" y2="185"/>
+      <line x1="640" y1="185" x2="800" y2="355"/>
+      <line x1="330" y1="420" x2="190" y2="400"/>
+      <line x1="190" y1="400" x2="150" y2="515"/>
+      <line x1="500" y1="710" x2="560" y2="835"/>
+    </g>
+    <g fill="#8b949e">
+      <g opacity="0.95">
+        <circle cx="800" cy="355" r="14"/>
+        <circle cx="640" cy="185" r="14"/>
+        <circle cx="190" cy="400" r="14"/>
+        <circle cx="560" cy="835" r="14"/>
+      </g>
+      <g opacity="0.7">
+        <circle cx="885" cy="290" r="11"/>
+        <circle cx="150" cy="515" r="11"/>
+      </g>
+    </g>
+    <g filter="url(#glow)">
+      <g stroke="#4ef08c" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <path d="M560 300 L400 300 L330 420 L400 540 L560 540 L620 420 Z"/>
+        <path d="M620 420 L660 300"/>
+        <path d="M620 420 L640 640 L500 710 L360 640"/>
+      </g>
+      <g fill="#4ef08c">
+        <circle cx="560" cy="300" r="22"/>
+        <circle cx="400" cy="300" r="22"/>
+        <circle cx="660" cy="300" r="18"/>
+        <circle cx="330" cy="420" r="22"/>
+        <circle cx="620" cy="420" r="22"/>
+        <circle cx="400" cy="540" r="22"/>
+        <circle cx="560" cy="540" r="22"/>
+        <circle cx="640" cy="640" r="22"/>
+        <circle cx="500" cy="710" r="22"/>
+        <circle cx="360" cy="640" r="22"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- left-center text block -->
+  <text x="300" y="212" font-family="JetBrains Mono, monospace" font-weight="700" font-size="112" letter-spacing="-0.02em"><tspan fill="#e6edf3">graf</tspan><tspan fill="#4ef08c">let</tspan></text>
+
+  <text x="302" y="272" font-family="Geist, Inter, system-ui, sans-serif" font-size="34" fill="#e6edf3">Docs as a graph, not snippets.</text>
+
+  <rect x="302" y="306" width="326" height="48" rx="9" fill="#0d0f12" stroke="#1c2027"/>
+  <text x="322" y="338" font-family="JetBrains Mono, monospace" font-size="22" dominant-baseline="middle"><tspan fill="#4ef08c">$ </tspan><tspan fill="#8b949e">npx </tspan><tspan fill="#e6edf3">@graflethq/cli</tspan></text>
+</svg>
