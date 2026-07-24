@@ -12,9 +12,9 @@ import { download } from "./download.js";
 import { login, logout } from "./login.js";
 import { watch } from "./watch.js";
 
-// Backend base URL. Prod URL is operator-provisioned (Cloudflare account not yet
-// live) — override with $GRAFLET_API until it's pinned. TODO: bake the real URL.
-const DEFAULT_API = "https://graflet-backend.example.workers.dev";
+// Backend base URL — the live production API (wrangler.jsonc routes graflet-backend
+// at this custom domain). $GRAFLET_API overrides it for local dev / staging.
+const DEFAULT_API = "https://api.graflet.rnui.dev";
 const apiBase = () => process.env.GRAFLET_API || DEFAULT_API;
 
 const HELP = `graflet — download docs + knowledge graphs

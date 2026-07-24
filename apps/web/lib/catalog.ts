@@ -22,10 +22,13 @@ export interface CatalogDoc {
   hero_savings: number | null;
   repo_url: string | null;
   graphscore: number | null;
-  /** Savings metric #4 — "usage token savings", a median % reduction (spec line 74;
-   *  kg-product-research/savings-metrics/REQUIREMENTS.md). NOT yet computed (CONTEXT.md), so it
-   *  is absent from the API today → the Tokens saved column shows "—" until it lands. */
-  usage_token_reduction_pct?: number | null;
+  /** Savings metric #4 — the raw token count of the whole source-doc corpus (all `.md`), the
+   *  Anthropic-counted `doc_tokens` from the bundle's savings.json. It's the size of the docs this
+   *  graph distills; the "Doc tokens" column / "Docs distilled" tile show it, "—" until a build lands. */
+  doc_tokens?: number | null;
+  /** Savings metric #2 — estimated seconds to build this graph yourself on a local M1 model
+   *  (Qwen3.5-9B, extrapolated from the on-device benchmark). Feeds the "Build time done" tile. */
+  build_seconds?: number | null;
   nodes?: number | null;
   edges?: number | null;
   built_at?: string | null;
@@ -66,8 +69,8 @@ export function buildCatalogRows(docs: CatalogDoc[], tab: CatalogTab, query = ""
       repo: repoSlug(d.repo_url),
       version: d.latest_version,
       score: d.graphscore == null ? DASH : `${d.graphscore}/100`,
-      // Metric #4 is a "typical" % reduction — show "~N%", never a fabricated number.
-      tokens: d.usage_token_reduction_pct == null ? DASH : `~${Math.round(d.usage_token_reduction_pct)}%`,
+      // Metric #4 — the raw doc-corpus token count this graph distills, shown compact (954k).
+      tokens: d.doc_tokens == null ? DASH : compact(d.doc_tokens),
       size: d.nodes == null || d.edges == null ? DASH : `${compact(d.nodes)} nodes · ${compact(d.edges)} edges`,
       updated: relativeTime(d.built_at, now),
       command: buildInstallCommand(d.slug),
@@ -109,7 +112,7 @@ export function relativeTime(iso: string | null | undefined, now: number): strin
 }
 
 /** 840 → "840", 2100 → "2.1k", 3_900_000 → "3.9M". */
-function compact(n: number): string {
+export function compact(n: number): string {
   if (n < 1000) return String(n);
   if (n < 1_000_000) return `${round1(n / 1000)}k`;
   return `${round1(n / 1_000_000)}M`;

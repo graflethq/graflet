@@ -30,6 +30,24 @@ export interface FetchMarkdownOptions {
 const SHA_RE = /^[0-9a-f]{40}$/i;
 const DEC = new TextDecoder();
 
+/**
+ * Documentation file extensions, and the root legal files that always travel with them.
+ * These MUST stay in step with the build engine's `fetch.py` (`_DOC_EXTS` / `_is_license`):
+ * when a doc has no pinned `docs_path` the engine graphifies the doc-extension files from
+ * ANYWHERE in the repo, so the CLI has to extract exactly that same set or the two halves
+ * stop aligning (ADR-0002 — they align by construction, or not at all).
+ */
+const DOC_EXTS = [".md", ".mdx", ".rst", ".txt"];
+const ROOT_LEGAL = ["LICENSE", "COPYING", "NOTICE"];
+
+/** Does this repo-relative path belong to the set the KG was built from? */
+function isDocFile(rel: string): boolean {
+  const lower = rel.toLowerCase();
+  if (DOC_EXTS.some((e) => lower.endsWith(e))) return true;
+  // a root LICENSE/COPYING/NOTICE, any extension — the engine surfaces these too
+  return !rel.includes("/") && ROOT_LEGAL.includes(rel.toUpperCase().split(".")[0]);
+}
+
 /** Extract `{org, repo}` from a `github.com/{org}/{repo}` URL (tolerates `.git`/trailing slash). */
 export function parseRepo(repoUrl: string): { org: string; repo: string } {
   const m = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?\/?$/.exec(repoUrl.trim());
@@ -43,10 +61,11 @@ export function codeloadUrl(org: string, repo: string, sha: string): string {
 }
 
 /**
- * Fetch the pinned upstream `.md` for a resolved source and write the `docs_path`
- * subtree under `destDir`. Returns the paths written. An unresolved/partial input
- * (e.g. the pre-P1 catalog state where `sha` is null) fails cleanly BEFORE any
- * network request — it never attempts a download.
+ * Fetch the pinned upstream `.md` for a resolved source and write it under `destDir`:
+ * the `docs_path` subtree when the catalog pins one, otherwise the doc files repo-wide
+ * (the same set the KG was built from — see isDocFile). Returns the paths written. An
+ * unresolved input (e.g. a catalog row whose `sha` is still null) fails cleanly BEFORE
+ * any network request — it never attempts a download.
  */
 export async function fetchMarkdown(
   src: ResolvedSource,
@@ -55,9 +74,12 @@ export async function fetchMarkdown(
 ): Promise<string[]> {
   const repoUrl = (src.repo_url ?? "").trim();
   const sha = (src.sha ?? "").trim();
+  // docs_path is OPTIONAL: most repos don't pin one, and for those the KG was built from the
+  // doc-extension files repo-wide, so that's what we fetch (see isDocFile). repo_url + sha are
+  // the real requirement — without the pin there is nothing to align to.
   const docsPath = (src.docs_path ?? "").trim().replace(/^\/+|\/+$/g, "");
-  if (!repoUrl || !sha || !docsPath) {
-    throw new Error("cannot fetch markdown: unresolved source (missing repo_url, sha or docs_path)");
+  if (!repoUrl || !sha) {
+    throw new Error("cannot fetch markdown: unresolved source (missing repo_url or sha)");
   }
   if (!SHA_RE.test(sha)) {
     throw new Error(`cannot fetch markdown: '${sha}' is not a 40-char commit sha`);
@@ -70,14 +92,18 @@ export async function fetchMarkdown(
   if (!res.ok) throw new Error(`codeload fetch failed (HTTP ${res.status}) for ${org}/${repo}@${sha}`);
   const tar = gunzipSync(new Uint8Array(await res.arrayBuffer()));
 
-  // The archive's single top-level dir is `{repo}-{sha}/`; keep only files under
-  // `{prefix}{docs_path}/`, and strip the `{repo}-{sha}/` prefix from the output.
+  // The archive's single top-level dir is `{repo}-{sha}/`; strip it, then keep either the pinned
+  // `docs_path` subtree or — when none is pinned — the doc files the KG was actually built from.
   const prefix = `${repo}-${sha}/`;
-  const subtree = `${prefix}${docsPath}/`;
+  const keep = docsPath
+    ? (rel: string) => rel === docsPath || rel.startsWith(`${docsPath}/`)
+    : isDocFile;
   const written: string[] = [];
   for (const entry of readTar(tar)) {
-    if (!entry.path.startsWith(subtree)) continue;
-    const outPath = safeJoin(destDir, entry.path.slice(prefix.length));
+    if (!entry.path.startsWith(prefix)) continue;
+    const rel = entry.path.slice(prefix.length);
+    if (!rel || !keep(rel)) continue;
+    const outPath = safeJoin(destDir, rel);
     await mkdir(dirname(outPath), { recursive: true });
     await writeFile(outPath, entry.data); // byte-for-byte, unmodified
     written.push(outPath);

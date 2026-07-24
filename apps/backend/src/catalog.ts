@@ -25,7 +25,7 @@ export async function handleCatalogList(env: Env): Promise<Response> {
   const { results } = await env.CATALOG.prepare(
     `SELECT d.slug, d.name, d.repo_url, d.license_id AS license, d.popularity_rank,
             v.version_label AS latest_version, v.graphscore, v.hero_savings,
-            v.nodes, v.edges, v.built_at
+            v.nodes, v.edges, v.built_at, v.build_seconds, v.doc_tokens
        FROM docs d
        JOIN doc_versions v ON v.slug = d.slug AND v.is_latest = 1 AND v.status = 'ready'
       ORDER BY d.popularity_rank ASC`,
@@ -41,6 +41,8 @@ export async function handleCatalogList(env: Env): Promise<Response> {
     nodes: number | null;
     edges: number | null;
     built_at: string | null;
+    build_seconds: number | null;
+    doc_tokens: number | null;
   }>();
   return Response.json({ docs: results });
 }
@@ -200,14 +202,15 @@ export async function handleCatalogUpsert(env: Env, req: Request): Promise<Respo
   stmts.push(
     env.CATALOG.prepare(
       `INSERT INTO doc_versions
-         (slug, version_label, is_latest, status, sha, docs_path, kg_ref, license_id, savings_json, graphscore, hero_savings, nodes, edges, built_at, needs_human)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         (slug, version_label, is_latest, status, sha, docs_path, kg_ref, license_id, savings_json, graphscore, hero_savings, nodes, edges, built_at, build_seconds, doc_tokens, needs_human)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(slug, version_label) DO UPDATE SET
          is_latest = excluded.is_latest, status = excluded.status,
          sha = excluded.sha, docs_path = excluded.docs_path, kg_ref = excluded.kg_ref,
          license_id = excluded.license_id, savings_json = excluded.savings_json,
          graphscore = excluded.graphscore, hero_savings = excluded.hero_savings,
          nodes = excluded.nodes, edges = excluded.edges, built_at = excluded.built_at,
+         build_seconds = excluded.build_seconds, doc_tokens = excluded.doc_tokens,
          needs_human = excluded.needs_human`,
     ).bind(
       slug,
@@ -224,6 +227,8 @@ export async function handleCatalogUpsert(env: Env, req: Request): Promise<Respo
       num(body.nodes),
       num(body.edges),
       str(body.built_at) || null,
+      num(body.build_seconds),
+      num(body.doc_tokens),
       body.needs_human ? 1 : 0,
     ),
   );
@@ -261,6 +266,8 @@ type UpsertBody = {
   nodes?: unknown;
   edges?: unknown;
   built_at?: unknown;
+  build_seconds?: unknown;
+  doc_tokens?: unknown;
   needs_human?: unknown;
 };
 

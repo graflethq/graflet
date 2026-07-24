@@ -75,7 +75,7 @@ export function CatalogSection() {
               <TableHead>Library</TableHead>
               <TableHead>Version</TableHead>
               <TableHead className="text-right">GraphScore</TableHead>
-              <TableHead className="text-right">Tokens saved</TableHead>
+              <TableHead className="text-right">Doc tokens</TableHead>
               <TableHead className="text-right">Graph size</TableHead>
               <TableHead className="text-right">Updated</TableHead>
               <TableHead className="text-right">Command</TableHead>

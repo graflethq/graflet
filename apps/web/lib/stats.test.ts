@@ -3,7 +3,7 @@ import { buildStatTiles, statBasis } from "./stats";
 import type { CatalogDoc } from "./catalog";
 
 // Representative doc = first (popularity-ordered). `next.js` has every metric;
-// `react` is missing usage_token_reduction_pct + hero_savings to exercise "—".
+// `react` is missing doc_tokens + build_seconds + hero_savings to exercise "—".
 const NEXT: CatalogDoc = {
   slug: "next.js",
   name: "next.js",
@@ -11,7 +11,8 @@ const NEXT: CatalogDoc = {
   popularity_rank: 1,
   latest_version: "16",
   hero_savings: 0.42,
-  usage_token_reduction_pct: 68,
+  doc_tokens: 954069,
+  build_seconds: 69063,
   repo_url: "https://github.com/vercel/next.js",
   graphscore: 94,
 };
@@ -32,16 +33,16 @@ describe("buildStatTiles (ADR-0006 honesty — real or '—', never fabricated)"
     const [cost, time, score, tokens] = buildStatTiles([NEXT, REACT]);
     expect(cost.value).toBe("$0.42");
     expect(score.value).toBe("94/100");
-    expect(tokens.value).toBe("~68%");
-    // No catalog field carries build duration yet → always "—".
-    expect(time.value).toBe("—");
+    expect(tokens.value).toBe("954.1k tokens"); // metric #4 — raw doc-corpus token count
+    expect(time.value).toBe("19h"); // metric #2 — est. local build time (69063s)
   });
 
   it("renders '—' for every metric the representative doc lacks", () => {
-    const [cost, , score, tokens] = buildStatTiles([REACT]);
+    const [cost, time, score, tokens] = buildStatTiles([REACT]);
     expect(cost.value).toBe("—"); // hero_savings null
+    expect(time.value).toBe("—"); // build_seconds absent
     expect(score.value).toBe("—"); // graphscore null
-    expect(tokens.value).toBe("—"); // usage_token_reduction_pct absent
+    expect(tokens.value).toBe("—"); // doc_tokens absent
   });
 
   it("shows all '—' and a null basis when the catalog is empty", () => {
@@ -63,7 +64,7 @@ describe("buildStatTiles (ADR-0006 honesty — real or '—', never fabricated)"
       "Build cost saved",
       "Build time done",
       "GraphScore",
-      "Fewer tokens for your AI",
+      "Docs distilled",
     ]);
   });
 

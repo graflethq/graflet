@@ -1,4 +1,4 @@
-import type { CatalogDoc } from "./catalog";
+import { compact, type CatalogDoc } from "./catalog";
 import { round1 } from "./utils";
 
 /**
@@ -31,9 +31,8 @@ export function buildStatTiles(docs: CatalogDoc[]): StatTile[] {
       sub: "vs building the graph yourself",
     },
     {
-      // ponytail: no build-duration field in the catalog yet → always "—"; a
-      // one-line map here when the pipeline's savings pass (metric #2) exposes it.
-      value: DASH,
+      // Metric #2 — estimated seconds to build this graph on a local M1 model, from the catalog.
+      value: rep?.build_seconds == null ? DASH : fmtDuration(rep.build_seconds),
       label: "Build time done",
       sub: "pre-computed, not on your machine",
     },
@@ -43,13 +42,10 @@ export function buildStatTiles(docs: CatalogDoc[]): StatTile[] {
       sub: "coverage × structure quality",
     },
     {
-      // Metric #4 is a median % reduction ("typical") — show "~N%", never fabricated.
-      value:
-        rep?.usage_token_reduction_pct == null
-          ? DASH
-          : `~${Math.round(rep.usage_token_reduction_pct)}%`,
-      label: "Fewer tokens for your AI",
-      sub: "vs feeding raw docs",
+      // Metric #4 — the raw token count of the source docs this graph distills (Anthropic-counted).
+      value: rep?.doc_tokens == null ? DASH : `${compact(rep.doc_tokens)} tokens`,
+      label: "Docs distilled",
+      sub: "of source docs, condensed into one graph",
     },
   ];
 }
@@ -64,8 +60,18 @@ export function statBasis(docs: CatalogDoc[]): string | null {
   const rep = docs[0];
   if (!rep) return null;
   const measured =
-    rep.hero_savings != null || rep.graphscore != null || rep.usage_token_reduction_pct != null;
+    rep.hero_savings != null || rep.graphscore != null || rep.doc_tokens != null || rep.build_seconds != null;
   return measured ? `${rep.name} ${rep.latest_version}` : null;
+}
+
+/** Build seconds → a short human duration for the tile: "42m", "19h", "2.9d". Rounded — this is an
+ *  extrapolated estimate, never presented as exact. */
+function fmtDuration(seconds: number): string {
+  const mins = Math.round(seconds / 60);
+  if (mins < 90) return `${mins}m`;
+  const hours = Math.round(seconds / 3600);
+  if (hours < 48) return `${hours}h`;
+  return `${round1(seconds / 86400)}d`;
 }
 
 /** Small USD: $0.42, $3.1, $1.2k. */

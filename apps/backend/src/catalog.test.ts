@@ -35,6 +35,8 @@ function readyDoc(over: UpsertBody = {}): UpsertBody {
     nodes: 1200,
     edges: 3900,
     built_at: "2026-07-20T10:00:00Z",
+    build_seconds: 69063,
+    doc_tokens: 954069,
     ...over,
   };
 }
@@ -72,6 +74,10 @@ describe("catalog API (ticket 02)", () => {
       nodes: 1200,
       edges: 3900,
       built_at: "2026-07-20T10:00:00Z",
+      // Savings metric #2 (est. local build time) + #4 (raw doc-corpus tokens) — carried on the
+      // list so the site's "Build time" + "Doc tokens" tiles render without a per-row fetch.
+      build_seconds: 69063,
+      doc_tokens: 954069,
     });
   });
 

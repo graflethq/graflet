@@ -124,6 +124,30 @@ describe("fetchMarkdown (ticket 04)", () => {
     expect(readFileSync(written[0])).toEqual(Buffer.from(bytes));
   });
 
+  // Most catalog rows pin no docs_path; for those the KG was built from the doc-extension files
+  // repo-wide (engine: fetch.py `_DOC_EXTS` / `_is_license`), so the .md half must match that set
+  // exactly or the two sources stop aligning (ADR-0002).
+  it("with no docs_path, extracts doc files repo-wide plus the root license — and no code", async () => {
+    const tarGz = makeTarGz([
+      block(`${top}/`, new Uint8Array(0), "5"),
+      block(`${top}/README.md`, enc.encode("readme")),
+      block(`${top}/CHANGELOG.md`, enc.encode("changes")),
+      block(`${top}/axum/docs/guide.mdx`, enc.encode("guide")),
+      block(`${top}/spec/api.rst`, enc.encode("api")),
+      block(`${top}/notes.txt`, enc.encode("notes")),
+      block(`${top}/LICENSE`, enc.encode("MIT")), // root legal file, no extension
+      block(`${top}/src/main.rs`, enc.encode("fn main() {}")), // code — must NOT ship
+      block(`${top}/src/nested/LICENSE`, enc.encode("nope")), // non-root legal — must NOT ship
+    ]);
+    const d = dest();
+    const written = await fetchMarkdown({ repo_url: "https://github.com/me/myrepo", sha: SHA, docs_path: null }, d, { fetchImpl: fakeFetch(tarGz) });
+
+    expect(written.map((p) => p.slice(d.length + 1)).sort()).toEqual(
+      ["CHANGELOG.md", "LICENSE", "README.md", join("axum", "docs", "guide.mdx"), "notes.txt", join("spec", "api.rst")].sort(),
+    );
+    expect(readFileSync(join(d, "axum", "docs", "guide.mdx"))).toEqual(Buffer.from(enc.encode("guide")));
+  });
+
   it("rejects an unresolved source WITHOUT fetching (pre-P1 null sha / missing fields)", async () => {
     const f = fakeFetch(makeTarGz([]));
     await expect(fetchMarkdown({ repo_url: "https://github.com/me/myrepo", sha: "", docs_path: "docs" }, dest(), { fetchImpl: f })).rejects.toThrow(/unresolved/i);

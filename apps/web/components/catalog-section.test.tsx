@@ -29,7 +29,7 @@ describe("CatalogSection (ADR-0006: a doc missing a metric still renders, showin
     render(<CatalogSection />);
 
     expect(await screen.findByText("lonely")).toBeInTheDocument();
-    // GraphScore, Tokens saved, Graph size, Updated all lack data → four — cells.
+    // GraphScore, Doc tokens, Graph size, Updated all lack data → four — cells.
     expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(4);
     // Per-row copy — no sign-in, no KG fetch (ADR-0005).
     expect(
