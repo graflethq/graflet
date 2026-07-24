@@ -19,11 +19,15 @@ library at one release.
 
 <!-- demo-gif: terminal recording of `graflet next.js` goes here once the catalog is populated -->
 
-> **Pre-release.** The CLI is code-complete but **not published yet**, and the catalog is empty. The
-> packages on [npm](https://www.npmjs.com/package/@graflethq/cli) and
-> [PyPI](https://pypi.org/project/graflet/) are name-lock placeholders — installing one today gets
-> you a stub, not the tool. Watch this repo (Watch → Custom → Releases) to hear when the real one
-> lands.
+## Install
+
+```bash
+npm i -g @graflethq/cli   # needs Node >= 18
+graflet next.js           # → ./next.js/ : the docs Markdown + the knowledge graph
+```
+
+Python users: `pipx install graflet` installs a thin launcher that hands off to the npm CLI when Node
+is on PATH. The catalog is **live** — [63 libraries](https://api.graflet.rnui.dev/catalog) and growing.
 
 ## The problem
 
@@ -116,10 +120,10 @@ If it is useful to you: star the repo, or tell someone who is losing tokens to d
 |---|---|
 | Website — catalog, copy-command, GitHub signup, legal pages | shipped, live at [graflet.rnui.dev](https://graflet.rnui.dev) |
 | Backend — OAuth, catalog API, download broker, watch subscriptions + notification email | shipped, Cloudflare Worker at `api.graflet.rnui.dev` |
-| CLI — `login` / `logout`, `<slug>` download, `watch` | code-complete, **not published yet** |
-| Launch catalog of knowledge graphs | **in build** — the catalog API currently returns zero docs |
+| CLI — `login` / `logout`, `<slug>` download, `watch` | **published** — `npm i -g @graflethq/cli` |
+| Launch catalog of knowledge graphs | **live** — 63 docs at [`api.graflet.rnui.dev/catalog`](https://api.graflet.rnui.dev/catalog), growing as the pipeline builds |
 | Release poller | not built — until it ships, nothing triggers a watch notification |
-| npm `@graflethq/cli` + PyPI `graflet` | name-lock **placeholders**; the real CLI replaces them |
+| npm `@graflethq/cli` + PyPI `graflet` | npm is the **real CLI**; PyPI `graflet` is a Node launcher (`npx @graflethq/cli`) |
 
 ## Repo layout
 
