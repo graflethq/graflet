@@ -1,64 +1,57 @@
-# graflet CLI
+<p align="center">
+  <a href="https://graflet.rnui.dev">
+    <img src="https://raw.githubusercontent.com/graflethq/graflet/main/assets/brand/graflet-og-1200x630.png" alt="graflet — Docs as a graph, not snippets." width="640">
+  </a>
+</p>
 
-The open-source command-line tool for the Graflet project. It signs you in with
-GitHub and (later tickets) downloads a doc's Markdown + knowledge graph.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@graflethq/cli"><img alt="npm" src="https://img.shields.io/npm/v/@graflethq/cli?logo=npm&label=npm"></a>
+  <a href="https://pypi.org/project/graflet/"><img alt="PyPI" src="https://img.shields.io/pypi/v/graflet?logo=pypi&logoColor=white&label=PyPI"></a>
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue">
+  <a href="https://graflet.rnui.dev"><img alt="graflet.rnui.dev" src="https://img.shields.io/badge/site-graflet.rnui.dev-14161D?logo=cloudflare&logoColor=F6A821"></a>
+</p>
 
-**Name is provisional** (`graflet`, package `graflet-cli`) — the brand is still
-open (CONTEXT.md). **Ticket 03 (this):** `login` / `logout` only. Download (05)
-and `watch` (08) come later.
+**Docs as a graph, not snippets.**
 
-## Commands
+Precomputed knowledge graphs of versioned library docs, for AI coding agents. One graflet = one
+library at one release. `graflet <slug>` downloads a library's documentation Markdown **plus** a
+pre-built knowledge graph of those docs, both pinned to the same upstream commit.
 
-| Command | What it does |
-|---------|--------------|
-| `graflet login` | GitHub OAuth in the browser; on success stores a bearer token. |
-| `graflet logout` | Forgets the stored token (keyring + plaintext fallback). |
-| `graflet --help` | Usage. Runs signed-out — auth gates only the KG download (ADR-0005). |
+## Install
 
-Sign-in is **identity only** — it never asks for marketing consent (ADR-0006).
-
-## How auth works
-
-The CLI never holds the GitHub client secret. It calls the backend, which runs
-the OAuth code exchange and mints its own bearer token (ADR-0001):
-
-```
-graflet login
-  → POST  <api>/auth/cli/start   → { authorize_url, state }
-  → opens authorize_url in the browser; you approve on GitHub
-  → GitHub redirects to the backend callback, which exchanges the code
-  → POST  <api>/auth/cli/poll {state}  (repeated) → { token, login }
-  → token stored in the OS keyring (or a 0600 file where none exists)
+```bash
+npm i -g @graflethq/cli   # needs Node >= 18
 ```
 
-## Token storage
+## Use
 
-1. **OS keyring** (`@napi-rs/keyring`) — the default.
-2. **`~/.config/graflet/token`** (0600) — fallback where no keyring exists
-   (headless Linux, containers). Honors `XDG_CONFIG_HOME`.
-
-For CI / headless use, skip the browser entirely with a token you already hold:
-
-```sh
-export GRAFLET_TOKEN=<bearer>      # or pass --token to the download/watch commands
+```bash
+graflet login          # sign in with GitHub (once) — the one action that needs an account
+graflet next.js        # latest tracked release  -> ./next.js/
+graflet next.js@16     # that release, pinned     -> ./next.js@16/
+graflet watch next.js  # get emailed when the graph updates
 ```
 
-`GRAFLET_TOKEN` / `--token` authenticate **without** a browser and **without**
-writing the keyring.
+Each download writes one directory with the graph (`graph.json`, `graph.html`, `GRAPH_REPORT.md`,
+`savings.json`, `meta.json`) **and** the library's own docs Markdown, byte-for-byte from upstream at
+the pinned commit. The Markdown is fetched anonymously from the library's public repo; the graph is
+streamed from a broker after sign-in, so you never hold a token for the private graph repo.
 
-## Config
+For CI / headless use, skip the browser with a bearer you already hold:
 
-| Env | Purpose | Default |
-|-----|---------|---------|
-| `GRAFLET_API` | Backend base URL | placeholder until the Worker URL is pinned |
-| `GRAFLET_TOKEN` | Use this bearer directly | — |
-| `XDG_CONFIG_HOME` | Base dir for the plaintext fallback | `~/.config` |
-
-## Develop
-
-```sh
-pnpm install
-pnpm run typecheck
-pnpm test          # vitest (Node) — credential store + login flow, no network
-pnpm run build     # tsc → dist/ ; the bin is dist/index.js
+```bash
+export GRAFLET_TOKEN=<bearer>   # authenticate without a browser, without writing the keyring
 ```
+
+Browse the catalog at **[graflet.rnui.dev](https://graflet.rnui.dev)**. Full design, ADRs and source:
+**[github.com/graflethq/graflet](https://github.com/graflethq/graflet)**.
+
+## Naming
+
+Spelled **g-r-a-f-l-e-t**, no p-h — from *graphlet*, a small induced subgraph. npm blocks the bare
+name (too close to `leaflet`), so the package is scoped `@graflethq/cli`; the installed command is
+`graflet`. PyPI keeps bare [`graflet`](https://pypi.org/project/graflet/).
+
+## License
+
+MIT — © 2026 MD. MOHIBUR RAHMAN.

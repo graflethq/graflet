@@ -13,19 +13,32 @@
 
 **Docs as a graph, not snippets.**
 
-Precomputed knowledge graphs of versioned library docs, for AI agents. One graflet = one library at one version.
+Precomputed knowledge graphs of versioned library docs, for AI agents. One graflet = one library at
+one release.
 
-> Context7 sends your agent snippets to read; **graflet** sends the graph to traverse.
+## The CLI is a Node tool
 
-## Run with no install
+graflet's command-line tool is published to npm as
+**[`@graflethq/cli`](https://www.npmjs.com/package/@graflethq/cli)**. Install it directly:
 
 ```bash
-uvx graflet          # Python (uv)
-npx @graflethq/cli   # Node — same tool, published to npm (scoped; installs command `graflet`)
+npm i -g @graflethq/cli   # needs Node >= 18
+graflet next.js
 ```
 
-Or install as a tool: `uv tool install graflet`.
+## This PyPI package is a launcher
+
+`pipx install graflet` (or `pip install graflet`) installs a thin launcher, **not** a Python
+reimplementation. When Node is on your PATH it hands off to the real CLI via `npx`:
+
+```bash
+pipx install graflet
+graflet next.js          # → npx @graflethq/cli next.js
+```
+
+Without Node it prints the `npm i -g @graflethq/cli` install line above.
 
 > Spelled **g-r-a-f-l-e-t**, no p-h.
 
-_Early placeholder release; the real CLI lands soon._
+Catalog & docs: **[graflet.rnui.dev](https://graflet.rnui.dev)** · Source:
+**[github.com/graflethq/graflet](https://github.com/graflethq/graflet)** · MIT.

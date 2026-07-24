@@ -13,13 +13,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10   # packages/cli pins pnpm-lock.yaml (lockfileVersion 9.0); no package-lock.json, so `npm ci` is not usable
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-      - run: npm install -g npm@latest   # trusted publishing needs npm >= 11.5.1
-      - run: npm publish
-        working-directory: packages/graflet-npm
+      - run: pnpm install --frozen-lockfile   # the TS CLI needs its dev deps (tsc) before the build
+        working-directory: packages/cli
+      - run: pnpm run build                    # tsc -> dist/index.js (the stub needed no build; this does)
+        working-directory: packages/cli
+      - run: npm install -g npm@latest         # trusted publishing needs npm >= 11.5.1
+      - run: npm publish                        # OIDC trusted publish of the REAL @graflethq/cli (files: dist, README, LICENSE)
+        working-directory: packages/cli
 
   pypi:
     runs-on: ubuntu-latest
