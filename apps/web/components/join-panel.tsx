@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { authStartUrl } from "@/lib/api";
 import { LINKS } from "@/lib/links";
+import { readSession, writeSession, type Session } from "@/lib/session";
 
 /**
  * The website signup flow (ticket 06 / ADR-0001, ADR-0006). "Sign in with GitHub"
@@ -15,20 +16,6 @@ import { LINKS } from "@/lib/links";
  * This is the ONLY place the site captures the opt-in — the landing page carries
  * no such field (ADR-0005 / spec).
  */
-
-type Session = { login: string; consent: "yes" | "no" };
-const SESSION_KEY = "graflet:session";
-
-function readSession(): Session | null {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const s = JSON.parse(raw) as Session;
-    return s.login && (s.consent === "yes" || s.consent === "no") ? s : null;
-  } catch {
-    return null;
-  }
-}
 
 export function JoinPanel() {
   const [optIn, setOptIn] = useState(false); // unchecked by default (ADR-0006)
@@ -50,7 +37,7 @@ export function JoinPanel() {
     }
     if (login && (consent === "yes" || consent === "no")) {
       const s: Session = { login, consent };
-      localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+      writeSession(s);
       setSession(s);
       history.replaceState(null, "", window.location.pathname);
       return;

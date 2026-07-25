@@ -17,6 +17,24 @@ export async function fetchCatalog(signal?: AbortSignal): Promise<CatalogDoc[]> 
 }
 
 /**
+ * GET /stars → the repo's star count for the nav's ★ Star button, or null when the
+ * backend couldn't reach GitHub. Null is a normal answer, not an error: the nav
+ * renders no count for it, which is what it already does below the display floor.
+ * Routed through our Worker (cached an hour) so a visitor's IP never spends a
+ * GitHub rate-limit slot.
+ */
+export async function fetchStars(signal?: AbortSignal): Promise<number | null> {
+  try {
+    const res = await fetch(`${CATALOG_API_URL}/stars`, { signal });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { stars?: number | null };
+    return typeof data.stars === "number" ? data.stars : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The website GitHub sign-in entry point on the backend Worker (ticket 06). A
  * top-level navigation here runs the OAuth code-exchange server-side — the client
  * secret never ships to the browser (ADR-0001). `consent` carries the unchecked-
