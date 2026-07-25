@@ -50,3 +50,34 @@ git add kg-product-research && git commit -m "bump research"   # record new poin
 ```
 
 `kg-data/` uses LFS — run `git -C kg-data lfs pull` after a fresh clone to hydrate the blobs.
+
+<!-- CCX-DELEGATE:BEGIN (delete this block to disable soft delegation) -->
+## Delegate cheap subtasks to CommandCode (`ccd`)
+
+To save Opus tokens, offload token-heavy grunt work to CommandCode via
+`.commandcode-delegate/ccd "<task>"` — it runs a cheap model on a separate
+credit pool and only the short answer returns here. **Delegate instead of doing
+inline** when a subtask is:
+
+- **Big-file read/summary** — reading a large file/dir only to extract a fact,
+  API surface, or summary: `ccd "Read X and return ONLY <the thing>"`.
+- **Codebase search** — broad grep/explore across many files where you only need
+  the findings: `ccd "Search <dir> for <pattern>; return file:line hits + 1 line each"`.
+- **Log/output analysis** — parsing a big log/dump for a needle or root cause:
+  `ccd "Scan <logfile> for <what>; return matching lines + cause"`.
+- **Boilerplate/scaffold gen** — generating repetitive files; add `-w` so it can
+  write: `ccd -w "Create <files> following <pattern>"`.
+
+Rules: pass ALL needed context in the task string (each call is a fresh session
+with no memory here); ask for a SHORT result (a big returned blob defeats the
+purpose). Do it **inline instead** when the task is small, you need exact bytes
+to edit, the answer must be certain, or `ccd` prints `CCX_FALLBACK`.
+
+Docs / disable: `.commandcode-delegate/README.md`.
+<!-- CCX-DELEGATE:END -->
+
+<!-- CCX-SKILLS:BEGIN (one-line pointer; delete to stop routing skills through CommandCode) -->
+> **Before running the `research` or `handoff` skill in this repo, first read
+> `.commandcode-delegate/SKILL-ROUTING.md`** — it routes their agent work to
+> parallel CommandCode sessions instead of Claude Code subagents (this repo only).
+<!-- CCX-SKILLS:END -->

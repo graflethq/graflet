@@ -13,3 +13,7 @@ handoffs/
 # Go-to-market research + campaign calendar — local only, never public
 .scratch/launch-gtm/
 
+
+# CommandCode delegation tally — local only
+.commandcode-delegate
+artifacts
