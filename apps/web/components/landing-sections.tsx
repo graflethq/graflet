@@ -69,6 +69,51 @@ export function HowItWorks() {
   );
 }
 
+/**
+ * Static, illustrative sample output — labelled as an example (not live data).
+ * Sits right after "How it works": the steps describe the run, this shows it
+ * finishing. Moved out of the hero so the catalog clears the fold.
+ */
+export function TerminalDemo() {
+  return (
+    <section className="mx-auto max-w-6xl px-4 pt-12 sm:px-6">
+      <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-border bg-[#0d0f12] text-left shadow-2xl">
+        <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+          <span className="size-2.5 rounded-full bg-[#ff5f57]" />
+          <span className="size-2.5 rounded-full bg-[#febc2e]" />
+          <span className="size-2.5 rounded-full bg-[#28c840]" />
+          <span className="ml-2.5 font-mono text-xs text-muted-foreground">react — graflet · example output</span>
+        </div>
+        <pre className="overflow-x-auto px-5 py-4 font-mono text-[13px] leading-[1.75] text-[#cdd3da]">
+          <span className="text-muted-foreground">$</span> uvx graflet react
+          {"\n"}
+          {/* The sha-alignment check now happens up front from the KG response headers, so it is
+              folded into this one line — there is no longer a separate "Aligned to release" step. */}
+          <span className="text-primary">✔</span> Resolved <span className="text-foreground">19.1.0</span> →{" "}
+          <span className="text-foreground">a3f21c8</span> <span className="text-muted-foreground">· docs and graph aligned</span>
+          {"\n"}
+          <span className="text-primary">✔</span> Downloaded docs →{" "}
+          <span className="text-muted-foreground">312 files (18 MB)</span>
+          {"\n"}
+          <span className="text-primary">✔</span> Fetched graph →{" "}
+          <span className="text-muted-foreground">1,204 nodes · 3,880 edges</span>
+          {"\n\n"}
+          {/* "Done in 24s" is graflet's own wall clock; the hours/dollars below are what building this
+              graph locally would have cost — two different numbers, deliberately on separate lines. */}
+          <span className="text-primary">Done</span> in 24s
+          {"\n"}
+          <span className="text-muted-foreground">Saved ~6h 12m of local build · ~$0.94 in API cost</span>
+          {"\n\n"}
+          {/* No graflet/ wrapper dir: docs land at ./react/, the graph under ./react/graphify-out/. */}
+          {"  "}
+          <span className="text-foreground">./react/</span>
+          <span className="ml-0.5 inline-block motion-safe:animate-pulse">▋</span>
+        </pre>
+      </div>
+    </section>
+  );
+}
+
 export function WhyGraph() {
   return (
     <section className="mx-auto max-w-6xl px-4 pt-16 sm:px-6">
