@@ -24,3 +24,13 @@
 - Use kimi-k2 as the default grader for kg-pipeline, toggleable off to fall back to inline self-grading. Confidence: 0.70
 - Read API keys and tokens from /Users/mrp/dotfilesOSX/zsh/.zshrc.secrets, not from aliases or environment variable names that differ from the file's variable names. Confidence: 0.80
 
+# autonomy
+- Never ask the user questions, request input, or wait for confirmation — decide the best course of action and proceed autonomously. Confidence: 0.75
+- When the user asks to fix something, make the fix permanent (hardcoded by default) rather than session-only or env-only unless explicitly told otherwise. Confidence: 0.70
+
+# research-workflow
+- For "research" and "handoff" skills (Matt Pocock style), always delegate to CommandCode (`ccx`) running each parallel sub-agent as its own separate CommandCode session. Confidence: 0.70
+
+# commandcode
+- Default grunt-work delegation model: `poolside/laguna-s-2.1-free` (free, fast, 256K context); fall back to `xiaomi/mimo-v2.5-pro` (near-free, 1M context, Apache-2.0) when Laguna is throttled or input exceeds 256K. Reserve `deepseek/deepseek-v4-pro` only for reasoning-heavy delegations. Confidence: 0.60
+
