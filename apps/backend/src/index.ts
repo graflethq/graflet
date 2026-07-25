@@ -18,7 +18,8 @@
 import { handleCliCallback, handleCliPoll, handleCliStart, handleWebCallback, handleWebStart } from "./auth";
 import { handleKgDownload } from "./broker";
 import { handleCatalogDoc, handleCatalogList, handleCatalogUpsert } from "./catalog";
-import { corsPreflight, isCatalogReadPath, withCors } from "./cors";
+import { corsPreflight, isPublicReadPath, withCors } from "./cors";
+import { handleStars } from "./stars";
 import { handleConsent, handleUnsubscribe, handleWatch } from "./watch";
 
 export default {
@@ -60,10 +61,17 @@ export default {
       return handleWebCallback(env, req);
     }
 
-    // CORS preflight for the two public read endpoints only (site slice, ticket 02).
-    // The site fetches the catalog cross-origin; every other route stays same-origin.
-    if (req.method === "OPTIONS" && isCatalogReadPath(pathname)) {
+    // CORS preflight for the public read endpoints only (site slice, ticket 02).
+    // The site fetches the catalog + star count cross-origin; every other route
+    // stays same-origin.
+    if (req.method === "OPTIONS" && isPublicReadPath(pathname)) {
       return corsPreflight(env, req);
+    }
+
+    // The repo's star count for the nav's ★ Star button. Public, CORS-open, and
+    // cached an hour so a visitor's IP never spends a GitHub rate-limit slot.
+    if (pathname === "/stars" && req.method === "GET") {
+      return withCors(await handleStars(env), env, req);
     }
 
     // Catalog (ticket 02). Reads are public (ADR-0005 gates only the KG download);

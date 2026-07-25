@@ -1,11 +1,12 @@
 /**
- * CORS for the two public, read-only catalog endpoints (ticket 02, site slice).
+ * CORS for the public, read-only endpoints (ticket 02, site slice).
  *
  * The website is a separate frontend app; it lists docs by calling GET /catalog
- * and GET /catalog/{slug} straight from the browser (cross-origin), so those two
- * responses must carry Access-Control-Allow-Origin for the site's origin. The
- * data is already public (ADR-0005 gates only the KG download) — CORS just lets
- * the browser's same-origin policy hand the bytes to the page's JS.
+ * and GET /catalog/{slug} straight from the browser (cross-origin), and reads the
+ * repo's star count from GET /stars the same way, so those responses must carry
+ * Access-Control-Allow-Origin for the site's origin. The data is already public
+ * (ADR-0005 gates only the KG download) — CORS just lets the browser's same-origin
+ * policy hand the bytes to the page's JS.
  *
  * Everything else (upsert, OAuth, broker, watch/consent) gets NO CORS header, so
  * a script on any other origin can't drive it from a browser.
@@ -26,10 +27,11 @@ export function allowedOrigin(env: Env, req: Request): string | null {
   return allow.includes(origin) ? origin : null;
 }
 
-/** True for the two public read paths (list + detail); never for /catalog/upsert. */
-export function isCatalogReadPath(pathname: string): boolean {
+/** True for the public read paths (catalog list + detail, star count); never for
+ *  /catalog/upsert, which is a write behind a shared secret. */
+export function isPublicReadPath(pathname: string): boolean {
   if (pathname === "/catalog/upsert") return false;
-  return pathname === "/catalog" || pathname.startsWith("/catalog/");
+  return pathname === "/catalog" || pathname.startsWith("/catalog/") || pathname === "/stars";
 }
 
 /** 204 preflight for a read endpoint; CORS headers only for an allowed origin. */

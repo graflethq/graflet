@@ -82,6 +82,27 @@ export async function fetchIdentity(accessToken: string): Promise<GitHubIdentity
 }
 
 /**
+ * The public repo's star count, for the site's ★ Star button (GET /stars).
+ *
+ * Authenticated even though the repo is public: an unauthenticated call is capped
+ * at 60/hr per IP, and a Worker's egress IP is shared across all of Cloudflare, so
+ * it would 403 unpredictably. The token is only ever spent on public metadata here.
+ */
+export async function fetchRepoStars(repo: string, token: string): Promise<number> {
+  const res = await fetchImpl(`${API_REPOS}/${repo}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "User-Agent": "graflet-backend",
+    },
+  });
+  if (!res.ok) throw new Error(`GET /repos/${repo} failed: ${res.status}`);
+  const body = (await res.json()) as { stargazers_count?: number };
+  if (typeof body.stargazers_count !== "number") throw new Error("no stargazers_count in response");
+  return body.stargazers_count;
+}
+
+/**
  * Fetch one file's raw bytes from a private repo (the pruned KG bundle tarball),
  * authenticated with the server-side token (ticket 05 / ADR-0002). The `raw` media
  * type returns the file bytes directly (up to 100 MB) — GitHub follows its own
