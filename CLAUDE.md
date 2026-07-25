@@ -31,9 +31,10 @@ Each dir is self-contained (own `package.json` + `node_modules`; no root workspa
 **Where skill-work goes** (`/to-spec`, `/to-tickets`, `/implement`): CLI feature → `packages/cli/`;
 site → `apps/web/`; API → `apps/backend/`. New specs/tickets → `.scratch/<feature>/`.
 
-**Release:** bump the SAME version in BOTH `packages/graflet-npm/package.json` and
-`packages/graflet-pypi/pyproject.toml`, then tag `vX.Y.Z` → CI publishes via OIDC. The two publish
-stubs fold into `packages/cli` once the real CLI ships.
+**Release:** bump the SAME version in **three** places — `packages/cli/package.json`,
+`packages/graflet-pypi/pyproject.toml` AND `packages/graflet-pypi/src/graflet/__init__.py`
+(`__version__`) — then tag `vX.Y.Z` → `.github/workflows/publish.yml` publishes both via OIDC.
+`packages/graflet-npm/` is the retired name-lock stub; it is NOT published and is not bumped.
 
 ## Private submodules — research & data live outside this repo
 
