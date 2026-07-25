@@ -2,16 +2,23 @@
  * `graflet <slug>` / `graflet <slug>@<version>` — THE SPINE (ticket 05 / ADR-0002, 0005).
  *
  * One command, two sources. Resolves the pin from the catalog, then writes BOTH
- * the doc's Markdown and its knowledge graph to ./<slug>/ together:
+ * the doc's Markdown and its knowledge graph to ./<slug>/, each in its own place:
  *   • .md  — fetched from the UPSTREAM public repo (ticket 04's module: one
- *            anonymous codeload tarball at the pinned sha; no token, no REST budget).
+ *            anonymous codeload tarball at the pinned sha; no token, no REST budget),
+ *            written at the root of ./<slug>/.
  *   • KG   — fetched from the backend broker (the ONE action needing sign-in,
- *            ADR-0005; the broker holds the private-repo token and streams bytes).
+ *            ADR-0005; the broker holds the private-repo token and streams bytes),
+ *            written under ./<slug>/graphify-out/ — the same folder name graphify
+ *            itself writes, so re-running graphify over the docs is a no-surprise
+ *            operation. Keeping the two apart also stops the bundle's own
+ *            GRAPH_REPORT.md from being indistinguishable from a doc .md to any
+ *            `**\/*.md` glob (including this engine's own null-docs_path rule).
  * The two align by construction: both are keyed to the same commit sha, asserted
  * here against the broker's X-KG-Sha before the KG is written (ADR-0002).
  */
 
-import { join } from "node:path";
+import { rename } from "node:fs/promises";
+import { basename, join } from "node:path";
 import { downloadKg, resolveDoc } from "./api.js";
 import { resolveToken } from "./credential-store.js";
 import { extractTarGz, fetchMarkdown } from "./md-fetch.js";
@@ -66,14 +73,25 @@ export async function download(arg: string, deps: DownloadDeps): Promise<number>
   }
 
   // Both verified — write the two sources together. .md from upstream (ticket 04,
-  // anonymous, no token), then the KG bundle files.
+  // anonymous, no token) at the root, then the KG bundle files under graphify-out/.
   // ponytail: a rare IO error between these two writes could orphan one source;
   // full atomicity (temp dir + rename) is deferred — the sha-drift path ADR-0002
   // cares about is already fully guarded above.
   await fetchMarkdown(resolved, dest, { fetchImpl });
-  await extractTarGz(kg.bytes, dest);
+  const written = await extractTarGz(kg.bytes, join(dest, "graphify-out"));
 
-  log(`Downloaded ${slug} (${resolved.version}) to ${dest}/ — Markdown + knowledge graph.`);
+  // The doc's own LICENSE/NOTICE travels INSIDE the bundle (kg-pipeline surfaces it from the
+  // upstream repo root — ENG-0003, for attribution-encumbered builders). It licenses the docs,
+  // not the graph, so lift it back to the root where the docs are. Matches the hyphenated forms
+  // real repos ship (LICENSE-APACHE + LICENSE-MIT, LICENSE-DOCS.md) — same rule as fetch.py's
+  // _is_license. A repo with no pinned docs_path already had this file fetched to the root; the
+  // rename lands the identical bytes on it.
+  for (const p of written) {
+    const name = basename(p);
+    if (/^(LICENSE|COPYING|NOTICE)\b/i.test(name)) await rename(p, join(dest, name));
+  }
+
+  log(`Downloaded ${slug} (${resolved.version}) to ${dest}/ — Markdown at the root, knowledge graph in graphify-out/.`);
   return 0;
 }
 

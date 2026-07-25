@@ -32,10 +32,24 @@ graflet next.js@16     # that release, pinned     -> ./next.js@16/
 graflet watch next.js  # get emailed when the graph updates
 ```
 
-Each download writes one directory with the graph (`graph.json`, `graph.html`, `GRAPH_REPORT.md`,
-`savings.json`, `meta.json`) **and** the library's own docs Markdown, byte-for-byte from upstream at
-the pinned commit. The Markdown is fetched anonymously from the library's public repo; the graph is
-streamed from a broker after sign-in, so you never hold a token for the private graph repo.
+Each download writes one directory holding both sources, kept apart:
+
+```
+next.js/
+├── docs/…               the library's own Markdown, byte-for-byte from upstream
+├── LICENSE              the docs' license
+└── graphify-out/        the graph
+    ├── graph.json
+    ├── graph.html
+    ├── GRAPH_REPORT.md
+    ├── savings.json
+    └── meta.json
+```
+
+`graphify-out/` is the same folder name [graphify](https://github.com/mrpmohiburrahman/graphify)
+writes, so running it over the docs yourself lands in the same place. The Markdown is fetched
+anonymously from the library's public repo at the pinned commit; the graph is streamed from a broker
+after sign-in, so you never hold a token for the private graph repo.
 
 For CI / headless use, skip the browser with a bearer you already hold:
 

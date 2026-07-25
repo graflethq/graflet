@@ -114,8 +114,9 @@ export async function fetchMarkdown(
 /**
  * Extract every regular file from a gzipped tarball into `destDir`, byte-for-byte,
  * path-traversal-guarded. Returns the paths written. This is how the KG bundle
- * lands (ticket 05): the broker streams one `.tar.gz` and the CLI unpacks its
- * files (graph.json, graph.html, GRAPH_REPORT.md, savings.json, LICENSE) here.
+ * lands (ticket 05): the broker streams one `.tar.gz` and the CLI unpacks its flat
+ * files (graph.json, graph.html, GRAPH_REPORT.md, savings.json, meta.json, LICENSE)
+ * into `<slug>/graphify-out/`, apart from the docs `fetchMarkdown` puts at the root.
  * `fetchMarkdown` above is the same shape over a filtered upstream subtree.
  */
 export async function extractTarGz(gzBytes: Uint8Array, destDir: string): Promise<string[]> {

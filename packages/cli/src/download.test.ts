@@ -92,10 +92,15 @@ describe("cli download — the spine (ticket 05)", () => {
     expect(code).toBe(0);
     // Source 1: the .md, byte-for-byte under docs/.
     expect(readFileSync(join(out, "docs", "intro.md"), "utf8")).toBe("# Intro\n");
-    // Source 2: every KG bundle file.
-    for (const f of ["graph.json", "graph.html", "GRAPH_REPORT.md", "savings.json", "LICENSE"]) {
-      expect(existsSync(join(out, f))).toBe(true);
+    // Source 2: every KG bundle file, under graphify-out/ — never loose at the root, so a
+    // `**/*.md` sweep of the docs can't pick up the bundle's own GRAPH_REPORT.md.
+    for (const f of ["graph.json", "graph.html", "GRAPH_REPORT.md", "savings.json"]) {
+      expect(existsSync(join(out, "graphify-out", f))).toBe(true);
+      expect(existsSync(join(out, f))).toBe(false);
     }
+    // …except the LICENSE, which licenses the DOCS and is lifted back out to the root.
+    expect(readFileSync(join(out, "LICENSE"), "utf8")).toBe("MIT");
+    expect(existsSync(join(out, "graphify-out", "LICENSE"))).toBe(false);
     // The .md came from anonymous codeload (no api.github.com, no token to GitHub).
     const codeload = calls.find((u) => u.includes("codeload.github.com"));
     expect(codeload).toBe(`https://codeload.github.com/me/myrepo/tar.gz/${SHA}`);
@@ -107,7 +112,7 @@ describe("cli download — the spine (ticket 05)", () => {
     const { fetchImpl } = stub({ kgSha: "f".repeat(40) }); // broker returns a different sha
     const code = await download("next.js", { apiBase: API, fetchImpl, getToken: () => "tok", outDir: () => out });
     expect(code).toBe(1);
-    expect(existsSync(join(out, "graph.json"))).toBe(false); // mismatched KG not written
+    expect(existsSync(join(out, "graphify-out"))).toBe(false); // mismatched KG not written
     expect(existsSync(join(out, "docs", "intro.md"))).toBe(false); // and NOT left as a .md-only dir
   });
 
