@@ -20,9 +20,9 @@ Each dir is self-contained (own `package.json` + `node_modules`; no root workspa
 |---|---|---|
 | `apps/web/` | Marketing + catalog **site** — Next.js on Cloudflare (OpenNext) | deployed via wrangler |
 | `apps/backend/` | **API** — Cloudflare Worker (GitHub auth, catalog, KG broker) | deployed via wrangler |
-| `packages/cli/` | The real **`graflet` CLI** (TypeScript) | → npm `@graflethq/cli` (when it ships) |
-| `packages/graflet-npm/` | npm publish **stub** (name-lock placeholder) | → npm `@graflethq/cli` (current) |
-| `packages/graflet-pypi/` | PyPI publish **stub** | → PyPI `graflet` |
+| `packages/cli/` | The real **`graflet` CLI** (TypeScript) | → npm `@graflethq/cli` — **live, 0.3.0** |
+| `packages/graflet-npm/` | Retired name-lock stub — not published, not bumped | — |
+| `packages/graflet-pypi/` | PyPI **launcher** (shells out to the npm CLI) | → PyPI `graflet` — live, 0.3.0 |
 | `kg-pipeline/` | KG build pipeline (submodule) | — |
 | `assets/brand/` | Logo / banner / OG / favicons (public) | — |
 | `.scratch/<feature>/` | Specs + issue tickets (see Issue tracker above) | local |
@@ -55,30 +55,24 @@ git add kg-product-research && git commit -m "bump research"   # record new poin
 <!-- CCX-DELEGATE:BEGIN (delete this block to disable soft delegation) -->
 ## Delegate cheap subtasks to CommandCode (`ccd`)
 
-To save Opus tokens, offload token-heavy grunt work to CommandCode via
-`.commandcode-delegate/ccd "<task>"` — it runs a cheap model on a separate
-credit pool and only the short answer returns here. **Delegate instead of doing
-inline** when a subtask is:
+`.commandcode-delegate/ccd "<task>"` runs a task on a cheap model on a separate
+credit pool; only the short answer returns here. Saves Opus tokens.
 
-- **Big-file read/summary** — reading a large file/dir only to extract a fact,
-  API surface, or summary: `ccd "Read X and return ONLY <the thing>"`.
-- **Codebase search** — broad grep/explore across many files where you only need
-  the findings: `ccd "Search <dir> for <pattern>; return file:line hits + 1 line each"`.
-- **Log/output analysis** — parsing a big log/dump for a needle or root cause:
-  `ccd "Scan <logfile> for <what>; return matching lines + cause"`.
-- **Boilerplate/scaffold gen** — generating repetitive files; add `-w` so it can
-  write: `ccd -w "Create <files> following <pattern>"`.
+A hook blocks whole-file reads over 96 KB — both `Read` and `cat` — and hands you
+the exact `ccd` line to run, so big reads are enforced, not remembered. Reach for
+`ccd` yourself for what no hook can see before it runs: broad multi-file searches
+and generating repetitive files (`-w` to let it write).
 
-Rules: pass ALL needed context in the task string (each call is a fresh session
-with no memory here); ask for a SHORT result (a big returned blob defeats the
-purpose). Do it **inline instead** when the task is small, you need exact bytes
-to edit, the answer must be certain, or `ccd` prints `CCX_FALLBACK`.
+Each call is a fresh session with no memory of this chat — put ALL context in the
+task string and ask for a SHORT result. Do it inline instead when the task is
+small, you need exact bytes to edit, or `ccd` prints `CCX_FALLBACK`.
 
-Docs / disable: `.commandcode-delegate/README.md`.
+`ccd -h` prints flags; `.commandcode-delegate/README.md` is the full doc.
 <!-- CCX-DELEGATE:END -->
 
 <!-- CCX-SKILLS:BEGIN (one-line pointer; delete to stop routing skills through CommandCode) -->
-> **Before running the `research` or `handoff` skill in this repo, first read
-> `.commandcode-delegate/SKILL-ROUTING.md`** — it routes their agent work to
-> parallel CommandCode sessions instead of Claude Code subagents (this repo only).
+> **`research` / `handoff` in this repo:** do the agent work with parallel
+> `.commandcode-delegate/ccd -s <skill> "<sub-topic>"` calls, NOT Claude Code
+> `Agent()` subagents — `-s` loads the same skill file the subagent would have read.
+> You synthesise the replies. Details: `.commandcode-delegate/SKILL-ROUTING.md`.
 <!-- CCX-SKILLS:END -->
