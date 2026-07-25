@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { buildCatalogRows, relativeTime, type CatalogDoc } from "./catalog";
+import {
+  buildCatalogRows,
+  pageWindow,
+  relativeTime,
+  sameSort,
+  toggleSort,
+  SORT_PRESETS,
+  type CatalogDoc,
+  type CatalogSort,
+} from "./catalog";
 
 // Fixture catalog JSON — the shape GET /catalog returns. `vitest` deliberately
 // lacks graphscore / doc_tokens / nodes / built_at to exercise the
@@ -44,40 +53,87 @@ const DOCS: CatalogDoc[] = [
   },
 ];
 
-const slugs = (docs: CatalogDoc[], tab: Parameters<typeof buildCatalogRows>[1], q = "") =>
-  buildCatalogRows(docs, tab, q).map((r) => r.slug);
+const [TOP_SCORED, SMALLEST, RECENT] = SORT_PRESETS.map((p) => p.sort);
+
+const slugs = (docs: CatalogDoc[], sort: CatalogSort, q = "") =>
+  buildCatalogRows(docs, sort, q).map((r) => r.slug);
 
 describe("buildCatalogRows — sorting", () => {
-  it("Popular = GraphScore desc, missing score last", () => {
-    expect(slugs(DOCS, "popular")).toEqual(["react", "shadcn", "vitest"]);
+  it("Top scored = GraphScore desc, missing score last", () => {
+    expect(slugs(DOCS, TOP_SCORED)).toEqual(["react", "shadcn", "vitest"]);
   });
 
   it("Smallest first = nodes asc, missing size last", () => {
-    expect(slugs(DOCS, "smallest")).toEqual(["shadcn", "react", "vitest"]);
+    expect(slugs(DOCS, SMALLEST)).toEqual(["shadcn", "react", "vitest"]);
   });
 
   it("Recently built = built_at desc, missing date last", () => {
-    expect(slugs(DOCS, "recent")).toEqual(["react", "shadcn", "vitest"]);
+    expect(slugs(DOCS, RECENT)).toEqual(["react", "shadcn", "vitest"]);
+  });
+
+  it("sorts every sortable column in both directions", () => {
+    expect(slugs(DOCS, { key: "score", dir: "asc" })).toEqual(["shadcn", "react", "vitest"]);
+    expect(slugs(DOCS, { key: "size", dir: "desc" })).toEqual(["react", "shadcn", "vitest"]);
+    expect(slugs(DOCS, { key: "updated", dir: "asc" })).toEqual(["shadcn", "react", "vitest"]);
+    expect(slugs(DOCS, { key: "tokens", dir: "desc" })).toEqual(["react", "shadcn", "vitest"]);
+  });
+
+  it("keeps docs missing the sorted metric last in BOTH directions", () => {
+    // vitest has no graphscore/nodes/built_at — it must never lead an ascending sort.
+    for (const key of ["score", "tokens", "size", "updated"] as const) {
+      expect(slugs(DOCS, { key, dir: "asc" }).at(-1)).toBe("vitest");
+      expect(slugs(DOCS, { key, dir: "desc" }).at(-1)).toBe("vitest");
+    }
   });
 
   it("does not mutate the input array", () => {
     const before = DOCS.map((d) => d.slug);
-    buildCatalogRows(DOCS, "smallest", "");
+    buildCatalogRows(DOCS, SMALLEST, "");
     expect(DOCS.map((d) => d.slug)).toEqual(before);
+  });
+});
+
+describe("toggleSort — a fresh column starts descending, the same column flips", () => {
+  it("switches column at desc, then alternates on repeat clicks", () => {
+    const first = toggleSort({ key: "score", dir: "desc" }, "tokens");
+    expect(first).toEqual({ key: "tokens", dir: "desc" });
+    expect(toggleSort(first, "tokens")).toEqual({ key: "tokens", dir: "asc" });
+    expect(toggleSort({ key: "tokens", dir: "asc" }, "tokens")).toEqual({
+      key: "tokens",
+      dir: "desc",
+    });
+  });
+
+  it("lights the matching preset tab however the sort was set", () => {
+    expect(sameSort(toggleSort({ key: "size", dir: "asc" }, "score"), TOP_SCORED)).toBe(true);
+    expect(sameSort({ key: "tokens", dir: "desc" }, TOP_SCORED)).toBe(false);
+  });
+});
+
+describe("pageWindow — both ends reachable, current always flanked", () => {
+  it("lists every page while they fit", () => {
+    expect(pageWindow(1, 5)).toEqual([1, 2, 3, 4, 5]);
+    expect(pageWindow(4, 7)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it("collapses the runs it skips, never the first or last page", () => {
+    expect(pageWindow(1, 40)).toEqual([1, 2, "…", 40]);
+    expect(pageWindow(20, 40)).toEqual([1, "…", 19, 20, 21, "…", 40]);
+    expect(pageWindow(40, 40)).toEqual([1, "…", 39, 40]);
   });
 });
 
 describe("buildCatalogRows — filtering", () => {
   it("filters by library name, case-insensitively", () => {
-    expect(slugs(DOCS, "popular", "shad")).toEqual(["shadcn"]);
-    expect(slugs(DOCS, "popular", "REACT")).toEqual(["react"]);
-    expect(slugs(DOCS, "popular", "   ")).toEqual(["react", "shadcn", "vitest"]);
+    expect(slugs(DOCS, TOP_SCORED, "shad")).toEqual(["shadcn"]);
+    expect(slugs(DOCS, TOP_SCORED, "REACT")).toEqual(["react"]);
+    expect(slugs(DOCS, TOP_SCORED, "   ")).toEqual(["react", "shadcn", "vitest"]);
   });
 });
 
 describe("buildCatalogRows — honesty (missing metrics render —, never fabricated)", () => {
   it("a doc missing metrics still renders its row, with — for each gap", () => {
-    const vitest = buildCatalogRows(DOCS, "popular").find((r) => r.slug === "vitest")!;
+    const vitest = buildCatalogRows(DOCS, TOP_SCORED).find((r) => r.slug === "vitest")!;
     expect(vitest).toMatchObject({
       score: "—",
       tokens: "—",
@@ -90,7 +146,7 @@ describe("buildCatalogRows — honesty (missing metrics render —, never fabric
 
 describe("buildCatalogRows — present metrics render real values", () => {
   it("maps a fully-populated doc to display strings", () => {
-    const react = buildCatalogRows(DOCS, "popular").find((r) => r.slug === "react")!;
+    const react = buildCatalogRows(DOCS, TOP_SCORED).find((r) => r.slug === "react")!;
     expect(react).toMatchObject({
       name: "react",
       repo: "reactjs/react.dev",
@@ -104,7 +160,7 @@ describe("buildCatalogRows — present metrics render real values", () => {
   });
 
   it("every row's command is the latest bare command (no @version)", () => {
-    for (const row of buildCatalogRows(DOCS, "popular")) {
+    for (const row of buildCatalogRows(DOCS, TOP_SCORED)) {
       expect(row.command).toBe(`uvx graflet ${row.slug}`);
     }
   });
@@ -112,7 +168,7 @@ describe("buildCatalogRows — present metrics render real values", () => {
   it("formats built_at as a freshness label relative to `now`", () => {
     // react built_at = 2026-07-20T10:00:00Z; fix `now` 3h later for a stable string.
     const now = Date.parse("2026-07-20T13:00:00Z");
-    const react = buildCatalogRows(DOCS, "popular", "", now).find((r) => r.slug === "react")!;
+    const react = buildCatalogRows(DOCS, TOP_SCORED, "", now).find((r) => r.slug === "react")!;
     expect(react.updated).toBe("3h ago");
   });
 });

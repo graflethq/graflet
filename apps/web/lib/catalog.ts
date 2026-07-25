@@ -48,18 +48,49 @@ export interface CatalogRow {
   key: string;
 }
 
-export type CatalogTab = "popular" | "smallest" | "recent";
+/** The four sortable columns. Library/Version/Command are inert: a version string
+ *  orders "0.128.0" before "16" before "latest", which means nothing to a reader. */
+export type SortKey = "score" | "tokens" | "size" | "updated";
+export type SortDir = "asc" | "desc";
+export interface CatalogSort {
+  key: SortKey;
+  dir: SortDir;
+}
+
+/** The tabs are named shortcuts INTO the sort state, not a second mechanism — a tab
+ *  lights up whenever the sort matches its preset, whether a tab or a column header
+ *  set it. So the arrows and the tabs can never disagree. */
+export const SORT_PRESETS = [
+  { label: "Top scored", sort: { key: "score", dir: "desc" } },
+  { label: "Smallest first", sort: { key: "size", dir: "asc" } },
+  { label: "Recently built", sort: { key: "updated", dir: "desc" } },
+] as const satisfies readonly { label: string; sort: CatalogSort }[];
+
+export const DEFAULT_SORT: CatalogSort = { key: "score", dir: "desc" };
+
+/** Rows per page (grill decision). */
+export const PAGE_SIZE = 15;
+
+export const sameSort = (a: CatalogSort, b: CatalogSort) => a.key === b.key && a.dir === b.dir;
+
+/** Descending is the useful first click for every sortable column here — best score,
+ *  biggest corpus, largest graph, most recent — so a fresh column starts there. */
+export function toggleSort(current: CatalogSort, key: SortKey): CatalogSort {
+  if (current.key !== key) return { key, dir: "desc" };
+  return { key, dir: current.dir === "desc" ? "asc" : "desc" };
+}
 
 const DASH = "—";
 
-export function buildCatalogRows(docs: CatalogDoc[], tab: CatalogTab, query = "", now = Date.now()): CatalogRow[] {
+export function buildCatalogRows(
+  docs: CatalogDoc[],
+  sort: CatalogSort,
+  query = "",
+  now = Date.now(),
+): CatalogRow[] {
   const q = query.trim().toLowerCase();
 
-  const sorted = docs.slice().sort((a, b) => {
-    if (tab === "smallest") return numAsc(a.nodes, b.nodes);
-    if (tab === "recent") return strDesc(a.built_at, b.built_at);
-    return numDesc(a.graphscore, b.graphscore); // popular
-  });
+  const sorted = docs.slice().sort((a, b) => compareDocs(a, b, sort));
 
   return sorted
     .filter((d) => (q ? d.name.toLowerCase().includes(q) : true))
@@ -76,6 +107,42 @@ export function buildCatalogRows(docs: CatalogDoc[], tab: CatalogTab, query = ""
       command: buildInstallCommand(d.slug),
       key: `cat-${d.slug}`,
     }));
+}
+
+/** Sort two docs by the active column. `built_at` compares as an ISO string (which
+ *  sorts chronologically); the rest are plain numbers. Missing values sort last in
+ *  BOTH directions — a doc with no score is never "the best" (ADR-0006). */
+function compareDocs(a: CatalogDoc, b: CatalogDoc, { key, dir }: CatalogSort): number {
+  if (key === "updated") {
+    return dir === "desc" ? strDesc(a.built_at, b.built_at) : strAsc(a.built_at, b.built_at);
+  }
+  const pick =
+    key === "score"
+      ? (d: CatalogDoc) => d.graphscore
+      : key === "tokens"
+        ? (d: CatalogDoc) => d.doc_tokens
+        : (d: CatalogDoc) => d.nodes;
+  return dir === "desc" ? numDesc(pick(a), pick(b)) : numAsc(pick(a), pick(b));
+}
+
+/**
+ * The page numbers to render, with "…" standing in for the runs we skip. Both ends
+ * are always reachable and the current page always has a neighbour on each side, so
+ * a 40-page catalog still renders as a short strip.
+ */
+export function pageWindow(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const out: (number | "…")[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+
+  if (start > 2) out.push("…");
+  for (let p = start; p <= end; p++) out.push(p);
+  if (end < total - 1) out.push("…");
+  out.push(total);
+
+  return out;
 }
 
 /** github URL → "owner/repo" for the row's dim sub-label. Shared with the
@@ -131,3 +198,4 @@ function nullsLast<T>(cmp: (a: T, b: T) => number) {
 const numDesc = nullsLast<number>((a, b) => b - a);
 const numAsc = nullsLast<number>((a, b) => a - b);
 const strDesc = nullsLast<string>((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+const strAsc = nullsLast<string>((a, b) => (a < b ? -1 : a > b ? 1 : 0));
