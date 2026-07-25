@@ -133,12 +133,17 @@ export function WhyGraph() {
 }
 
 /**
- * Support: a star, and that's the whole ask (ADR-0005: no paywall).
+ * Support: a star is still the ask, and a supporter licence is the optional one.
  *
- * The GitHub Sponsors and Buy Me a Coffee buttons are gone because neither
- * destination exists — buymeacoffee.com/graflethq 404s and the org has no
- * sponsors listing, so both were dead buttons in production. A money route can
- * come back here as a second button whenever one is actually set up.
+ * This used to read "no paid plans — ever" while the nav linked a checkout selling
+ * ten of them. Both statements can't be on one page. What survived is the part that
+ * is actually true and always will be: nothing is paywalled (ADR-0005 gates only the
+ * KG download, behind a GitHub sign-in). The licence funds the work and unlocks
+ * nothing — see ADR-0009, which superseded the "no paid plans" half of ADR-0005.
+ *
+ * The old GitHub Sponsors and Buy Me a Coffee buttons are gone because neither
+ * destination existed — buymeacoffee.com/graflethq 404s and the org has no sponsors
+ * listing. Support is the money route that does exist, so it takes that slot.
  */
 export function Support() {
   return (
@@ -146,11 +151,15 @@ export function Support() {
       <div className="rounded-xl border border-border bg-card p-8 text-center sm:p-10">
         <h2 className="font-mono text-2xl font-semibold tracking-tight">Support the project</h2>
         <p className="mt-2 text-muted-foreground">
-          Free and open source, no paid plans — ever. A star is the whole ask.
+          Free and open source, and nothing is paywalled. A star is the whole ask — or fund the work with an
+          optional supporter licence, which unlocks nothing because there is nothing to unlock.
         </p>
-        <div className="mt-6 flex justify-center font-mono text-sm">
+        <div className="mt-6 flex flex-wrap justify-center gap-3 font-mono text-sm">
           <Button asChild size="lg">
             <a href={LINKS.github}>★ Star on GitHub</a>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <a href="/support">Support from $10</a>
           </Button>
         </div>
       </div>
@@ -169,7 +178,7 @@ export function SiteFooter() {
             the repo, which ★ Star already opens. What's left goes somewhere else. */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <a href="/#catalog" className="hover:text-foreground">Catalog</a>
-          <a href="/pricing" className="hover:text-foreground">Pricing</a>
+          <a href="/support" className="hover:text-foreground">Support</a>
           <a href="/privacy" className="hover:text-foreground">Privacy</a>
           <a href="/terms" className="hover:text-foreground">Terms</a>
           <a href="/refunds" className="hover:text-foreground">Refunds</a>

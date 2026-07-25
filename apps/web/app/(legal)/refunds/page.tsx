@@ -63,7 +63,7 @@ export default function RefundsPage() {
       <P>
         A refund ends the licence. Graflet itself is free and open source, so refunding a supporter licence never takes
         away the CLI or the docs — those were never the thing you paid for. See the{" "}
-        <ProseLink href="/pricing">pricing page</ProseLink> for what a licence actually covers.
+        <ProseLink href="/support">support page</ProseLink> for what a licence actually covers.
       </P>
     </article>
   );

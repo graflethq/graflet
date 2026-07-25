@@ -33,7 +33,7 @@ export function SiteNav() {
           </a>
           <div className="hidden items-center gap-6 font-mono text-[13px] text-muted-foreground sm:flex">
             <a href="/#catalog" className="hover:text-foreground">Catalog</a>
-            <a href="/pricing" className="hover:text-foreground">Support</a>
+            <a href="/support" className="hover:text-foreground">Support</a>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 font-mono">

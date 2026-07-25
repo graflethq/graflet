@@ -44,12 +44,24 @@ describe("Landing page — every outbound link points somewhere that exists", ()
     for (const href of external) expect(declared).toContain(href);
   });
 
-  it("asks for a star and nothing else — there is no funding destination yet", async () => {
+  it("asks for a star, and offers the one funding destination that exists", async () => {
     const { container } = render(<Home />);
     await screen.findByText("No libraries are ready yet.");
 
     expect(screen.getByRole("link", { name: "★ Star on GitHub" })).toHaveAttribute("href", LINKS.github);
+    expect(screen.getByRole("link", { name: "Support from $10" })).toHaveAttribute("href", "/support");
+    // The two that never existed stay gone (see the test above).
     expect(container.innerHTML).not.toMatch(/buymeacoffee|sponsors/i);
+  });
+
+  it("never claims there are no paid plans while linking a checkout that sells them", async () => {
+    // This shipped: the Support card read "no paid plans — ever" while the nav
+    // linked ten of them. Contradicting your own checkout on the page a merchant
+    // reviewer lands on is a liability, not a typo. ADR-0009 settled the wording.
+    const { container } = render(<Home />);
+    await screen.findByText("No libraries are ready yet.");
+
+    expect(container.textContent).not.toMatch(/no paid plans/i);
   });
 
   it("keeps Docs and GitHub out of the footer, like the nav", async () => {

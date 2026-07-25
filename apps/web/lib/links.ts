@@ -1,6 +1,8 @@
 /**
  * Outbound links used by the nav + hero + support/footer. Graflet brand; repo is
- * graflethq/graflet. No paywall link ever (ADR-0005).
+ * graflethq/graflet. Still no paywall link ever — the supporter licence is a
+ * same-origin /support route, not a gate, and it belongs to no product feature
+ * (ADR-0005 as amended by ADR-0009).
  *
  * `sponsors` and `buyMeACoffee` used to live here as best guesses at @graflethq
  * URLs. Neither existed — buymeacoffee.com/graflethq 404s and the org has no

@@ -1,6 +1,10 @@
 # ADR-0005 — Gate only the KG download; free OSS; monetization deferred
 
-**Status:** Accepted (2026-07-20)
+**Status:** Accepted (2026-07-20) — **partly superseded by [ADR-0009](0009-optional-supporter-licence.md) (2026-07-26)**
+
+> ADR-0009 replaces the **"No paid plans in v1"** bullet below: there is now an optional supporter licence sold
+> through Freemius. The rest of this ADR stands — exactly one action is gated, that gate is a GitHub sign-in for
+> access-control, and nothing is paywalled.
 
 ## Context
 The tool is free and open source, and the explicit goal right now is **audience + GitHub stars + donations**, not

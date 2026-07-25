@@ -5,28 +5,29 @@ import { Button } from "@/components/ui/button";
 import { TIERS, SANDBOX, checkoutUrl, machines } from "@/lib/support";
 
 export const metadata: Metadata = {
-  title: "Pricing · Graflet",
+  title: "Support · Graflet",
   description:
     "Graflet is free and open source. A supporter licence is optional — pick any amount from $10 to $100. Same files at every tier.",
 };
 
 /**
- * Pricing / supporter page.
+ * Support page.
  *
- * The CLI and the docs stay free (ADR-0005 gates only the KG download, and that
- * gate is a GitHub sign-in, not a payment). This page sells one optional thing: a
- * lifetime supporter licence at a price the buyer picks.
+ * Called "support" and not "pricing" because nothing here is priced: the CLI, the
+ * docs and the catalog are free at every tier (ADR-0005 gates only the KG
+ * download, and that gate is a GitHub sign-in, not a payment). "Pricing" implies a
+ * feature ladder, and there isn't one — see ADR-0009.
  *
  * Ten buttons rather than an amount box because Freemius's checkout has no
  * custom-amount parameter — see lib/support.ts. Nothing here is withheld from the
- * cheapest tier; say so on the page rather than implying a feature ladder.
+ * cheapest tier; say so on the page rather than letting the ladder imply otherwise.
  */
-export default function PricingPage() {
+export default function SupportPage() {
   return (
     <>
       <SiteNav />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-16 sm:px-6">
-        <h1 className="font-mono text-3xl font-semibold tracking-tight">Pricing</h1>
+        <h1 className="font-mono text-3xl font-semibold tracking-tight">Support</h1>
         <p className="mt-4 leading-relaxed text-muted-foreground">
           Graflet is free. The CLI, the docs, and the catalog cost nothing and always will — the only thing behind a
           gate is the graph download, and that gate is a GitHub sign-in, not a payment.
