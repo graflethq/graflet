@@ -169,8 +169,10 @@ export function SiteFooter() {
             the repo, which ★ Star already opens. What's left goes somewhere else. */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <a href="/#catalog" className="hover:text-foreground">Catalog</a>
+          <a href="/pricing" className="hover:text-foreground">Pricing</a>
           <a href="/privacy" className="hover:text-foreground">Privacy</a>
           <a href="/terms" className="hover:text-foreground">Terms</a>
+          <a href="/refunds" className="hover:text-foreground">Refunds</a>
           <a href="/attribution" className="hover:text-foreground">Attribution</a>
         </div>
       </div>

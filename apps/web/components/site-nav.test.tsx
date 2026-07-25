@@ -26,8 +26,14 @@ describe("SiteNav — ★ Star is the only GitHub affordance", () => {
 
     expect(screen.queryByRole("link", { name: "Docs" })).toBeNull();
     expect(screen.queryByRole("link", { name: "GitHub" })).toBeNull();
-    // Catalog survives — it's the one link that goes somewhere else.
-    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "#catalog");
+    // Catalog survives — it's the one link that goes somewhere else. Root-relative
+    // now that the nav also renders on /pricing, where a bare "#catalog" is dead.
+    expect(screen.getByRole("link", { name: "Catalog" })).toHaveAttribute("href", "/#catalog");
+  });
+
+  it("links Support at the pricing page", async () => {
+    render(<SiteNav />);
+    expect(screen.getByRole("link", { name: "Support" })).toHaveAttribute("href", "/pricing");
   });
 
   it("points Star at the repo", async () => {

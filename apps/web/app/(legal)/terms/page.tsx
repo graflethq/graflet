@@ -13,8 +13,9 @@ export default function TermsPage() {
     <article>
       <Title>Terms of use</Title>
       <Lede>
-        Graflet is free and <ProseLink href={LINKS.github}>open source</ProseLink>. There are no paid plans, and there
-        never will be. Use it however you like within the terms below.
+        Graflet is free and <ProseLink href={LINKS.github}>open source</ProseLink>. Nothing is paywalled; the one thing
+        you can buy is an optional <ProseLink href="/pricing">supporter licence</ProseLink>. Use it however you like
+        within the terms below.
       </Lede>
 
       <H2>Free and open source</H2>
@@ -38,6 +39,14 @@ export default function TermsPage() {
         The docs Graflet redistributes belong to their upstream projects and remain under those projects' licenses.
         We ship only permissively licensed docs; each library's source repository and license are listed on the{" "}
         <ProseLink href="/attribution">attribution page</ProseLink>.
+      </P>
+
+      <H2>Supporter licences</H2>
+      <P>
+        Buying a <ProseLink href="/pricing">supporter licence</ProseLink> is optional and changes nothing about the
+        terms above — the tool stays free, and every tier ships the same files. Purchases are sold by Freemius as
+        merchant of record, under their EULA, and are refundable in full for 30 days: see the{" "}
+        <ProseLink href="/refunds">refund policy</ProseLink>.
       </P>
 
       <H2>Questions</H2>
