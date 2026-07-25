@@ -32,6 +32,24 @@ graflet next.js@16     # that release, pinned     -> ./next.js@16/
 graflet watch next.js  # get emailed when the graph updates
 ```
 
+A download reports each step as it happens — the two sources stream in parallel:
+
+```
+$ graflet next.js
+graflet · next.js → ./next.js/
+
+✔ Resolved 16 → 2f9d939 · docs and graph aligned
+✔ Downloaded docs → 312 files (18 MB)
+✔ Fetched graph → 1,204 nodes · 3,880 edges
+
+Done in 24s
+Saved ~6h 12m of local build · ~$0.94 in API cost
+```
+
+All of that is on **stderr**. Stdout carries exactly one line — the absolute destination
+path — so `cd "$(graflet next.js)"` works with no parsing. Piped or in CI, the same words
+print as plain lines with no spinner and no escape codes.
+
 Each download writes one directory holding both sources, kept apart:
 
 ```

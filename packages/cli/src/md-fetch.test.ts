@@ -66,6 +66,23 @@ function fakeFetch(tarGz: Uint8Array) {
   return vi.fn(async (_url: string | URL | Request, _init?: RequestInit) => new Response(tarGz)) as unknown as typeof fetch;
 }
 
+/** A fetch whose body arrives in several chunks, each a VIEW onto the one shared buffer —
+ *  the shape real streams hand back, and the shape a `chunk.buffer`-based join corrupts. */
+function chunkedFetch(tarGz: Uint8Array, chunkSize: number, headers?: Record<string, string>) {
+  return vi.fn(
+    async () =>
+      new Response(
+        new ReadableStream<Uint8Array>({
+          start(c) {
+            for (let o = 0; o < tarGz.length; o += chunkSize) c.enqueue(tarGz.subarray(o, o + chunkSize));
+            c.close();
+          },
+        }),
+        { headers },
+      ),
+  ) as unknown as typeof fetch;
+}
+
 describe("parseRepo / codeloadUrl", () => {
   it("parses org/repo from a github repo_url and builds the anonymous codeload URL", () => {
     expect(parseRepo("https://github.com/vercel/next.js")).toEqual({ org: "vercel", repo: "next.js" });
@@ -158,6 +175,60 @@ describe("fetchMarkdown (ticket 04)", () => {
     const f = fakeFetch(makeTarGz([]));
     await expect(fetchMarkdown({ repo_url: "https://github.com/me/myrepo", sha: "main", docs_path: "docs" }, dest(), { fetchImpl: f })).rejects.toThrow(/sha/i);
     expect(f).not.toHaveBeenCalled();
+  });
+
+  // The download is ~30 silent seconds without this; the counter is what makes it not look hung.
+  // Kept even though codeload does NOT send one in practice (chunked over HTTP/1.1): this
+  // pins the percentage branch for the day a server does, e.g. the broker forwarding a length.
+  it("reports streaming progress with a real total when the server sends Content-Length", async () => {
+    const bytes = enc.encode("# Intro\nhello\n");
+    const tarGz = makeTarGz([block(`${top}/docs/intro.md`, bytes)]);
+    const ticks: Array<[number, number | null]> = [];
+    const d = dest();
+
+    const written = await fetchMarkdown({ repo_url: "https://github.com/me/myrepo", sha: SHA, docs_path: "docs" }, d, {
+      fetchImpl: chunkedFetch(tarGz, 64, { "content-length": String(tarGz.length) }),
+      onProgress: (done, total) => ticks.push([done, total]),
+    });
+
+    expect(ticks.length).toBeGreaterThan(1); // actually chunked, not one lump
+    expect(ticks.every(([, total]) => total === tarGz.length)).toBe(true);
+    expect(ticks.map(([done]) => done)).toEqual([...ticks.map(([done]) => done)].sort((a, b) => a - b)); // monotonic
+    expect(ticks.at(-1)![0]).toBe(tarGz.length); // ends at 100%
+    // Byte-identical reassembly: a mis-joined buffer makes the tar reader emit garbage, silently.
+    expect(readFileSync(written[0])).toEqual(Buffer.from(bytes));
+  });
+
+  it("reports bytes-so-far with a null total when there is no Content-Length (the KG broker's shape)", async () => {
+    const tarGz = makeTarGz([block(`${top}/docs/intro.md`, enc.encode("x"))]);
+    const ticks: Array<[number, number | null]> = [];
+    await fetchMarkdown({ repo_url: "https://github.com/me/myrepo", sha: SHA, docs_path: "docs" }, dest(), {
+      fetchImpl: chunkedFetch(tarGz, 512),
+      onProgress: (done, total) => ticks.push([done, total]),
+    });
+    expect(ticks.every(([, total]) => total === null)).toBe(true);
+  });
+
+  it("falls back to arrayBuffer() when the response exposes no stream, still firing one final tick", async () => {
+    const bytes = enc.encode("bodyless");
+    const tarGz = makeTarGz([block(`${top}/docs/intro.md`, bytes)]);
+    const bodyless = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      body: null,
+      arrayBuffer: async () => tarGz.slice().buffer,
+    })) as unknown as typeof fetch;
+    const ticks: Array<[number, number | null]> = [];
+    const d = dest();
+
+    const written = await fetchMarkdown({ repo_url: "https://github.com/me/myrepo", sha: SHA, docs_path: "docs" }, d, {
+      fetchImpl: bodyless,
+      onProgress: (done, total) => ticks.push([done, total]),
+    });
+
+    expect(ticks).toEqual([[tarGz.length, tarGz.length]]);
+    expect(readFileSync(written[0])).toEqual(Buffer.from(bytes));
   });
 
   it("refuses a path-traversal entry in the archive", async () => {

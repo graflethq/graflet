@@ -66,18 +66,26 @@ function TerminalPanel() {
       <pre className="overflow-x-auto px-5 py-4 font-mono text-[13px] leading-[1.75] text-[#cdd3da]">
         <span className="text-muted-foreground">$</span> uvx graflet react
         {"\n"}
-        <span className="text-primary">✔</span> Resolved <span className="text-foreground">react@19.1.0</span>{" "}
-        <span className="text-muted-foreground">(pinned)</span>
+        {/* The sha-alignment check now happens up front from the KG response headers, so it is
+            folded into this one line — there is no longer a separate "Aligned to release" step. */}
+        <span className="text-primary">✔</span> Resolved <span className="text-foreground">19.1.0</span> →{" "}
+        <span className="text-foreground">a3f21c8</span> <span className="text-muted-foreground">· docs and graph aligned</span>
         {"\n"}
         <span className="text-primary">✔</span> Downloaded docs →{" "}
-        <span className="text-muted-foreground">./graflet/react/*.md (312 files)</span>
+        <span className="text-muted-foreground">312 files (18 MB)</span>
         {"\n"}
-        <span className="text-primary">✔</span> Fetched knowledge graph →{" "}
-        <span className="text-muted-foreground">graph.json (1,204 nodes · 3,880 edges)</span>
+        <span className="text-primary">✔</span> Fetched graph →{" "}
+        <span className="text-muted-foreground">1,204 nodes · 3,880 edges</span>
+        {"\n\n"}
+        {/* "Done in 24s" is graflet's own wall clock; the hours/dollars below are what building this
+            graph locally would have cost — two different numbers, deliberately on separate lines. */}
+        <span className="text-primary">Done</span> in 24s
         {"\n"}
-        <span className="text-primary">✔</span> Aligned to release <span className="text-foreground">react@19.1.0</span>
-        {"\n"}
-        <span className="text-primary">Done</span> in 8m 12s · saved ~$0.42 in build cost
+        <span className="text-muted-foreground">Saved ~6h 12m of local build · ~$0.94 in API cost</span>
+        {"\n\n"}
+        {/* No graflet/ wrapper dir: docs land at ./react/, the graph under ./react/graphify-out/. */}
+        {"  "}
+        <span className="text-foreground">./react/</span>
         <span className="ml-0.5 inline-block motion-safe:animate-pulse">▋</span>
       </pre>
     </div>

@@ -1,5 +1,11 @@
 /** Backend client for the OAuth CLI flow (ticket 03). */
 
+// Byte plumbing lives in md-fetch.ts because that is where the KG bundle's bytes already
+// land (extractTarGz) — the two downloads of ticket 05 share one streaming reader so their
+// progress counters behave identically. Nothing auth-related flows the other way: md-fetch
+// stays token-free by construction (ADR-0002).
+import { contentLength, readBodyBytes } from "./md-fetch.js";
+
 export interface StartResponse {
   authorize_url: string;
   state: string;
@@ -80,9 +86,48 @@ export async function resolveDoc(
   return ((await res.json()) as { resolve: Resolve | null }).resolve;
 }
 
+export interface OpenKg {
+  /** The sha the backend recorded with the bundle (X-KG-Sha), or null. */
+  sha: string | null;
+  /** Content-Length when present. The broker streams, so expect null. */
+  total: number | null;
+  /** Drain the body to bytes, reporting progress as chunks land. */
+  read(onProgress?: (done: number, total: number | null) => void): Promise<Uint8Array>;
+}
+
+/**
+ * GET /kg/{slug}[?version=] returning after HEADERS only, so the caller can verify the sha
+ * alignment (ADR-0002) before a single byte is written to disk. `fetch()` already resolves
+ * on headers — the only trick is not draining the body here, which buys two things at once:
+ * the ADR-0002 guarantee that a sha mismatch leaves NOTHING on disk survives even though the
+ * docs and KG legs now download CONCURRENTLY, and the caller owns the byte counter.
+ */
+export async function openKg(
+  apiBase: string,
+  token: string,
+  slug: string,
+  version: string | null,
+  fetchImpl: typeof fetch = fetch,
+): Promise<OpenKg> {
+  const res = await fetchImpl(`${apiBase}/kg/${encodeURIComponent(slug)}${versionQuery(version)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  // These three strings are what a user actually reads when the download fails; they are
+  // asserted in the download tests. Keep them here only — downloadKg below funnels through.
+  if (res.status === 401 || res.status === 403) throw new Error("Your sign-in has expired. Run `graflet login` again.");
+  if (res.status === 404) throw new Error(`No downloadable KG for "${slug}"${version ? `@${version}` : ""} yet.`);
+  if (!res.ok) throw new Error(`KG download failed (HTTP ${res.status})`);
+  return {
+    sha: res.headers.get("X-KG-Sha"),
+    total: contentLength(res),
+    read: (onProgress) => readBodyBytes(res, onProgress),
+  };
+}
+
 /** GET /kg/{slug}[?version=] — the auth-gated KG download (ticket 05). Returns the
  *  bundle `.tar.gz` bytes and the sha the backend recorded with it (X-KG-Sha), so
- *  the caller can confirm the KG aligns with the .md snapshot (ADR-0002). */
+ *  the caller can confirm the KG aligns with the .md snapshot (ADR-0002). The
+ *  headers-and-bytes-in-one-await shape for callers that don't render progress. */
 export async function downloadKg(
   apiBase: string,
   token: string,
@@ -90,13 +135,8 @@ export async function downloadKg(
   version: string | null,
   fetchImpl: typeof fetch = fetch,
 ): Promise<{ bytes: Uint8Array; sha: string | null }> {
-  const res = await fetchImpl(`${apiBase}/kg/${encodeURIComponent(slug)}${versionQuery(version)}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (res.status === 401 || res.status === 403) throw new Error("Your sign-in has expired. Run `graflet login` again.");
-  if (res.status === 404) throw new Error(`No downloadable KG for "${slug}"${version ? `@${version}` : ""} yet.`);
-  if (!res.ok) throw new Error(`KG download failed (HTTP ${res.status})`);
-  return { bytes: new Uint8Array(await res.arrayBuffer()), sha: res.headers.get("X-KG-Sha") };
+  const kg = await openKg(apiBase, token, slug, version, fetchImpl);
+  return { bytes: await kg.read(), sha: kg.sha };
 }
 
 function versionQuery(version: string | null): string {

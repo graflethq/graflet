@@ -10,6 +10,10 @@
  * at that SHA. No `api.github.com` call and no token, so it never spends the
  * 60/hr anonymous REST budget. The SHA is the same one the KG was built from (P1),
  * so the Markdown aligns with the KG when ticket 05 wires them together.
+ *
+ * The tarball is READ AS A STREAM (see readBodyBytes) rather than buffered blind, so
+ * ticket 05 can render a live byte counter over it — a 40 MB codeload download is ~30
+ * seconds of total silence otherwise, which users read as a hung CLI.
  */
 import { gunzipSync } from "node:zlib";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -25,6 +29,10 @@ export interface ResolvedSource {
 
 export interface FetchMarkdownOptions {
   fetchImpl?: typeof fetch;
+  /** Called as the tarball streams in. `total` is the Content-Length when the server sent
+   *  one — in practice null, because codeload answers node's fetch with chunked transfer
+   *  encoding and no length. Callers must handle null as the normal case. */
+  onProgress?: (done: number, total: number | null) => void;
 }
 
 const SHA_RE = /^[0-9a-f]{40}$/i;
@@ -61,6 +69,63 @@ export function codeloadUrl(org: string, repo: string, sha: string): string {
 }
 
 /**
+ * Content-Length as a usable number, or null when the server sent none (or 0/garbage).
+ * codeload DOES send it, so the docs leg can show a real percentage; the KG broker is a
+ * streaming Worker and does NOT, so that leg shows bytes-so-far only. Null is the honest
+ * answer there — inventing a total would render a progress bar that lies.
+ */
+export function contentLength(res: Response): number | null {
+  const n = Number(res.headers.get("content-length"));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/**
+ * Drain a response body to bytes, ticking `onProgress` as chunks land. Shared with the KG
+ * broker leg (api.ts `openKg`) — both downloads want the same counter, and this module is
+ * already the place the KG bundle's bytes are handled (see extractTarGz below).
+ *
+ * The joined result MUST be byte-identical to what `arrayBuffer()` would have returned: the
+ * tar reader downstream fails SILENTLY on a mis-joined buffer, emitting garbage paths rather
+ * than throwing. Chunks are routinely VIEWS onto a larger shared buffer, so each is copied
+ * with `set(chunk, off)`; anything reaching for `chunk.buffer` would splice in the
+ * neighbouring bytes of that shared allocation.
+ *
+ * A null `res.body` (test doubles, and any runtime that materializes the body eagerly) falls
+ * back to `arrayBuffer()` and reports one final tick, so a caller's bar still lands on 100%.
+ */
+export async function readBodyBytes(
+  res: Response,
+  onProgress?: (done: number, total: number | null) => void,
+): Promise<Uint8Array> {
+  const total = contentLength(res);
+  if (!res.body) {
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    onProgress?.(bytes.length, total ?? bytes.length); // size is known by now: report it as the total
+    return bytes;
+  }
+  // getReader() rather than `for await`: a hand-rolled ReadableStream in a test double is not
+  // guaranteed to carry Symbol.asyncIterator, but the reader protocol is always there.
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let done = 0;
+  for (;;) {
+    const { done: eof, value } = await reader.read();
+    if (eof) break;
+    if (!value) continue;
+    chunks.push(value);
+    done += value.length;
+    onProgress?.(done, total);
+  }
+  const out = new Uint8Array(done);
+  let off = 0;
+  for (const c of chunks) {
+    out.set(c, off);
+    off += c.length;
+  }
+  return out;
+}
+
+/**
  * Fetch the pinned upstream `.md` for a resolved source and write it under `destDir`:
  * the `docs_path` subtree when the catalog pins one, otherwise the doc files repo-wide
  * (the same set the KG was built from — see isDocFile). Returns the paths written. An
@@ -90,7 +155,10 @@ export async function fetchMarkdown(
   // A bare GET — no headers means no Authorization, so no token is ever sent.
   const res = await fetchImpl(codeloadUrl(org, repo, sha));
   if (!res.ok) throw new Error(`codeload fetch failed (HTTP ${res.status}) for ${org}/${repo}@${sha}`);
-  const tar = gunzipSync(new Uint8Array(await res.arrayBuffer()));
+  // ponytail: gunzip stays synchronous — it blocks ~286ms on a 40 MB tarball, one visible
+  // spinner stutter at the very end of the download. Worker threads / async zlib to hide
+  // that is far more machinery than the symptom is worth.
+  const tar = gunzipSync(await readBodyBytes(res, opts.onProgress));
 
   // The archive's single top-level dir is `{repo}-{sha}/`; strip it, then keep either the pinned
   // `docs_path` subtree or — when none is pinned — the doc files the KG was actually built from.
