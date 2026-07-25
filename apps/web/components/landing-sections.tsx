@@ -132,22 +132,25 @@ export function WhyGraph() {
   );
 }
 
-/** Support: Star / Sponsors / Buy Me a Coffee — the only monetization (ADR-0005: no paywall). */
+/**
+ * Support: a star, and that's the whole ask (ADR-0005: no paywall).
+ *
+ * The GitHub Sponsors and Buy Me a Coffee buttons are gone because neither
+ * destination exists — buymeacoffee.com/graflethq 404s and the org has no
+ * sponsors listing, so both were dead buttons in production. A money route can
+ * come back here as a second button whenever one is actually set up.
+ */
 export function Support() {
   return (
     <section className="mx-auto max-w-6xl px-4 pt-16 sm:px-6">
       <div className="rounded-xl border border-border bg-card p-8 text-center sm:p-10">
         <h2 className="font-mono text-2xl font-semibold tracking-tight">Support the project</h2>
-        <p className="mt-2 text-muted-foreground">Free and open source. No paid plans — ever.</p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3 font-mono text-sm">
+        <p className="mt-2 text-muted-foreground">
+          Free and open source, no paid plans — ever. A star is the whole ask.
+        </p>
+        <div className="mt-6 flex justify-center font-mono text-sm">
           <Button asChild size="lg">
             <a href={LINKS.github}>★ Star on GitHub</a>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <a href={LINKS.sponsors}>♥ GitHub Sponsors</a>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <a href={LINKS.buyMeACoffee}>☕ Buy Me a Coffee</a>
           </Button>
         </div>
       </div>
@@ -162,10 +165,10 @@ export function SiteFooter() {
         <span>
           graflet · Free &amp; open source · MIT
         </span>
+        {/* Docs and GitHub are gone for the same reason they left the nav: both were
+            the repo, which ★ Star already opens. What's left goes somewhere else. */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <a href="/#catalog" className="hover:text-foreground">Catalog</a>
-          <a href={LINKS.docs} className="hover:text-foreground">Docs</a>
-          <a href={LINKS.github} className="hover:text-foreground">GitHub</a>
           <a href="/privacy" className="hover:text-foreground">Privacy</a>
           <a href="/terms" className="hover:text-foreground">Terms</a>
           <a href="/attribution" className="hover:text-foreground">Attribution</a>
