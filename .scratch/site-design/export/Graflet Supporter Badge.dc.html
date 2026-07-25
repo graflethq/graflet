@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@400;500&display=swap" rel="stylesheet"><style>body{margin:0;background:#f4f2ee;-webkit-font-smoothing:antialiased}a{color:#4ef08c}a:hover{color:#7df3ab}</style></helmet>
+<div style="padding:56px 60px 80px;font-family:Geist,system-ui,sans-serif;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:baseline;gap:14px">
+<div style="font:500 15px/1.2 'JetBrains Mono',monospace;color:#111">graflet — supporter badge</div>
+<div style="font:400 12.5px/1.4 Geist,system-ui,sans-serif;color:rgba(0,0,0,.5)">5 variants · exactly 1200×320 · opaque, rounded, hairline border</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
+<span style="font:400 11px/1 'JetBrains Mono',monospace;color:rgba(0,0,0,.45);margin-right:4px">preview width</span>
+<button onClick="{{ set1200 }}" style="font:400 11px/1 'JetBrains Mono',monospace;padding:7px 11px;border-radius:6px;border:1px solid rgba(0,0,0,.14);background:#fff;color:#111;cursor:pointer" style-hover="background:#eae7e1">1200</button>
+<button onClick="{{ set600 }}" style="font:400 11px/1 'JetBrains Mono',monospace;padding:7px 11px;border-radius:6px;border:1px solid rgba(0,0,0,.14);background:#fff;color:#111;cursor:pointer" style-hover="background:#eae7e1">600 (actual)</button>
+<button onClick="{{ set300 }}" style="font:400 11px/1 'JetBrains Mono',monospace;padding:7px 11px;border-radius:6px;border:1px solid rgba(0,0,0,.14);background:#fff;color:#111;cursor:pointer" style-hover="background:#eae7e1">300</button>
+<span style="font:400 11px/1 'JetBrains Mono',monospace;color:rgba(0,0,0,.35);margin-left:6px">{{ scaleLabel }}</span>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:44px">
+
+<div style="display:flex;flex-direction:column;gap:11px">
+<div style="display:flex;align-items:baseline;gap:9px"><span style="font:700 10.5px/1 'JetBrains Mono',monospace;padding:4px 7px;background:#111;color:#fff;border-radius:4px">1</span><span style="font:400 12.5px/1.3 Geist,system-ui,sans-serif;color:rgba(0,0,0,.55)">Horizontal card — lit triad, hairline divider, calm and symmetrical</span></div>
+<div style="width:{{ boxW }};height:{{ boxH }}">
+<div style="width:1200px;height:320px;transform:scale({{ s }});transform-origin:top left;box-sizing:border-box;background:#0a0b0d;border:1px solid #1c2027;border-radius:24px;overflow:hidden;display:flex;align-items:center;padding:0 72px 0 56px;gap:56px">
+<svg width="260" height="200" viewBox="0 0 260 200" style="flex:none;display:block">
+<g stroke="#1c2027" stroke-width="1.25">
+<line x1="34" y1="52" x2="96" y2="24"></line><line x1="34" y1="52" x2="60" y2="118"></line><line x1="60" y1="118" x2="40" y2="176"></line><line x1="96" y1="24" x2="164" y2="52"></line><line x1="60" y1="118" x2="130" y2="150"></line><line x1="130" y1="150" x2="210" y2="176"></line><line x1="164" y1="52" x2="226" y2="30"></line>
+</g>
+<g stroke="rgba(78,240,140,0.34)" stroke-width="1.5">
+<line x1="164" y1="52" x2="204" y2="104"></line><line x1="204" y1="104" x2="130" y2="150"></line><line x1="130" y1="150" x2="164" y2="52"></line>
+</g>
+<g fill="#31383f"><circle cx="34" cy="52" r="4"></circle><circle cx="96" cy="24" r="3.4"></circle><circle cx="60" cy="118" r="4"></circle><circle cx="40" cy="176" r="3.4"></circle><circle cx="226" cy="30" r="3.4"></circle><circle cx="210" cy="176" r="3.4"></circle></g>
+<g fill="rgba(78,240,140,0.13)"><circle cx="164" cy="52" r="15"></circle><circle cx="204" cy="104" r="13"></circle><circle cx="130" cy="150" r="13"></circle></g>
+<g fill="#4ef08c"><circle cx="164" cy="52" r="6"></circle><circle cx="204" cy="104" r="5"></circle><circle cx="130" cy="150" r="5"></circle></g>
+</svg>
+<div style="width:1px;height:168px;background:#1c2027;flex:none"></div>
+<div style="display:flex;flex-direction:column;gap:22px">
+<div style="font:500 84px/1 'JetBrains Mono',monospace;letter-spacing:-2px;color:#e6edf3">graflet</div>
+<div style="font:400 26px/1 'JetBrains Mono',monospace;letter-spacing:9px;text-transform:uppercase;color:#8b949e">Supporter</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:11px">
+<div style="display:flex;align-items:baseline;gap:9px"><span style="font:700 10.5px/1 'JetBrains Mono',monospace;padding:4px 7px;background:#111;color:#fff;border-radius:4px">2</span><span style="font:400 12.5px/1.3 Geist,system-ui,sans-serif;color:rgba(0,0,0,.55)">Terminal panel — prompt line and response</span></div>
+<div style="width:{{ boxW }};height:{{ boxH }}">
+<div style="width:1200px;height:320px;transform:scale({{ s }});transform-origin:top left;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:24px;overflow:hidden;display:flex;flex-direction:column">
+<div style="height:62px;flex:none;border-bottom:1px solid #1c2027;display:flex;align-items:center;padding:0 28px;gap:11px;background:#0e1116">
+<span style="width:13px;height:13px;border-radius:50%;background:#2d3339;display:block"></span>
+<span style="width:13px;height:13px;border-radius:50%;background:#2d3339;display:block"></span>
+<span style="width:13px;height:13px;border-radius:50%;background:#4ef08c;display:block;box-shadow:0 0 12px rgba(78,240,140,.45)"></span>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 44px;gap:20px;position:relative">
+<div style="display:flex;align-items:center;gap:16px;font:500 42px/1 'JetBrains Mono',monospace">
+<span style="color:#4ef08c">$</span><span style="color:#e6edf3">graflet --supporter</span>
+</div>
+<div style="display:flex;align-items:center;gap:14px;font:400 34px/1 'JetBrains Mono',monospace;color:#4ef08c">
+<span>✓ thank you</span><span style="width:14px;height:30px;background:#4ef08c;display:block;opacity:.85"></span>
+</div>
+<div style="position:absolute;right:40px;bottom:26px;font:500 22px/1 'JetBrains Mono',monospace;color:#8b949e">graflet</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:11px">
+<div style="display:flex;align-items:baseline;gap:9px"><span style="font:700 10.5px/1 'JetBrains Mono',monospace;padding:4px 7px;background:#111;color:#fff;border-radius:4px">3</span><span style="font:400 12.5px/1.3 Geist,system-ui,sans-serif;color:rgba(0,0,0,.55)">Edge-lit banner — centered split wordmark over graph field</span></div>
+<div style="width:{{ boxW }};height:{{ boxH }}">
+<div style="width:1200px;height:320px;transform:scale({{ s }});transform-origin:top left;box-sizing:border-box;background:#0a0b0d;border:1px solid #1c2027;border-radius:24px;overflow:hidden;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center">
+<div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% -10%, rgba(78,240,140,0.09), transparent 60%)"></div>
+<svg width="1200" height="320" viewBox="0 0 1200 320" style="position:absolute;inset:0;opacity:.85">
+<g stroke="#1c2027" stroke-width="1"><line x1="40" y1="90" x2="150" y2="46"></line><line x1="150" y1="46" x2="238" y2="122"></line><line x1="238" y1="122" x2="118" y2="196"></line><line x1="118" y1="196" x2="60" y2="272"></line><line x1="238" y1="122" x2="356" y2="252"></line><line x1="356" y1="252" x2="470" y2="286"></line><line x1="150" y1="46" x2="330" y2="34"></line><line x1="1160" y1="230" x2="1050" y2="272"></line><line x1="1050" y1="272" x2="962" y2="196"></line><line x1="962" y1="196" x2="1082" y2="122"></line><line x1="1082" y1="122" x2="1140" y2="48"></line><line x1="962" y1="196" x2="844" y2="66"></line><line x1="844" y1="66" x2="730" y2="34"></line><line x1="1050" y1="272" x2="870" y2="286"></line></g>
+<g fill="#262c33"><circle cx="40" cy="90" r="3.5"></circle><circle cx="150" cy="46" r="3.5"></circle><circle cx="238" cy="122" r="3.5"></circle><circle cx="118" cy="196" r="3.5"></circle><circle cx="60" cy="272" r="3"></circle><circle cx="356" cy="252" r="3"></circle><circle cx="470" cy="286" r="3"></circle><circle cx="330" cy="34" r="3"></circle><circle cx="1160" cy="230" r="3.5"></circle><circle cx="1050" cy="272" r="3.5"></circle><circle cx="962" cy="196" r="3.5"></circle><circle cx="1082" cy="122" r="3.5"></circle><circle cx="1140" cy="48" r="3"></circle><circle cx="844" cy="66" r="3"></circle><circle cx="730" cy="34" r="3"></circle><circle cx="870" cy="286" r="3"></circle></g>
+<g fill="rgba(78,240,140,0.12)"><circle cx="238" cy="122" r="14"></circle><circle cx="962" cy="196" r="14"></circle></g>
+<g fill="#4ef08c"><circle cx="238" cy="122" r="4.5"></circle><circle cx="962" cy="196" r="4.5"></circle></g>
+</svg>
+<div style="position:relative;font:500 104px/1 'JetBrains Mono',monospace;letter-spacing:-3px"><span style="color:#e6edf3">graf</span><span style="color:#4ef08c">let</span></div>
+<div style="position:relative;margin-top:26px;font:400 24px/1 'JetBrains Mono',monospace;letter-spacing:13px;text-transform:uppercase;color:#8b949e;text-indent:13px">Supporter</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:11px">
+<div style="display:flex;align-items:baseline;gap:9px"><span style="font:700 10.5px/1 'JetBrains Mono',monospace;padding:4px 7px;background:#111;color:#fff;border-radius:4px">4</span><span style="font:400 12.5px/1.3 Geist,system-ui,sans-serif;color:rgba(0,0,0,.55)">Badge + payload — hero node block, then wordmark, word, tagline</span></div>
+<div style="width:{{ boxW }};height:{{ boxH }}">
+<div style="width:1200px;height:320px;transform:scale({{ s }});transform-origin:top left;box-sizing:border-box;background:#0a0b0d;border:1px solid #1c2027;border-radius:24px;overflow:hidden;display:flex">
+<div style="width:392px;flex:none;background:#0e1116;border-right:1px solid #1c2027;display:flex;align-items:center;justify-content:center">
+<svg width="300" height="240" viewBox="0 0 300 240" style="display:block">
+<g stroke="rgba(78,240,140,0.3)" stroke-width="1.4"><line x1="150" y1="120" x2="54" y2="52"></line><line x1="150" y1="120" x2="252" y2="96"></line><line x1="150" y1="120" x2="106" y2="204"></line></g>
+<circle cx="150" cy="120" r="46" fill="rgba(78,240,140,0.06)"></circle>
+<circle cx="150" cy="120" r="26" fill="rgba(78,240,140,0.13)"></circle>
+<circle cx="150" cy="120" r="11" fill="#4ef08c"></circle>
+<g fill="#31383f"><circle cx="54" cy="52" r="5"></circle><circle cx="252" cy="96" r="5"></circle><circle cx="106" cy="204" r="5"></circle></g>
+</svg>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 56px;gap:18px">
+<div style="font:500 68px/1 'JetBrains Mono',monospace;letter-spacing:-2px;color:#e6edf3">graflet</div>
+<div style="font:400 22px/1 'JetBrains Mono',monospace;letter-spacing:8px;text-transform:uppercase;color:#4ef08c">Supporter</div>
+<div style="width:100%;height:1px;background:#1c2027"></div>
+<div style="font:400 24px/1.3 Geist,system-ui,sans-serif;color:#8b949e">Docs as a graph, not snippets.</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:11px">
+<div style="display:flex;align-items:baseline;gap:9px"><span style="font:700 10.5px/1 'JetBrains Mono',monospace;padding:4px 7px;background:#111;color:#fff;border-radius:4px">5</span><span style="font:400 12.5px/1.3 Geist,system-ui,sans-serif;color:rgba(0,0,0,.55)">Minimal strip — one line, one lit node, one hairline</span></div>
+<div style="width:{{ boxW }};height:{{ boxH }}">
+<div style="width:1200px;height:320px;transform:scale({{ s }});transform-origin:top left;box-sizing:border-box;background:#0a0b0d;border:1px solid #1c2027;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px">
+<div style="display:flex;align-items:center;gap:20px">
+<svg width="34" height="34" viewBox="0 0 34 34" style="display:block;flex:none"><circle cx="17" cy="17" r="15" fill="rgba(78,240,140,0.1)"></circle><circle cx="17" cy="17" r="7" fill="#4ef08c"></circle></svg>
+<div style="font:400 48px/1 'JetBrains Mono',monospace;letter-spacing:1px;color:#e6edf3">graflet <span style="color:#3d444d">·</span> Supporter</div>
+</div>
+<div style="width:520px;height:1px;background:#1c2027"></div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  state = { s: 1 };
+  renderVals() {
+    const s = this.state.s;
+    return {
+      s,
+      boxW: (1200 * s) + 'px',
+      boxH: (320 * s) + 'px',
+      scaleLabel: s === 1 ? 'native 1200×320' : (s === 0.5 ? 'displayed size 600×160' : 'stress test 300×80'),
+      set1200: () => this.setState({ s: 1 }),
+      set600: () => this.setState({ s: 0.5 }),
+      set300: () => this.setState({ s: 0.25 }),
+    };
+  }
+}
+</script>
+</body>
+</html>
