@@ -17,3 +17,10 @@ handoffs/
 # CommandCode delegation tally — local only
 .commandcode-delegate
 artifacts
+
+# docs/ is allow-listed: only these three ship. Everything else under docs/ is
+# local vendored reference material and stays out of the public repo.
+docs/*
+!docs/adr/
+!docs/agents/
+!docs/supporter/
