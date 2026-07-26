@@ -98,7 +98,8 @@ pnpm exec wrangler d1 migrations apply graflet-catalog --remote
 pnpm exec wrangler secret put PRIVATE_REPO_TOKEN
 pnpm exec wrangler secret put GITHUB_OAUTH_CLIENT_SECRET   # the OAuth App client secret
 pnpm exec wrangler secret put CATALOG_UPSERT_SECRET        # any high-entropy shared secret
-pnpm exec wrangler secret list          # acceptance: shows all three, type secret_text, no values
+pnpm exec wrangler secret put POSTHOG_PROJECT_KEY          # PostHog project key (ticket 06); omit to disable capture
+pnpm exec wrangler secret list          # acceptance: lists every secret above, type secret_text, no values
 
 # 4. Ship it, then hit the public health check.
 pnpm run deploy

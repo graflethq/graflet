@@ -52,4 +52,8 @@
   //   CATALOG_UPSERT_SECRET         — bearer for POST /catalog/upsert (ticket 02)
   //   RESEND_API_KEY                — send watcher email via Resend (ticket 08)
   //   UNSUBSCRIBE_SECRET            — signing secret for one-click unsubscribe links (ticket 08)
+  //   POSTHOG_PROJECT_KEY           — PostHog project key for server-side capture (ticket 06).
+  //                                   Write-only and public by design (the browser bundle
+  //                                   carries the same value), but kept a secret so no project
+  //                                   token is committed. Unset = capture is a silent no-op.
 }

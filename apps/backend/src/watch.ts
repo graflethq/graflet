@@ -10,12 +10,13 @@
  *                      notifications still send; only the promo footer stops.
  */
 
+import type { Tracker } from "./analytics";
 import { authenticateUser } from "./auth";
 import { unsubscribeToken } from "./notify";
 import { sha256Hex } from "./tokens";
 
 /** POST /watch {slug} — subscribe the signed-in user to a doc's updates. */
-export async function handleWatch(env: Env, req: Request): Promise<Response> {
+export async function handleWatch(env: Env, req: Request, track: Tracker): Promise<Response> {
   const user = await authenticateUser(env, req);
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
 
@@ -26,12 +27,16 @@ export async function handleWatch(env: Env, req: Request): Promise<Response> {
   const doc = await env.CATALOG.prepare("SELECT slug FROM docs WHERE slug = ?").bind(slug).first();
   if (!doc) return Response.json({ error: "unknown doc" }, { status: 404 });
 
-  await env.CATALOG.prepare(
+  const res = await env.CATALOG.prepare(
     `INSERT INTO subscriptions (github_id, slug, created_at) VALUES (?, ?, ?)
      ON CONFLICT(github_id, slug) DO NOTHING`,
   )
     .bind(user.github_id, slug, new Date().toISOString())
     .run();
+
+  // Only on an actual insert. This endpoint is idempotent, and a CLI that re-watches
+  // on every run would otherwise report a watch count that is really a call count.
+  if (res.meta.changes > 0) track.capture("watch_created", String(user.github_id), { doc: slug });
 
   return Response.json({ ok: true, slug, marketing_consent: user.marketing_consent });
 }

@@ -8,3 +8,8 @@ PRIVATE_REPO_TOKEN="ghp_replace_me"
 
 # GitHub OAuth App client secret (paired with your OAuth client ID).
 GITHUB_OAUTH_CLIENT_SECRET="replace_me"
+
+# PostHog project key for server-side capture (ticket 06 / ADR-0010). The same
+# write-only key the browser bundle carries — kept out of the repo, not out of
+# the browser. Leave unset locally and capture is a silent no-op.
+POSTHOG_PROJECT_KEY="phc_replace_me"

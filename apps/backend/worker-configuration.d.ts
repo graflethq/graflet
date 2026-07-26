@@ -32,6 +32,11 @@ declare namespace Cloudflare {
     // tokens (SHA-256 of `unsub:<id>:<secret>`, secret last) (ticket 08).
     RESEND_API_KEY: string;
     UNSUBSCRIBE_SECRET: string;
+    // PostHog project key for server-side capture (ticket 06 / ADR-0010). Write-only
+    // and public by design (the same value ships in the browser bundle), but kept a
+    // secret here so no project token is committed to a public repo. Absent = capture
+    // is a silent no-op, which is what local dev runs as.
+    POSTHOG_PROJECT_KEY: string;
   }
 }
 

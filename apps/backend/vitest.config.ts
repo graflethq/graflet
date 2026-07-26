@@ -30,6 +30,7 @@ export default defineConfig({
           RESEND_FROM: "graflet <updates@test.dev>",
           MARKETING_POSTAL_ADDRESS: "123 Test St, Testville",
           UNSUBSCRIBE_SECRET: "test-unsubscribe-secret",
+          POSTHOG_PROJECT_KEY: "phc_test_project_key",
           PRIVATE_KG_REPO: "graflethq/kg-bundles",
           // Allow-list the CORS test asserts against (site origin + local dev).
           SITE_ORIGINS: "https://site.test,http://localhost:3000",

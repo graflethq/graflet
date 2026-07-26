@@ -15,5 +15,8 @@
     "typescript": "^5.7.0",
     "vitest": "4.1.10",
     "wrangler": "4.112.0"
+  },
+  "dependencies": {
+    "posthog-node": "^5.46.1"
   }
 }

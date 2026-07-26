@@ -13,8 +13,19 @@
  * Sign-in is identity only: it never sets marketing_consent (ADR-0006).
  */
 
+import type { Tracker } from "./analytics";
 import { authorizeUrl, exchangeCode, fetchIdentity } from "./github";
 import { randomToken, sha256Hex } from "./tokens";
+
+/**
+ * The person properties PostHog holds, set from here rather than from the browser
+ * (ticket 05/06). The site could send the email in the OAuth return fragment, but a
+ * fragment still lands in the address bar and in browser history — the Worker has it
+ * already and can hand it straight over. `$set` overwrites on every sign-in, so a
+ * changed GitHub handle or email follows the person instead of going stale.
+ * /privacy names these three fields and no others.
+ */
+const personProperties = (login: string, email: string | null) => ({ github_login: login, ...(email ? { email } : {}) });
 
 const PENDING_TTL_MS = 10 * 60 * 1000; // a browser sign-in has 10 minutes to complete
 
@@ -42,7 +53,7 @@ export async function handleCliStart(env: Env, req: Request): Promise<Response> 
 }
 
 /** GET /auth/cli/callback — GitHub redirects the browser here after authorize. */
-export async function handleCliCallback(env: Env, req: Request): Promise<Response> {
+export async function handleCliCallback(env: Env, req: Request, track: Tracker): Promise<Response> {
   const params = new URL(req.url).searchParams;
   const state = params.get("state");
   const code = params.get("code");
@@ -71,12 +82,18 @@ export async function handleCliCallback(env: Env, req: Request): Promise<Respons
       callbackUri(req),
     );
     const id = await fetchIdentity(accessToken);
-    const token = await upsertUserAndMintToken(env, id.github_id, id.email);
+    const { token, isNew } = await upsertUserAndMintToken(env, id.github_id, id.email);
     await env.CATALOG.prepare("UPDATE pending_auth SET token = ?, login = ?, email = ? WHERE state = ?")
       .bind(token, id.login, id.email, state)
       .run();
+    track.capture("signin_completed", String(id.github_id), {
+      is_new_user: isNew,
+      surface: "cli",
+      $set: personProperties(id.login, id.email),
+    });
     return page(`Signed in as ${id.login}. You can close this window and return to the terminal.`);
   } catch (e) {
+    track.error(e);
     await failPending(env, state, e instanceof Error ? e.message : "sign-in failed");
     return page("Sign-in failed. Close this window and try the login command again.");
   }
@@ -147,7 +164,7 @@ export async function handleWebStart(env: Env, req: Request): Promise<Response> 
  * login + resulting consent in the URL fragment (a fragment is never sent to a
  * server / logged — no bearer token ever reaches the browser).
  */
-export async function handleWebCallback(env: Env, req: Request): Promise<Response> {
+export async function handleWebCallback(env: Env, req: Request, track: Tracker): Promise<Response> {
   const params = new URL(req.url).searchParams;
   const state = params.get("state");
   const code = params.get("code");
@@ -179,7 +196,7 @@ export async function handleWebCallback(env: Env, req: Request): Promise<Respons
       webCallbackUri(req),
     );
     const id = await fetchIdentity(accessToken);
-    await upsertUser(env, id.github_id, id.email);
+    const { isNew } = await upsertUser(env, id.github_id, id.email);
 
     const answer = pending.consent === "yes" ? "yes" : "no";
     // Guarded to 'unset': the website opt-in is recorded once and never overwrites
@@ -198,11 +215,31 @@ export async function handleWebCallback(env: Env, req: Request): Promise<Respons
       .first<{ marketing_consent: string }>();
 
     await deletePending(env, state);
-    return redirectBack(returnTo, { login: id.login, consent: stored?.marketing_consent ?? answer });
+    // The back half of the sign-in funnel: `signin_started` is fired by the browser
+    // (ticket 04) and can be blocked; this one cannot, so the pair gives the real
+    // conversion rate.
+    track.capture("signin_completed", String(id.github_id), {
+      is_new_user: isNew,
+      surface: "website",
+      $set: personProperties(id.login, id.email),
+    });
+    // github_id rides back so the site can identify the person in PostHog on the
+    // numeric id (ticket 05) — the same key the CLI and this Worker use, which is
+    // the only reason one person's site visit, download and CLI run share a
+    // timeline. The email is deliberately NOT here: a fragment stays out of server
+    // logs but still lands in the address bar and browser history, so the Worker
+    // sends it to PostHog itself (ticket 06).
+    return redirectBack(returnTo, {
+      login: id.login,
+      github_id: String(id.github_id),
+      consent: stored?.marketing_consent ?? answer,
+    });
   } catch (e) {
     // Parity with the CLI callback: keep server-side observability of exchange
-    // failures. The fragment can't carry detail, so log it (observability is on).
+    // failures. The fragment can't carry detail, so log it (observability is on)
+    // and report it, because nobody reads Workers logs until a user complains.
     console.error("web sign-in failed:", e instanceof Error ? e.message : e);
+    track.error(e);
     await deletePending(env, state);
     return redirectBack(returnTo, { error: "signin_failed" });
   }
@@ -240,31 +277,39 @@ function redirectBack(returnTo: string, fragment: Record<string, string>): Respo
  * deliberate opt-in (website signup or CLI) sets it (ADR-0006). A NULL email
  * never clobbers a stored one (the users row is the core asset).
  */
-export async function upsertUser(env: Env, githubId: number, email: string | null): Promise<void> {
-  await env.CATALOG.prepare(
+export async function upsertUser(env: Env, githubId: number, email: string | null): Promise<{ isNew: boolean }> {
+  const now = new Date().toISOString();
+  // RETURNING gives the row as it stands after the write. `DO UPDATE` never touches
+  // created_at, so a returned created_at equal to the one we just passed means this
+  // was a fresh insert — `is_new_user` for ticket 06, with no second query and no
+  // read-then-write race.
+  const row = await env.CATALOG.prepare(
     `INSERT INTO users (github_id, email, created_at) VALUES (?, ?, ?)
-     ON CONFLICT(github_id) DO UPDATE SET email = COALESCE(excluded.email, users.email)`,
+     ON CONFLICT(github_id) DO UPDATE SET email = COALESCE(excluded.email, users.email)
+     RETURNING created_at`,
   )
-    .bind(githubId, email, new Date().toISOString())
-    .run();
+    .bind(githubId, email, now)
+    .first<{ created_at: string }>();
+  return { isNew: row?.created_at === now };
 }
 
 /**
  * Upsert the user (above) and mint a fresh bearer token, stored only as a hash.
- * Returns the raw token. Used by the CLI flow; the website flow needs no token
- * (it records consent server-side and only redirects the browser back).
+ * Returns the raw token plus whether this was the user's first sign-in. Used by the
+ * CLI flow; the website flow needs no token (it records consent server-side and only
+ * redirects the browser back).
  */
 export async function upsertUserAndMintToken(
   env: Env,
   githubId: number,
   email: string | null,
-): Promise<string> {
-  await upsertUser(env, githubId, email);
+): Promise<{ token: string; isNew: boolean }> {
+  const { isNew } = await upsertUser(env, githubId, email);
   const raw = randomToken();
   await env.CATALOG.prepare("INSERT INTO tokens (token_hash, github_id, created_at) VALUES (?, ?, ?)")
     .bind(await sha256Hex(raw), githubId, new Date().toISOString())
     .run();
-  return raw;
+  return { token: raw, isNew };
 }
 
 /** Tri-state marketing consent (ADR-0006). One source of truth for the union. */
