@@ -39,7 +39,16 @@ async function signIn(identity: Identity, emails?: { email: string; primary: boo
     method: "POST",
     body: JSON.stringify({ state: start.state }),
   });
-  return { start, poll: (await poll.json()) as { status: string; token?: string; login?: string; email?: string } };
+  return {
+    start,
+    poll: (await poll.json()) as {
+      status: string;
+      token?: string;
+      login?: string;
+      email?: string;
+      github_id?: string;
+    },
+  };
 }
 
 describe("GitHub OAuth (ticket 03)", () => {
@@ -66,6 +75,9 @@ describe("GitHub OAuth (ticket 03)", () => {
     expect(poll.login).toBe("octocat");
     expect(poll.email).toBe("octo@example.com");
     expect(poll.token).toBeTruthy();
+    // The CLI's telemetry (ticket 07) identifies to the github_id, not the login —
+    // a renamed handle would fork one person in two. Poll is the only channel it has.
+    expect(poll.github_id).toBe("42");
 
     const users = await env.CATALOG.prepare("SELECT * FROM users WHERE github_id = 42").all();
     expect(users.results).toHaveLength(1);

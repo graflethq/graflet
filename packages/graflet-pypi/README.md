@@ -38,6 +38,14 @@ graflet next.js          # → npx @graflethq/cli next.js
 
 Without Node it prints the `npm i -g @graflethq/cli` install line above.
 
+## Telemetry
+
+The launcher itself sends nothing. The CLI it hands off to asks once, in a terminal, whether it
+may send anonymous usage stats — **the default is no**, and `GRAFLET_TELEMETRY=0` or
+`DO_NOT_TRACK=1` disables it outright. `graflet telemetry [on|off]` changes the answer; a run with
+no terminal never asks and never sends. Details:
+**[graflet.rnui.dev/privacy](https://graflet.rnui.dev/privacy)**.
+
 > Spelled **g-r-a-f-l-e-t**, no p-h.
 
 Catalog & docs: **[graflet.rnui.dev](https://graflet.rnui.dev)** · Source:

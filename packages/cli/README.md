@@ -75,6 +75,45 @@ For CI / headless use, skip the browser with a bearer you already hold:
 export GRAFLET_TOKEN=<bearer>   # authenticate without a browser, without writing the keyring
 ```
 
+## Telemetry — off unless you say yes
+
+**Nothing is sent unless you opt in.** The first time you run a real command in a terminal,
+graflet asks once whether it may send anonymous usage stats. The default is no, a bare Enter
+is no, and it never asks again:
+
+```bash
+graflet telemetry        # show the current setting and where it's stored
+graflet telemetry on     # opt in
+graflet telemetry off    # opt back out, at any time
+```
+
+Two environment variables hard-disable it regardless of what you answered:
+
+```bash
+export GRAFLET_TELEMETRY=0   # graflet's own switch
+export DO_NOT_TRACK=1        # the cross-tool convention (consoledonottrack.com)
+```
+
+A non-interactive run — CI, a pipe, no terminal — **never asks and never sends**, whatever is
+stored. The answer lives in `~/.config/graflet/telemetry.json` (or `$XDG_CONFIG_HOME`), next to
+the token fallback.
+
+If you do opt in, four events are sent to [PostHog](https://posthog.com) (US region), and
+nothing else:
+
+| Event | What travels with it |
+|---|---|
+| `cli_command_run` | the subcommand name (`login`, `watch`, `download`, …) and the graflet version |
+| `cli_login_completed` | — |
+| `cli_download_completed` | the doc slug, the resolved version, how long it took, how many bytes |
+| `cli_download_failed` | a fixed reason label (`auth_expired`, `not_found`, `transfer_failed`, …) |
+
+**Never sent:** file paths, file names, your arguments, your hostname, your username, your
+environment, or the contents of anything you download. Your IP address isn't stored either — every
+event carries `$ip: null`, so no location is derived from it. Before you sign in the events are
+keyed to a random id generated on your machine; signing in attaches them to your GitHub id, and
+`graflet logout` discards both. Full policy: **[graflet.rnui.dev/privacy](https://graflet.rnui.dev/privacy)**.
+
 Browse the catalog at **[graflet.rnui.dev](https://graflet.rnui.dev)**. Full design, ADRs and source:
 **[github.com/graflethq/graflet](https://github.com/graflethq/graflet)**.
 

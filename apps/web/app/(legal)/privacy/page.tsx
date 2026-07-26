@@ -156,9 +156,8 @@ export default function PrivacyPage() {
         </li>
         <li>There are no advertising trackers, no ad networks, and no third-party marketing pixels on this site.</li>
         <li>
-          The CLI sends no usage data. It talks to the Graflet API to list the catalog and download graphs, and that
-          is all. If that ever changes, it will be opt-in, off unless you say yes, and this page will say so before
-          that version ships.
+          The CLI sends no usage data unless you opt in — see <ProseLink href="#cli">the CLI section</ProseLink>. It
+          is off until you answer yes, and it is never on in CI.
         </li>
       </UL>
       <P>
@@ -166,6 +165,52 @@ export default function PrivacyPage() {
         GitHub, as a plain archive from <code className="text-foreground">codeload.github.com</code>. We never see
         that request and it carries no account of yours, but GitHub does see your IP address and which library you
         asked for — exactly as if you had cloned the repository yourself.
+      </P>
+
+      <H2 id="cli">The CLI: off unless you say yes</H2>
+      <P>
+        The first time you run a real command in a terminal, the CLI asks once whether it may send anonymous usage
+        stats. <strong className="text-foreground">The default is no</strong> — a bare Enter is no — and it never
+        asks again. Your answer is stored in{" "}
+        <code className="text-foreground">~/.config/graflet/telemetry.json</code>, and{" "}
+        <code className="text-foreground">graflet telemetry on</code> or{" "}
+        <code className="text-foreground">graflet telemetry off</code> changes it at any time.
+      </P>
+      <P>
+        Setting <code className="text-foreground">GRAFLET_TELEMETRY=0</code> or{" "}
+        <code className="text-foreground">DO_NOT_TRACK=1</code> disables it entirely, whatever you answered. A run
+        with no terminal attached — CI, a pipe, a cron job — never asks and never sends, because a prompt nobody can
+        answer is not consent.
+      </P>
+      <P>If you do say yes, four events reach PostHog and nothing else:</P>
+      <UL>
+        <li>
+          <code className="text-foreground">cli_command_run</code> — which subcommand you ran (
+          <code className="text-foreground">login</code>, <code className="text-foreground">watch</code>,{" "}
+          <code className="text-foreground">download</code>…) and the graflet version.
+        </li>
+        <li>
+          <code className="text-foreground">cli_login_completed</code> — that a sign-in finished. No properties.
+        </li>
+        <li>
+          <code className="text-foreground">cli_download_completed</code> — the library slug, the version it
+          resolved to, how long it took and how many bytes arrived.
+        </li>
+        <li>
+          <code className="text-foreground">cli_download_failed</code> — one word for why, from a fixed list
+          (&ldquo;auth_expired&rdquo;, &ldquo;not_found&rdquo;, &ldquo;transfer_failed&rdquo;…). Never the error
+          text itself.
+        </li>
+      </UL>
+      <P>
+        Never sent: file paths, file names, your command-line arguments, your hostname, your username, your
+        environment variables, or anything inside what you downloaded. Your IP address is not stored either — the
+        CLI tells PostHog to discard it on every event, which also means no location is derived from it. Before you
+        sign in the events carry a random id generated on your machine and nothing else; signing in attaches them
+        to your{" "}
+        <code className="text-foreground">github_id</code>, and{" "}
+        <code className="text-foreground">graflet logout</code> discards both, so the next person to use that
+        machine starts fresh.
       </P>
 
       <H2>The three kinds of email</H2>
@@ -204,7 +249,9 @@ export default function PrivacyPage() {
       <AnalyticsOptOut />
       <P>
         It covers the website. Sign-ins and graph downloads are recorded by our server against your account, so if
-        you want those stopped too, ask us to delete your data below and use the tool signed out.
+        you want those stopped too, ask us to delete your data below and use the tool signed out. The CLI has its
+        own switch — <code className="text-foreground">graflet telemetry off</code>, described{" "}
+        <ProseLink href="#cli">above</ProseLink>.
       </P>
 
       <H2 id="delete">Delete your data</H2>

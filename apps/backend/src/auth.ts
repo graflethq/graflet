@@ -83,8 +83,10 @@ export async function handleCliCallback(env: Env, req: Request, track: Tracker):
     );
     const id = await fetchIdentity(accessToken);
     const { token, isNew } = await upsertUserAndMintToken(env, id.github_id, id.email);
-    await env.CATALOG.prepare("UPDATE pending_auth SET token = ?, login = ?, email = ? WHERE state = ?")
-      .bind(token, id.login, id.email, state)
+    await env.CATALOG.prepare(
+      "UPDATE pending_auth SET token = ?, login = ?, email = ?, github_id = ? WHERE state = ?",
+    )
+      .bind(token, id.login, id.email, id.github_id, state)
       .run();
     track.capture("signin_completed", String(id.github_id), {
       is_new_user: isNew,
@@ -105,10 +107,17 @@ export async function handleCliPoll(env: Env, req: Request): Promise<Response> {
   if (!state) return Response.json({ status: "error", error: "missing state" }, { status: 400 });
 
   const row = await env.CATALOG.prepare(
-    "SELECT token, login, email, error, expires_at FROM pending_auth WHERE state = ?",
+    "SELECT token, login, email, github_id, error, expires_at FROM pending_auth WHERE state = ?",
   )
     .bind(state)
-    .first<{ token: string | null; login: string | null; email: string | null; error: string | null; expires_at: string }>();
+    .first<{
+      token: string | null;
+      login: string | null;
+      email: string | null;
+      github_id: number | null;
+      error: string | null;
+      expires_at: string;
+    }>();
 
   if (!row) return Response.json({ status: "expired" });
 
@@ -118,7 +127,16 @@ export async function handleCliPoll(env: Env, req: Request): Promise<Response> {
   }
   if (row.token) {
     await deletePending(env, state); // one-time: the token leaves the DB with the CLI
-    return Response.json({ status: "complete", token: row.token, login: row.login, email: row.email });
+    // `github_id` as a STRING, matching the site's `identify(String(github_id))` and the
+    // Worker's `capture(…, String(id.github_id))` — the CLI (ticket 07) uses it verbatim as
+    // its `distinct_id`, and a number here would file the same person under a second key.
+    return Response.json({
+      status: "complete",
+      token: row.token,
+      login: row.login,
+      email: row.email,
+      github_id: row.github_id === null ? null : String(row.github_id),
+    });
   }
   if (Date.parse(row.expires_at) < Date.now()) {
     await deletePending(env, state);

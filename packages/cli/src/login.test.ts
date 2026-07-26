@@ -1,5 +1,7 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { login, logout } from "./login";
+import { stopTelemetry } from "./telemetry";
+import { collectTelemetry } from "./telemetry.fixture";
 import type { PollResponse } from "./api";
 
 const json = (o: unknown) => new Response(JSON.stringify(o), { headers: { "content-type": "application/json" } });
@@ -66,8 +68,58 @@ describe("login (ticket 03)", () => {
 describe("logout (ticket 03)", () => {
   it("clears the stored token and exits 0", () => {
     let cleared = 0;
-    const code = logout({ clear: () => cleared++, log: () => {} });
+    const code = logout({ clear: () => cleared++, forget: () => {}, log: () => {} });
     expect(code).toBe(0);
     expect(cleared).toBe(1);
+  });
+
+  it("forgets the telemetry identity too — a shared machine must not inherit the last person", () => {
+    let forgot = 0;
+    logout({ clear: () => {}, forget: () => forgot++, log: () => {} });
+    expect(forgot).toBe(1);
+  });
+});
+
+describe("login telemetry (ticket 07)", () => {
+  afterEach(() => stopTelemetry());
+
+  const deps = (poll: PollResponse[]) => ({
+    apiBase: "http://backend",
+    fetchImpl: makeFetch(poll),
+    save: () => {},
+    sleep: async () => {},
+    log: () => {},
+  });
+
+  it("identifies to the github_id, then files the sign-in under that person", async () => {
+    const t = await collectTelemetry();
+    expect(t.sent).toEqual([]); // starting up sends nothing
+
+    await login(deps([{ status: "complete", token: "tok123", login: "octocat", github_id: "42" }]));
+    const sent = await t.settle();
+
+    expect(sent.map((e) => e.event)).toEqual(["$identify", "cli_login_completed"]);
+    expect(sent[0].distinct_id).toBe("42");
+    expect(sent[0].properties.$anon_distinct_id).toMatch(/^[0-9a-f-]{36}$/);
+    // The merge happened first, so the event itself belongs to the person, not the machine.
+    expect(sent[1].distinct_id).toBe("42");
+    // The GitHub handle is never a distinct_id — it can be renamed out from under us.
+    expect(JSON.stringify(sent)).not.toContain("octocat");
+  });
+
+  it("a backend too old to return github_id still signs in, just anonymously", async () => {
+    const t = await collectTelemetry();
+    const code = await login(deps([{ status: "complete", token: "tok123", login: "octocat" }]));
+    const sent = await t.settle();
+
+    expect(code).toBe(0);
+    expect(sent.map((e) => e.event)).toEqual(["cli_login_completed"]);
+    expect(sent[0].distinct_id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it("a failed sign-in reports nothing", async () => {
+    const t = await collectTelemetry();
+    await login(deps([{ status: "error", error: "access_denied" }]));
+    expect(await t.settle()).toEqual([]);
   });
 });

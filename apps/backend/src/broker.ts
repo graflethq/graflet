@@ -69,10 +69,19 @@ export async function handleKgDownload(
   // Stream the private bytes through under OUR headers. Not a redirect, not a
   // signed URL, no Authorization forwarded — the server token stays server-side.
   // X-KG-Sha lets the CLI prove the KG matches the .md snapshot (ADR-0002).
+  //
+  // X-Graflet-User is the CLI's only other way to learn who it is (ticket 07). Bearer
+  // tokens never expire, so someone who signed in on an older version never runs
+  // `login` again — and `login` is where the CLI normally learns its `github_id`.
+  // Without this header their telemetry would stay on the machine id forever, and the
+  // site→CLI funnel would miss the entire existing install base. Telling an
+  // authenticated caller their own account id discloses nothing they didn't just
+  // authenticate as.
   return new Response(bundle.body, {
     headers: {
       "Content-Type": "application/gzip",
       "X-KG-Sha": target.sha,
+      "X-Graflet-User": person,
     },
   });
 }

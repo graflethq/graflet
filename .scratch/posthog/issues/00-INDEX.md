@@ -14,7 +14,7 @@ time with `/implement`, clearing context between tickets.
 | 04 | Site explicit events + `catalog_search` demand signal ✅ **done 2026-07-26** (all five through `capture()` in `lib/analytics.ts`; `doc_row_click` had no trigger — rows aren't links — so it fires from a row `onClick` that skips clicks on the copy button; support tiers split into a client component) | 03 |
 | 05 | Identify on sign-in — `github_id` + login + email ✅ **done + verified live 2026-07-26** (anon id carried across the OAuth trip in `sessionStorage` → `bootstrap.distinctID`; merge confirmed on production — pre-sign-in and Worker events share one `person_id`. `email` moved to the Worker's `$set` rather than riding in the callback URL) | 03 |
 | 06 | Backend Worker server-side capture + `captureException` ✅ **done + deployed 2026-07-26** (`src/analytics.ts`, `posthog-node` workerd export — no `nodejs_compat`; `ctx.waitUntil` not `await`; `watch_removed` has no endpoint to fire from) | 01, 02 |
-| 07 | CLI opt-in telemetry (one prompt, `DO_NOT_TRACK`, kill switch) | 01, 02, 06 |
+| 07 | CLI opt-in telemetry (one prompt, `DO_NOT_TRACK`, kill switch) ✅ **built 2026-07-26, not yet published** (`packages/cli/src/telemetry.ts`; no `posthog-node` — a `fetch` POST to `/i/v0/e/`; needed backend migration 0007 so poll returns `github_id`; `logout` also forgets the telemetry identity. Operator: deploy the Worker, then tag `v0.4.0`) | 01, 02, 06 |
 | 08 | Dashboard: missing-doc demand list + site→CLI funnel | 04, 06, 07 |
 | 09 | Account deletion — erase our row **and** the PostHog person | 06 |
 

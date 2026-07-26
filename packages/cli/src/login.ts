@@ -8,6 +8,7 @@
 
 import { startLogin, poll } from "./api.js";
 import { saveToken, clearToken } from "./credential-store.js";
+import { capture, forgetPerson, identify } from "./telemetry.js";
 
 export interface LoginDeps {
   apiBase: string;
@@ -45,6 +46,13 @@ export async function login(deps: LoginDeps): Promise<number> {
     const r = await poll(deps.apiBase, state, fetchImpl);
     if (r.status === "complete") {
       save(r.token!);
+      // Identity BEFORE the event, so `cli_login_completed` is already filed under the
+      // person rather than under the machine. `github_id`, never the login: a renamed
+      // handle would fork one person in two (spec, "Identity rules"). Absent on a
+      // backend older than migration 0007 — then the run stays anonymous, which is a
+      // thinner funnel, not a broken sign-in.
+      if (r.github_id) identify(r.github_id);
+      capture("cli_login_completed");
       log(`Signed in as ${r.login}.`);
       return 0;
     }
@@ -65,11 +73,15 @@ export async function login(deps: LoginDeps): Promise<number> {
 export interface LogoutDeps {
   clear?: () => void;
   log?: (msg: string) => void;
+  forget?: () => void;
 }
 
 /** Forget the stored token (keyring + plaintext). Returns an exit code. */
 export function logout(deps: LogoutDeps = {}): number {
   (deps.clear ?? (() => clearToken()))();
+  // …and the telemetry identity with it. Leaving it behind would file the next person
+  // to use this machine under the account that just signed out (ticket 07).
+  (deps.forget ?? (() => forgetPerson()))();
   (deps.log ?? console.log)("Signed out.");
   return 0;
 }

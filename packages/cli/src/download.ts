@@ -35,6 +35,7 @@ import { openKg, resolveDoc } from "./api.js";
 import { resolveToken } from "./credential-store.js";
 import { extractTarGz, fetchMarkdown } from "./md-fetch.js";
 import { formatBytes, formatCount, formatDuration, startProgress } from "./progress.js";
+import { capture, identify } from "./telemetry.js";
 
 export interface DownloadDeps {
   apiBase: string;
@@ -57,8 +58,37 @@ export interface DownloadDeps {
   isStdoutTTY?: boolean;
 }
 
-/** Returns a process exit code (0 = both sources written). */
+/**
+ * Returns a process exit code (0 = both sources written).
+ *
+ * The wrapper exists for one reason: `resolveDoc`/`openKg` report an unknown slug or
+ * an expired bearer by THROWING, so those failures leave through here and not through
+ * any of the `return 1`s below. Without it, `cli_download_failed` would miss the
+ * commonest real failure of all — the one the spec calls out as a blind spot.
+ */
 export async function download(arg: string, deps: DownloadDeps): Promise<number> {
+  try {
+    return await runDownload(arg, deps);
+  } catch (err) {
+    capture("cli_download_failed", { reason: failureReason(err) });
+    throw err;
+  }
+}
+
+/**
+ * A thrown failure as ONE of a fixed set of labels. The message itself is never sent:
+ * it can carry a slug, and a filesystem error's can carry an absolute path — `reason`
+ * has to stay a low-cardinality label, not free text (ticket 07).
+ */
+function failureReason(err: unknown): string {
+  const msg = err instanceof Error ? err.message : "";
+  if (/sign-in has expired/.test(msg)) return "auth_expired";
+  if (/^No doc named|^No downloadable KG/.test(msg)) return "not_found";
+  if (/HTTP \d+/.test(msg)) return "http_error";
+  return "error";
+}
+
+async function runDownload(arg: string, deps: DownloadDeps): Promise<number> {
   const startedAt = Date.now();
   const fetchImpl = deps.fetchImpl ?? fetch;
   const getToken = deps.getToken ?? (() => resolveToken());
@@ -81,12 +111,14 @@ export async function download(arg: string, deps: DownloadDeps): Promise<number>
   // The gate (ADR-0005): downloading a KG is the ONE action that needs sign-in.
   const token = getToken();
   if (!token) {
+    capture("cli_download_failed", { reason: "not_signed_in" });
     say("Downloading a KG needs a sign-in. Run `graflet login` first.");
     return 1;
   }
 
   const resolved = await resolveDoc(deps.apiBase, slug, version, fetchImpl);
   if (!resolved) {
+    capture("cli_download_failed", { reason: "not_available" });
     say(`"${slug}"${version ? `@${version}` : ""} isn't available to download yet.`);
     return 1;
   }
@@ -104,7 +136,13 @@ export async function download(arg: string, deps: DownloadDeps): Promise<number>
   // drift/bug. Checking here, before either leg starts, is what keeps "a mismatch leaves
   // nothing on disk" true even though the two legs now download at the same time.
   const kg = await openKg(deps.apiBase, token, slug, version, fetchImpl);
+  // The broker just told us who this bearer belongs to. `login` is the other place the
+  // CLI learns its `github_id`, but tokens never expire — someone who signed in on an
+  // older version never runs it again, and without this their telemetry would sit on
+  // the machine id forever (ticket 07). A no-op once identified.
+  if (kg.user) identify(kg.user);
   if (kg.sha && kg.sha !== resolved.sha) {
+    capture("cli_download_failed", { reason: "sha_mismatch" });
     say(`Refusing to write: the KG's sha (${kg.sha}) doesn't match the docs sha (${resolved.sha}).`);
     return 1;
   }
@@ -201,6 +239,7 @@ export async function download(arg: string, deps: DownloadDeps): Promise<number>
     const [docsRes, graphRes] = await Promise.allSettled([docsLeg, graphLeg]);
 
     if (docsRes.status === "rejected" || graphRes.status === "rejected") {
+      capture("cli_download_failed", { reason: "transfer_failed" });
       p.stop(); // flush the frame BEFORE the hint, so the hint reads as the last word
       // Whatever landed STAYS. Both legs are idempotent overwrites, so the retry is genuinely
       // "the same command again" — and deleting a half-download is how you lose the 30 MB that
@@ -222,6 +261,16 @@ export async function download(arg: string, deps: DownloadDeps): Promise<number>
       if (/^(LICENSE|COPYING|NOTICE)\b/i.test(name)) await rename(file, join(dest, name));
     }
     p.stop();
+
+    // `version` is what the catalog RESOLVED to, not what was typed: a bare `graflet
+    // react` has to land in the same series as `graflet react@19`, or the demand
+    // signal splits across the pin someone happened to use.
+    capture("cli_download_completed", {
+      doc: slug,
+      version: resolved.version,
+      duration_ms: Date.now() - startedAt,
+      bytes: docsBytes + graphBytes,
+    });
 
     say(`Done in ${formatDuration((Date.now() - startedAt) / 1000)}`);
     const localSeconds = num(savings, "local_time", "estimated_total_seconds");

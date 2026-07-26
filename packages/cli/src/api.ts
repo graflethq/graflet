@@ -16,6 +16,9 @@ export interface PollResponse {
   token?: string;
   login?: string;
   email?: string | null;
+  /** The numeric GitHub id as a string — the join key the site and the Worker file
+   *  events under too (ticket 07). Null on a backend older than migration 0007. */
+  github_id?: string | null;
   error?: string;
 }
 
@@ -89,6 +92,11 @@ export async function resolveDoc(
 export interface OpenKg {
   /** The sha the backend recorded with the bundle (X-KG-Sha), or null. */
   sha: string | null;
+  /** Who the bearer belongs to (X-Graflet-User), or null on an older backend. The
+   *  CLI's only source of its own `github_id` outside `login` — and tokens never
+   *  expire, so a user who signed in on an older version never runs `login` again
+   *  (ticket 07). */
+  user: string | null;
   /** Content-Length when present. The broker streams, so expect null. */
   total: number | null;
   /** Drain the body to bytes, reporting progress as chunks land. */
@@ -119,6 +127,7 @@ export async function openKg(
   if (!res.ok) throw new Error(`KG download failed (HTTP ${res.status})`);
   return {
     sha: res.headers.get("X-KG-Sha"),
+    user: res.headers.get("X-Graflet-User"),
     total: contentLength(res),
     read: (onProgress) => readBodyBytes(res, onProgress),
   };

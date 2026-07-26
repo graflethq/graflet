@@ -105,6 +105,26 @@ describe("KG download broker (ticket 05)", () => {
     expect(kg.headers.get("X-KG-Sha")).toBe(resolved.resolve.sha);
   });
 
+  it("names the bearer's owner (X-Graflet-User) so the CLI can identify without signing in again", async () => {
+    stubPrivateRepo();
+    await seedReadyDoc();
+    const token = await signedInToken();
+
+    const kg = await SELF.fetch(`${BASE}/kg/next.js`, { headers: { Authorization: `Bearer ${token}` } });
+    // Bearer tokens never expire, so a user who signed in on an older CLI never runs
+    // `login` again — this header is their only route to a `github_id` (ticket 07).
+    // A string, matching the site's `identify(String(github_id))`.
+    expect(kg.headers.get("X-Graflet-User")).toBe("1");
+  });
+
+  it("tells an unauthenticated caller nothing about anyone", async () => {
+    stubPrivateRepo();
+    await seedReadyDoc();
+    const res = await SELF.fetch(`${BASE}/kg/next.js`);
+    expect(res.status).toBe(401);
+    expect(res.headers.get("X-Graflet-User")).toBeNull();
+  });
+
   it("a doc with no deliverable pin (unknown / not-ready) is 404, not brokered", async () => {
     const calls = stubPrivateRepo();
     const token = await signedInToken();

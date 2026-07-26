@@ -1,9 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { gzipSync } from "node:zlib";
 import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { download } from "./download.js";
+import { flush, startTelemetry, stopTelemetry } from "./telemetry.js";
+import { collectTelemetry, dataKeys, discardsIp } from "./telemetry.fixture.js";
 
 const API = "https://backend.test";
 const SHA = "0123456789abcdef0123456789abcdef01234567";
@@ -80,7 +82,9 @@ function stub(opts: { resolveBody?: unknown; kgSha?: string | null; bundle?: Uin
     if (url.includes("/catalog/")) return Response.json(opts.resolveBody ?? { resolve });
     if (url.includes("codeload.github.com")) return new Response(docsTarGz);
     if (url.includes("/kg/")) {
-      const headers = opts.kgSha === undefined ? { "X-KG-Sha": SHA } : opts.kgSha === null ? {} : { "X-KG-Sha": opts.kgSha };
+      const sha = opts.kgSha === undefined ? { "X-KG-Sha": SHA } : opts.kgSha === null ? {} : { "X-KG-Sha": opts.kgSha };
+      // X-Graflet-User: the broker naming the bearer's owner (ticket 07).
+      const headers = { ...sha, "X-Graflet-User": "4242" };
       return new Response(opts.kgBody ? opts.kgBody() : (opts.bundle ?? bundleTarGz), { headers });
     }
     throw new Error(`unexpected ${url}`);
@@ -294,5 +298,120 @@ describe("cli download — the spine (ticket 05)", () => {
     expect(s.err.join("")).toContain("\x1b"); // the frame really did render
     expect(s.out).toEqual([out]); // …and the payload is untouched by it
     expect(s.out[0]).not.toMatch(/^\s/);
+  });
+});
+
+/**
+ * Ticket 07's real guarantee, asserted rather than grepped: what an opted-in machine
+ * transmits when the four call sites in this file fire. The slug and the destination
+ * path are deliberately messy here — if the CLI ever leaked argv or a filesystem
+ * path into a property, these assertions are where it would surface.
+ */
+describe("download telemetry (ticket 07)", () => {
+  afterEach(() => stopTelemetry());
+
+  it("a completed download reports the doc, the RESOLVED version, timing and bytes — nothing else", async () => {
+    const t = await collectTelemetry();
+    const { fetchImpl } = stub();
+    const s = sink();
+    // No version typed, so the event must carry what the catalog resolved to ("16").
+    await download("next.js", { apiBase: API, fetchImpl, getToken: () => "tok", outDir: dest, ...s.deps });
+
+    const [event] = await t.events();
+    expect(event.event).toBe("cli_download_completed");
+    expect(dataKeys(event)).toEqual(["bytes", "doc", "duration_ms", "version"]);
+    expect(event.properties.doc).toBe("next.js");
+    expect(event.properties.version).toBe("16");
+    expect(event.properties.bytes as number).toBeGreaterThan(0);
+    expect(typeof event.properties.duration_ms).toBe("number");
+    // The IP is the one identifier a server-side capture would carry by default;
+    // /privacy promises it doesn't, so the payload has to actively discard it.
+    expect(discardsIp(event)).toBe(true);
+  });
+
+  it("every failure reports a fixed reason label, never the message or the slug", async () => {
+    const t = await collectTelemetry();
+
+    // signed out
+    await download("next.js", { apiBase: API, fetchImpl: stub().fetchImpl, getToken: () => null, ...sink().deps });
+    // resolvable slug with no deliverable pin
+    await download("next.js", {
+      apiBase: API,
+      fetchImpl: stub({ resolveBody: { resolve: null } }).fetchImpl,
+      getToken: () => "tok",
+      ...sink().deps,
+    });
+    // the KG was built from a different commit than the docs
+    await download("next.js", {
+      apiBase: API,
+      fetchImpl: stub({ kgSha: "f".repeat(40) }).fetchImpl,
+      getToken: () => "tok",
+      outDir: dest,
+      ...sink().deps,
+    });
+    // an unknown slug — thrown by resolveDoc, so it leaves through the wrapper
+    await download("nope", {
+      apiBase: API,
+      fetchImpl: (async () => new Response("no", { status: 404 })) as unknown as typeof fetch,
+      getToken: () => "tok",
+      ...sink().deps,
+    }).catch(() => {});
+    // A bearer the backend no longer accepts. Pinned because tokens never expire on
+    // OUR side — this is the commonest real failure, and the one the spec calls out as
+    // a blind spot the backend cannot see (a 401 has no github_id to attribute).
+    const expired = stub();
+    await download("next.js", {
+      apiBase: API,
+      fetchImpl: (async (input: any, init: any) =>
+        String(input).includes("/kg/")
+          ? new Response("no", { status: 401 })
+          : expired.fetchImpl(input, init)) as unknown as typeof fetch,
+      getToken: () => "stale",
+      ...sink().deps,
+    }).catch(() => {});
+
+    const events = await t.events();
+    expect(events.map((e) => e.properties.reason)).toEqual([
+      "not_signed_in",
+      "not_available",
+      "sha_mismatch",
+      "not_found",
+      "auth_expired",
+    ]);
+    // The reason is the ONLY property, and no payload anywhere mentions the slug or a path.
+    for (const e of events) expect(dataKeys(e)).toEqual(["reason"]);
+    expect(JSON.stringify(events)).not.toContain("next.js");
+    expect(JSON.stringify(events)).not.toContain(tmpdir());
+  });
+
+  it("identifies to the person the broker names, so a token from an older version still joins", async () => {
+    const t = await collectTelemetry();
+    const { fetchImpl } = stub();
+    await download("next.js", { apiBase: API, fetchImpl, getToken: () => "tok", outDir: dest, ...sink().deps });
+
+    const all = await t.settle();
+    expect(all[0].event).toBe("$identify");
+    expect(all[0].distinct_id).toBe("4242"); // X-Graflet-User off the KG response
+    expect(all[1].distinct_id).toBe("4242"); // …and the download event follows it
+
+    // Second download in the same process: already this person, so no second merge.
+    t.reset();
+    await download("next.js", { apiBase: API, fetchImpl, getToken: () => "tok", outDir: dest, ...sink().deps });
+    expect((await t.settle()).map((e) => e.event)).toEqual(["cli_download_completed"]);
+  });
+
+  it("sends nothing at all when the machine never opted in", async () => {
+    const sent: unknown[] = [];
+    await startTelemetry({
+      file: join(mkdtempSync(join(tmpdir(), "tel-out-")), "telemetry.json"),
+      isTTY: true,
+      env: {},
+      ask: async () => "", // bare Enter — the default is no
+      fetchImpl: (async () => (sent.push(1), new Response("ok"))) as unknown as typeof fetch,
+    });
+    const { fetchImpl } = stub();
+    await download("next.js", { apiBase: API, fetchImpl, getToken: () => "tok", outDir: dest, ...sink().deps });
+    await flush();
+    expect(sent).toEqual([]);
   });
 });
