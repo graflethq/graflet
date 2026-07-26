@@ -43,11 +43,13 @@ a user complains.
       **`watch_removed` was not built: there is no unwatch endpoint to fire it from.** Same call as ticket 04 made
       for `doc_row_click` — a named event with no trigger is a permanently empty series on the dashboard. It is
       removed from the `WorkerEvent` union, so adding the endpoint will fail to compile until the event is added back.
-- [ ] `distinct_id` is the same `github_id` string the site uses (ticket 05) — verified by finding one person with
+- [x] `distinct_id` is the same `github_id` string the site uses (ticket 05) — verified by finding one person with
       both a site event and a backend event on their timeline.
-      **Left unticked deliberately.** `src/analytics.test.ts` asserts `distinct_id === "100"` / `"200"` off the real
-      wire payload, so the code is right; but this box asks for one person observed in PostHog with events from both
-      surfaces, and nobody has looked. Same live check as ticket 05's merge box.
+      **Verified live on production, 2026-07-26.** Person `2580a34b-c055-5740-a827-f166fdc172ab` carries the
+      browser's `$pageview` / `signin_started` and this Worker's `signin_completed` (`distinct_id: "35300157"`,
+      `surface: website`, `is_new_user: false`) on one timeline. `$set` landed too: the person's `email` came from
+      the Worker, never through the browser, which is the whole reason ticket 05 stopped sending it. Full evidence
+      table on ticket 05.
 - [x] `captureException` is called in the Worker's catch blocks, and a deliberately induced failure shows up in
       PostHog error tracking.
       One top-level `try/catch` in `src/index.ts` wrapping the whole router — the single place that sees every

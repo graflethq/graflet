@@ -31,11 +31,23 @@ happens here and nowhere earlier.
       One validation rule, `isGithubId` in `lib/session.ts`, is shared by the writer and the reader. Two rules let a
       value the writer rejects (`0`, a negative, a float) survive in storage and reach `identify(String(0))` on the
       next load — which is what a first pass actually did.
-- [ ] Anonymous events from earlier in the same session appear on the identified person afterwards (the
+- [x] Anonymous events from earlier in the same session appear on the identified person afterwards (the
       anonymous→identified merge). Verified on a real sign-in, not assumed.
-      **Left unticked deliberately.** The wiring is built and unit-tested, but this box asks for a live
-      verification and that has not happened — ticking it would be the exact assumption it forbids. The operator
-      step is below.
+      **Verified live on production, 2026-07-26.** A real sign-in at `graflet.rnui.dev`, then queried in PostHog.
+      The anonymous id was `019f9f21-b203-7432-a919-6542267e9afd`; every event either side of the boundary
+      resolves to one `person_id`, `2580a34b-c055-5740-a827-f166fdc172ab`:
+
+      | event | distinct_id | person_id |
+      |---|---|---|
+      | `$pageview` (anonymous, pre-sign-in) | `019f9f21-…` | `2580a34b-…` |
+      | `signin_started` (anonymous) | `019f9f21-…` | `2580a34b-…` |
+      | `signin_completed` (**Worker**) | `35300157` | `2580a34b-…` |
+      | `$identify` — carried `$anon_distinct_id: 019f9f21-…` | `35300157` | `2580a34b-…` |
+
+      The person carries both distinct ids and all three fields
+      (`email: …@gmail.com`, `github_login: mrpmohiburrahman`). This also settles the `identified_only` question
+      empirically: the pre-sign-in events were captured with `$process_person_profile: false` and are attributed to
+      the person anyway.
       **Ticket 03's warning was right about the cause and the fix chosen was to carry the id, not to drop the box.**
       `lib/analytics.ts` parks `posthog.get_distinct_id()` in `sessionStorage` under `graflet:analytics-anon-id` on
       the sign-in click; `AnalyticsProvider` reads-and-removes it and passes it as `bootstrap: { distinctID }`, so
@@ -68,14 +80,23 @@ happens here and nowhere earlier.
       PostHog's entries, and that watching a library and a failed download are recorded. The page test now asserts
       the enumeration includes the new key.
 
-## Follow-ups this opened
+## Settled after the live run
 
-- **Live check, and the two unticked boxes depend on it.** Sign in on production, then confirm in PostHog that one
-  person carries the pre-sign-in `$pageview`, `signin_started`, `signin_completed` and a download on one timeline.
-  Until then the merge is built and tested but not observed, and ticket 08 should not build a funnel on it.
-- **Anyone signed in before 2026-07-26 is never identified.** Their `graflet:session` has no `github_id` and the
-  join panel gives them no way to sign in again. Options if it matters: show the sign-in panel when a session lacks
-  `github_id` (self-healing, but existing users see a sign-in prompt again — harmless, since consent is guarded
-  server-side and is never re-asked), or leave it to churn. Deliberately not decided here.
-- ADR-0010 said pre-login visitors have nothing stored on their device. That is now false by one `sessionStorage`
-  entry, so the ADR carries a dated amendment rather than being quietly contradicted by the code.
+- **Anyone signed in before 2026-07-26 is never identified** — their `graflet:session` predates `github_id`. Fixed
+  rather than left to churn: the account card now offers "Reconnect your account", a link (not the sign-in panel,
+  which would re-show the marketing opt-in that ADR-0006 forbids re-asking) carrying their recorded consent answer
+  so the server's `'unset'` guard finds nothing to change. This was not hypothetical — the first browser tested had
+  exactly this session.
+- **Walking the flow on production caught a bug the tests did not.** The reconnect link shipped without the
+  `onClick` the sign-in button has, so it round-tripped and handed back a `github_id` with no `$anon_distinct_id`
+  attached — an identified person with nothing merged into them, which is the entire point of the trip. Fixed and
+  covered by a test that clicks the link.
+- ADR-0010 said pre-login visitors have nothing stored on their device. Now false by one `sessionStorage` entry, so
+  the ADR carries a dated amendment rather than being quietly contradicted by the code.
+
+## Still open
+
+- A **download** has not been observed on a real person's timeline — that needs a CLI download against production,
+  and the funnel's last step is unverified. The four steps before it are confirmed.
+- One junk `__probe_from_console` event exists in the project from isolating ingestion lag during this check.
+  Harmless; ignore it in any query that counts events.
