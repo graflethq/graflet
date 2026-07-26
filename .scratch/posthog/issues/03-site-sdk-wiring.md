@@ -12,8 +12,9 @@ first.
 **Blocked by:** 01 (token + proxy host), 02 (privacy page must be true before this deploys).
 
 **Status:** done 2026-07-26, **deployed and capturing** (`graflet-web` version `af914b93-806f-4818-9c0f-b3142df48c48`
-on `graflet.rnui.dev`). One box stays open: the blocker check needs a browser whose blocker actually carries tracker
-lists — the test profile's Adblock Plus runs ad lists only (details in that box).
+on `graflet.rnui.dev`). **All boxes closed**, including the blocker check — run against Adblock Plus with tracker
+blocking on. Headline: events get through on the first-party host; session replay and dead-click capture do not,
+because those two bundles are blocked by filename rather than by host. Detail in that box.
 
 Verified on the live domain, not just locally: `$pageview` rows with `$host = 'graflet.rnui.dev'` in project 528914;
 every request to `edge.graflet.rnui.dev` (`/i/v0/e/`, `/s/`, `config.js`, all four extension bundles) and **zero** to
@@ -61,32 +62,36 @@ apps at the parent-domain scope, not by this one.)
       request going to the first-party subdomain, not to `i.posthog.com`. Every request — `config.js`, `/flags/`,
       `/e/`, `/s/`, all four extension bundles — goes to `edge.graflet.rnui.dev`. Zero requests to any
       `*.posthog.com` host. Events queried back out of project 528914 by SQL.
-- [ ] With uBlock Origin (or equivalent) enabled, events still arrive — the whole point of ticket 01. If they do
+- [x] With uBlock Origin (or equivalent) enabled, events still arrive — the whole point of ticket 01. If they do
       not, the chosen subdomain or path is already on a blocklist and needs changing; record the finding here.
-      **Half-answered, and the interesting half is a finding about blockers, not about us.** The test browser *does*
-      run a blocker — Adblock Plus, enabled, working. Probed six hosts from the live page, by `fetch` and by
-      `<script>` tag:
+      **Answered on the live site, against Adblock Plus with *Block additional tracking* enabled — and the finding is
+      more precise than the box expected: the proxy defeats host rules, and filename rules defeat the proxy.**
 
-      | host | result |
-      |---|---|
-      | `static.doubleclick.net` | **BLOCKED** |
-      | `www.google-analytics.com` | reached |
-      | `www.googletagmanager.com` | reached |
-      | `us.i.posthog.com` | reached |
-      | `us-assets.i.posthog.com` | reached |
-      | `edge.graflet.rnui.dev` (ours) | reached |
+      The blocker is genuinely aggressive with that toggle on. Probed from the page (`fetch` + `<script>`):
+      **blocked** — `static.doubleclick.net`, `www.google-analytics.com`, `www.googletagmanager.com`,
+      `cdn.segment.com`, `static.hotjar.com`, `cdn.amplitude.com`, `cdn.mxpnl.com`, `plausible.io`,
+      **`app.posthog.com`**; **reached** — `us.i.posthog.com`, `us-assets.i.posthog.com`, `eu.i.posthog.com`,
+      `internal-t.posthog.com`, and `edge.graflet.rnui.dev` (ours).
 
-      So the blocker is live (doubleclick dies) but its active filter lists are **ad** lists only — it does not block
-      analytics hosts at all, not even Google Analytics. ADR-0010's 10–30% recovery is about *tracker* lists
-      (EasyPrivacy, which uBlock Origin enables by default and which Adblock Plus keeps behind a separate
-      "block additional tracking" toggle, off by default). This profile therefore cannot prove or disprove the
-      recovery: ours reaching proves nothing while the direct host reaches too.
-      **Still to do, one click:** turn on Adblock Plus → *Block additional tracking* (or use a uBlock Origin profile),
-      reload the site, and re-run the probe. Expected: `us.i.posthog.com` flips to BLOCKED while
-      `edge.graflet.rnui.dev` keeps reaching, and `/i/v0/e/` still returns 200. If ours flips too, the subdomain is on
-      a list and needs changing — that is the outcome this box exists to catch.
-      *(Earlier note in this file said the browser had no blocker at all. Wrong — it has one; its lists just don't
-      cover analytics.)*
+      Two things follow. First, this list carries a PostHog rule but only for the **legacy** `app.posthog.com` host,
+      not for today's regional ingest hosts — so against *this* blocker the proxy recovers nothing, because nothing
+      was being lost. It costs nothing either, and it is still the right call for lists that do cover
+      `*.i.posthog.com`. Second, and this is the real result: **our first-party host is not blocked, and capture
+      works** — `$pageview` for `https://graflet.rnui.dev/support?blockeron=1` is in project 528914, posted through
+      `POST edge.graflet.rnui.dev/i/v0/e/` → **200**, with the blocker on. (Note for future debugging: those POSTs do
+      **not** show up in the page's own `performance.getEntriesByType('resource')`, because posthog-js sends them as
+      beacons. Read them from the browser's network log, or the in-page check will look like a silent failure.)
+
+      **The exception, worth knowing before someone opens session replay and finds it thin:** two of PostHog's
+      extension bundles are blocked *by filename*, on any host, so a first-party domain cannot save them —
+      `posthog-recorder.js` (session replay) and `dead-clicks-autocapture.js`. Isolated deliberately: from inside the
+      page `fetch` of those two **fails**, while `surveys.js`, `exception-autocapture.js` and `config.js` return 200
+      off the same host, a made-up `/static/not-a-recorder.js` returns a normal 404, and `curl` (no blocker) gets 200
+      for all of them. So: **events, flags, surveys and exception capture survive a tracking blocker; session replay
+      and dead clicks do not.** Replay coverage is therefore partial by design of the blocklists, not by our config,
+      and there is no supported way to rename PostHog's bundles. Don't read a quiet replay list as a bug.
+      *(Two earlier notes in this file were wrong and are corrected here: the browser does run a blocker, and its
+      tracker list does not cover PostHog's current ingest hosts.)*
 - [x] The provider calls `isAnalyticsOptedOut()` (`apps/web/lib/analytics.ts`, added by ticket 02) **before**
       `posthog.init` and skips init entirely when it returns true. The `/privacy` opt-out button is already live and
       already writes the key — until this box is ticked, the page names a switch the SDK ignores. Verified live, not

@@ -117,3 +117,8 @@ paid out of the 1M/month free allowance.
   explicit `catalog_search` event.
 - The CNAME for the managed proxy must be **DNS-only (grey cloud)**. The repo's wrangler token cannot write DNS,
   so it is an operator step in the Cloudflare dashboard.
+- **The proxy does not save session replay.** Measured on the live site (ticket 03, 2026-07-26): with a tracking
+  blocker on, blockers kill `posthog-recorder.js` and `dead-clicks-autocapture.js` by **filename**, so serving them
+  from a first-party host changes nothing. Events, flags, surveys and exception capture do get through. Treat replay
+  and `$dead_click` as **partial-coverage** signals — never as a denominator — and don't debug a thin replay list as
+  a wiring bug.
