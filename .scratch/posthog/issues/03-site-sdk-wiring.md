@@ -11,9 +11,16 @@ first.
 
 **Blocked by:** 01 (token + proxy host), 02 (privacy page must be true before this deploys).
 
-**Status:** done 2026-07-26 — with one box deliberately left open (the uBlock check needs a browser that has a
-content blocker; this one has none). Built and verified against a local production build; **not yet deployed** — the
-branch still has to ship before any of it captures real traffic.
+**Status:** done 2026-07-26, **deployed and capturing** (`graflet-web` version `af914b93-806f-4818-9c0f-b3142df48c48`
+on `graflet.rnui.dev`). One box stays open: the blocker check needs a browser whose blocker actually carries tracker
+lists — the test profile's Adblock Plus runs ad lists only (details in that box).
+
+Verified on the live domain, not just locally: `$pageview` rows with `$host = 'graflet.rnui.dev'` in project 528914;
+every request to `edge.graflet.rnui.dev` (`/i/v0/e/`, `/s/`, `config.js`, all four extension bundles) and **zero** to
+any `*.posthog.com` host; `persistence: 'memory'`, `person_profiles: 'identified_only'`, `rageclick`,
+`capture_pageleave` all read back off the live SDK; **0** `ph_*` localStorage keys and **0** person rows created.
+(Two `ph_*` cookies are visible on the domain but belong to *other* projects' tokens — set by other `*.rnui.dev`
+apps at the parent-domain scope, not by this one.)
 
 - [x] `posthog-js` is initialised once, client-side, from a provider mounted in `apps/web/app/layout.tsx`, and the
       app still renders with the env vars absent (local dev without a token must not crash or spam errors).
@@ -56,11 +63,30 @@ branch still has to ship before any of it captures real traffic.
       `*.posthog.com` host. Events queried back out of project 528914 by SQL.
 - [ ] With uBlock Origin (or equivalent) enabled, events still arrive — the whole point of ticket 01. If they do
       not, the chosen subdomain or path is already on a blocklist and needs changing; record the finding here.
-      **Not verifiable in the test browser: it has no content blocker.** Probed from the page —
-      `fetch('https://us.i.posthog.com/static/array.js')` **reached** the network, so nothing is blocking even the
-      canonical PostHog host in this profile, and "events arrived" proves nothing about blocker recovery. Left open
-      deliberately: someone with uBlock Origin enabled needs to load the deployed site once and confirm `/e/` still
-      returns 200. The proxy path itself is confirmed working end to end.
+      **Half-answered, and the interesting half is a finding about blockers, not about us.** The test browser *does*
+      run a blocker — Adblock Plus, enabled, working. Probed six hosts from the live page, by `fetch` and by
+      `<script>` tag:
+
+      | host | result |
+      |---|---|
+      | `static.doubleclick.net` | **BLOCKED** |
+      | `www.google-analytics.com` | reached |
+      | `www.googletagmanager.com` | reached |
+      | `us.i.posthog.com` | reached |
+      | `us-assets.i.posthog.com` | reached |
+      | `edge.graflet.rnui.dev` (ours) | reached |
+
+      So the blocker is live (doubleclick dies) but its active filter lists are **ad** lists only — it does not block
+      analytics hosts at all, not even Google Analytics. ADR-0010's 10–30% recovery is about *tracker* lists
+      (EasyPrivacy, which uBlock Origin enables by default and which Adblock Plus keeps behind a separate
+      "block additional tracking" toggle, off by default). This profile therefore cannot prove or disprove the
+      recovery: ours reaching proves nothing while the direct host reaches too.
+      **Still to do, one click:** turn on Adblock Plus → *Block additional tracking* (or use a uBlock Origin profile),
+      reload the site, and re-run the probe. Expected: `us.i.posthog.com` flips to BLOCKED while
+      `edge.graflet.rnui.dev` keeps reaching, and `/i/v0/e/` still returns 200. If ours flips too, the subdomain is on
+      a list and needs changing — that is the outcome this box exists to catch.
+      *(Earlier note in this file said the browser had no blocker at all. Wrong — it has one; its lists just don't
+      cover analytics.)*
 - [x] The provider calls `isAnalyticsOptedOut()` (`apps/web/lib/analytics.ts`, added by ticket 02) **before**
       `posthog.init` and skips init entirely when it returns true. The `/privacy` opt-out button is already live and
       already writes the key — until this box is ticked, the page names a switch the SDK ignores. Verified live, not
