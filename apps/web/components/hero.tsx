@@ -4,7 +4,8 @@ import { LINKS } from "@/lib/links";
 
 // The one command, from the shared builder so the hero and the catalog rows can
 // never drift (ticket 03).
-const HERO_COMMAND = buildInstallCommand("react");
+const HERO_DOC = "react";
+const HERO_COMMAND = buildInstallCommand(HERO_DOC);
 
 /**
  * Compact hero: one headline, one sourced claim, one command — sized so the first
@@ -47,6 +48,8 @@ export function Hero() {
         <CopyButton
           value={HERO_COMMAND}
           idleLabel="Copy"
+          // The hero command pins no version, so "latest" is literally what it installs.
+          copyEvent={{ doc: HERO_DOC, version: "latest", surface: "hero" }}
           className="shrink-0 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         />
       </div>

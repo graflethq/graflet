@@ -11,7 +11,7 @@ time with `/implement`, clearing context between tickets.
 | 01 | PostHog project + $0 billing limits + managed reverse proxy ✅ **done 2026-07-26** (project 528914; proxy `edge.graflet.rnui.dev` = `valid`, flags + assets 200) | — |
 | 02 | Privacy page rewrite + erasure path ✅ **done 2026-07-26** (no delete path exists — gap recorded, page promises none; opt-out seam = `lib/analytics.ts`) | — |
 | 03 | Site SDK wiring — anonymous by default, proxy host, replay + error tracking ✅ **done 2026-07-26** (`components/analytics-provider.tsx`; no `defaults` bundle — it created a person row per anonymous load; uBlock box left open, test browser has no blocker) | 01, 02 |
-| 04 | Site explicit events + `catalog_search` demand signal | 03 |
+| 04 | Site explicit events + `catalog_search` demand signal ✅ **done 2026-07-26** (all five through `capture()` in `lib/analytics.ts`; `doc_row_click` had no trigger — rows aren't links — so it fires from a row `onClick` that skips clicks on the copy button; support tiers split into a client component) | 03 |
 | 05 | Identify on sign-in — `github_id` + login + email | 03 |
 | 06 | Backend Worker server-side capture + `captureException` | 01, 02 |
 | 07 | CLI opt-in telemetry (one prompt, `DO_NOT_TRACK`, kill switch) | 01, 02, 06 |

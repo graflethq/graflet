@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { capture } from "@/lib/analytics";
 
 /**
  * Copy-a-string button, shared by the hero command pill and every catalog row.
@@ -12,11 +13,17 @@ export function CopyButton({
   idleLabel,
   copiedLabel = "Copied ✓",
   className,
+  copyEvent,
 }: {
   value: string;
   idleLabel: ReactNode;
   copiedLabel?: ReactNode;
   className?: string;
+  /** What to report as `command_copied` (ticket 04). The button is shared, so the
+   *  caller says which surface it sits on. Required, not optional: an optional
+   *  payload trades a compile error for a silently unmeasured copy, and "does anyone
+   *  copy the command?" is the first question the analytics exist to answer. */
+  copyEvent: { doc: string; version: string; surface: "hero" | "catalog_row" };
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +43,12 @@ export function CopyButton({
         // "copied" label when the write actually succeeds, so it never lies (e.g. on
         // a non-secure context where navigator.clipboard is undefined).
         navigator.clipboard?.writeText(value).then(
-          () => setCopied(true),
+          () => {
+            setCopied(true);
+            // On success only: an event for a copy that never reached the clipboard
+            // would answer "does anyone copy the command?" with a number that isn't true.
+            capture("command_copied", copyEvent);
+          },
           () => {},
         );
       }}

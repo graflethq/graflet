@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CatalogSection } from "./catalog-section";
+
+// `__loaded: true` so `capture()` gets past its "SDK never initialised" guard —
+// these tests are about which events the table sends, and with what.
+vi.mock("posthog-js", () => ({ default: { __loaded: true, capture: vi.fn() } }));
+const ph = (await import("posthog-js")).default as unknown as { capture: ReturnType<typeof vi.fn> };
 
 function stubCatalog(docs: unknown[]) {
   vi.stubGlobal(
@@ -213,5 +218,81 @@ describe("CatalogSection — pagination (15 per page)", () => {
     // lib-2 and lib-20 both contain "lib-2".
     expect(screen.getByText("2 matches")).toBeInTheDocument();
     expect(screen.getByText("20 libraries · more coming soon")).toBeInTheDocument();
+  });
+});
+
+describe("CatalogSection — analytics (ticket 04: the missing-doc demand signal)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    ph.capture.mockClear();
+  });
+
+  it("reports one catalog_search per search a human meant to run, not one per keystroke", async () => {
+    stubCatalog(docsWithTokens(20));
+    render(<CatalogSection />);
+    await screen.findByText("lib-1");
+    ph.capture.mockClear();
+
+    // Five keystrokes. "lib-2" matches lib-2 and lib-20.
+    await userEvent.type(screen.getByLabelText("Search libraries"), "lib-2");
+    expect(ph.capture).not.toHaveBeenCalled(); // still typing — nothing sent yet
+
+    await waitFor(() => expect(ph.capture).toHaveBeenCalledTimes(1), { timeout: 2000 });
+    expect(ph.capture).toHaveBeenCalledWith("catalog_search", { query: "lib-2", result_count: 2 });
+
+    // Clearing the box is not a search: an empty query sends nothing at all.
+    await userEvent.clear(screen.getByLabelText("Search libraries"));
+    await new Promise((r) => setTimeout(r, 700));
+    expect(ph.capture).toHaveBeenCalledTimes(1);
+  });
+
+  it("waits for the catalog before reporting a search — a half-loaded page is not zero demand", async () => {
+    let arrive!: (docs: unknown[]) => void;
+    const docs = new Promise<unknown[]>((r) => (arrive = r));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, json: async () => ({ docs: await docs }) })) as unknown as typeof fetch,
+    );
+    render(<CatalogSection />);
+    await screen.findByText("Loading catalog…");
+    ph.capture.mockClear();
+
+    await userEvent.type(screen.getByLabelText("Search libraries"), "lib-2");
+    await new Promise((r) => setTimeout(r, 700));
+    // `rows` is empty because the fetch hasn't landed — reporting result_count 0 here
+    // (or forever, when the fetch failed) would invent a missing-doc signal.
+    expect(ph.capture).not.toHaveBeenCalled();
+
+    arrive(docsWithTokens(20));
+    await screen.findByText("lib-20");
+
+    await waitFor(() => expect(ph.capture).toHaveBeenCalledTimes(1), { timeout: 2000 });
+    expect(ph.capture).toHaveBeenCalledWith("catalog_search", { query: "lib-2", result_count: 2 });
+  });
+
+  it("names the doc on a row click, and the surface on a copy — a copy counting once", async () => {
+    stubCatalog(docsWithTokens(1));
+    render(<CatalogSection />);
+    await screen.findByText("lib-1");
+    ph.capture.mockClear();
+
+    await userEvent.click(screen.getByText("lib-1"));
+    expect(ph.capture).toHaveBeenCalledWith("doc_row_click", { doc: "lib-1", version: "1.0.0" });
+
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    ph.capture.mockClear();
+
+    await userEvent.click(screen.getByRole("button", { name: /^Copy command/ }));
+
+    await waitFor(() =>
+      expect(ph.capture).toHaveBeenCalledWith("command_copied", {
+        doc: "lib-1",
+        version: "1.0.0",
+        surface: "catalog_row",
+      }),
+    );
+    // The copy button sits inside the row — without the guard this would be two events.
+    expect(ph.capture).toHaveBeenCalledTimes(1);
   });
 });

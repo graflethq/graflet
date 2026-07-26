@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +22,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { CopyButton } from "@/components/copy-button";
+import { capture, searchTerm } from "@/lib/analytics";
 import { useCatalog } from "@/lib/use-catalog";
 import {
   buildCatalogRows,
@@ -75,6 +76,24 @@ export function CatalogSection() {
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const current = Math.min(page, pageCount);
   const pageRows = rows.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+
+  // The missing-doc demand signal (ticket 04). This event is the ONLY place a typed
+  // search term exists: autocapture never records typed text and session replay masks
+  // inputs. Re-armed on every keystroke, so typing "react" reports one search a human
+  // meant to run, not five prefixes of it.
+  //
+  // Nothing is sent until the catalog is `ready`, and that is the whole point of the
+  // event: while it loads — and forever if the fetch failed — `rows` is empty, so a
+  // search typed into a half-loaded page would report `result_count: 0` and be
+  // indistinguishable from "we genuinely don't have react". A search that outruns the
+  // fetch is reported once, when the data lands, with the count it really matched.
+  const ready = load.status === "ready";
+  useEffect(() => {
+    const q = searchTerm(query);
+    if (!q || !ready) return;
+    const t = setTimeout(() => capture("catalog_search", { query: q, result_count: rows.length }), 500);
+    return () => clearTimeout(t);
+  }, [query, ready, rows.length]);
 
   function reSort(key: SortKey) {
     setSort((s) => toggleSort(s, key));
@@ -162,7 +181,19 @@ export function CatalogSection() {
               </StateRow>
             )}
             {pageRows.map((row) => (
-              <TableRow key={row.key}>
+              <TableRow
+                key={row.key}
+                onClick={(e) => {
+                  // The row's only control is the copy button, which sends its own
+                  // `command_copied` — without this guard one copy reports two events.
+                  // ponytail: pointer only. The row is not a link and nothing here
+                  // navigates, so there is no keyboard path to make focusable without
+                  // inventing one; `doc_row_click` therefore under-counts keyboard
+                  // users. Read it as "rows people poked at", never as a denominator.
+                  if ((e.target as HTMLElement).closest("button")) return;
+                  capture("doc_row_click", { doc: row.slug, version: row.version });
+                }}
+              >
                 <TableCell>
                   <div className="flex min-w-0 flex-col">
                     <span className="text-foreground">{row.name}</span>
@@ -184,6 +215,7 @@ export function CatalogSection() {
                       reads the full command out for screen readers. */}
                   <CopyButton
                     value={row.command}
+                    copyEvent={{ doc: row.slug, version: row.version, surface: "catalog_row" }}
                     idleLabel="⧉"
                     copiedLabel={<span className="text-primary">✓</span>}
                     className="rounded-md border border-border bg-secondary px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/landing-sections";
-import { Button } from "@/components/ui/button";
-import { TIERS, SANDBOX, checkoutUrl, machines } from "@/lib/support";
+import { SupportTiers } from "@/components/support-tiers";
+import { SANDBOX } from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Support · Graflet",
@@ -50,18 +50,7 @@ export default function SupportPage() {
             more machines and funds more of the work; it does not unlock anything held back from the $10 tier.
           </p>
 
-          <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {TIERS.map((tier) => (
-              <li key={tier.usd}>
-                <Button asChild variant="outline" className="h-auto w-full flex-col items-start gap-1 px-4 py-3">
-                  <a href={checkoutUrl(tier)} rel="noopener">
-                    <span className="font-mono text-lg font-semibold text-foreground">${tier.usd}</span>
-                    <span className="font-mono text-[11px] font-normal text-muted-foreground">{machines(tier)}</span>
-                  </a>
-                </Button>
-              </li>
-            ))}
-          </ul>
+          <SupportTiers />
 
           <p className="mt-6 font-mono text-xs text-muted-foreground">
             One-off · USD · Sold by Freemius, our merchant of record ·{" "}

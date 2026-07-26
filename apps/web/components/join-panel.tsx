@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { capture } from "@/lib/analytics";
 import { authStartUrl } from "@/lib/api";
 import { LINKS } from "@/lib/links";
 import { readSession, writeSession, type Session } from "@/lib/session";
@@ -96,6 +97,10 @@ export function JoinPanel() {
 
       <a
         href={authStartUrl(optIn ? "yes" : "no", returnTo)}
+        // Front half of the sign-in funnel; the back half is `signin_completed` from
+        // the Worker (ticket 06). Fired inline before a top-level navigation on
+        // purpose — posthog-js flushes its queue on pagehide, so the event still lands.
+        onClick={() => capture("signin_started", { surface: "join_panel" })}
         className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 font-mono text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
       >
         Sign in with GitHub

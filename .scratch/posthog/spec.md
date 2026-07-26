@@ -59,7 +59,7 @@ heatmaps, session replay (default input masking kept), `$exception`.
 | `command_copied` | `doc`, `version`, `surface` (`hero` \| `catalog_row`) | `apps/web/components/copy-button.tsx` |
 | `doc_row_click` | `doc`, `version` | `apps/web/components/catalog-section.tsx` |
 | `signin_started` | `surface` | `apps/web/components/join-panel.tsx` |
-| `support_click` | `tier` | `apps/web/app/support/page.tsx` |
+| `support_click` | `tier` | `apps/web/components/support-tiers.tsx` — split out of `/support`, which stays a server component |
 
 ### Backend Worker
 | Event | Properties | Fired from |

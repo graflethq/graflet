@@ -15,7 +15,13 @@ describe("CopyButton (ADR-0005: copying makes no network request)", () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
 
-    render(<CopyButton value="uvx graflet react" idleLabel="Copy" />);
+    render(
+      <CopyButton
+        value="uvx graflet react"
+        idleLabel="Copy"
+        copyEvent={{ doc: "react", version: "latest", surface: "hero" }}
+      />,
+    );
     await userEvent.click(screen.getByRole("button"));
 
     expect(writeText).toHaveBeenCalledTimes(1);
