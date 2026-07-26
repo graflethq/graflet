@@ -108,6 +108,11 @@ describe("JoinPanel (ticket 06 — unchecked opt-in, no secret, no re-ask)", () 
     // to change — the opt-in box is never put in front of them again (ADR-0006).
     expect(link.getAttribute("href")).toContain("consent=yes");
     expect(screen.queryByRole("checkbox")).toBeNull();
+
+    // Reconnecting is a sign-in leg like any other: it has to park the anonymous id
+    // too, or it hands back an identity with nothing attached to it.
+    await userEvent.click(link);
+    expect(sessionStorage.getItem(ANON_ID_KEY)).toBe("anon-abc");
   });
 
   it("does not nag a session that already carries the account id", async () => {

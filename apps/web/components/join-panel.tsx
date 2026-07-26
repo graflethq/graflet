@@ -77,7 +77,17 @@ export function JoinPanel() {
           // ADR-0006 forbids. This carries their recorded answer straight through,
           // so the server's guard sees nothing to change and nobody is re-asked.
           <p className="mt-4 font-mono text-xs text-muted-foreground">
-            <a href={authStartUrl(session.consent, returnTo)} className="text-primary hover:underline">
+            <a
+              href={authStartUrl(session.consent, returnTo)}
+              // Same two calls as the sign-in button below. This leg is a sign-in
+              // too: without `rememberAnonId` the reconnect would hand back an id
+              // with nothing attached to it, which is the whole point of the trip.
+              onClick={() => {
+                capture("signin_started", { surface: "reconnect" });
+                rememberAnonId();
+              }}
+              className="text-primary hover:underline"
+            >
               Reconnect your account
             </a>{" "}
             — this browser signed in before we started recording which account is which. It changes nothing about
