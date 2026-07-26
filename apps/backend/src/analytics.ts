@@ -25,6 +25,11 @@ import { PostHog } from "posthog-node";
  *  server-side, and the proxy would only add a hop (ADR-0010). */
 const POSTHOG_HOST = "https://us.i.posthog.com";
 
+/** A DIFFERENT host from the one above, and PostHog is strict about it: capture is a
+ *  public write-only endpoint on `us.i.posthog.com`, while everything authenticated
+ *  by a personal API key — person deletion included — lives on `us.posthog.com`. */
+const POSTHOG_API_HOST = "https://us.posthog.com";
+
 // Outbound-fetch seam, same pattern as github.ts / notify.ts: tests swap this so
 // the suite asserts on the real payload without touching the network.
 let analyticsFetch: typeof fetch = (input, init) => fetch(input, init);
@@ -106,4 +111,56 @@ export function createTracker(env: Env, ctx: ExecutionContext): Tracker {
     capture: (event, distinctId, properties) => send((c) => c.captureImmediate({ distinctId, event, properties })),
     error: (err) => send((c) => c.captureExceptionImmediate(err instanceof Error ? err : new Error(String(err)))),
   };
+}
+
+/** The one field of PostHog's bulk-delete reply this module reads (their OpenAPI
+ *  schema's `PersonBulkDeleteResponse`; the counts beside it have no caller). */
+interface BulkDeleteResult {
+  deletion_errors?: unknown[];
+}
+
+/**
+ * Erase the PostHog person behind `distinctId` — the second half of the two-system
+ * erasure ADR-0010 signed us up for (ticket 09).
+ *
+ * The exact opposite contract to `createTracker` above, in every respect, and
+ * deliberately so: this is awaited rather than fired into `waitUntil`, and every
+ * failure THROWS rather than being swallowed. A silently-failed delete leaves a
+ * person profile in a US third-party store keyed to an account that no longer
+ * exists — precisely the state the obligation forbids — so the caller has to be
+ * able to see the failure and decline to delete our own rows on top of it.
+ *
+ * `bulk_delete` with a single distinct id, not `DELETE /persons/:id/`: that one wants
+ * the person's UUID, which we do not have and would need a lookup call to learn,
+ * making it two round trips and a race. Passing the distinct id also makes this
+ * naturally idempotent — an id matching nobody comes back `persons_found: 0` and a
+ * 202, not an error, which is what lets a retry finish a half-done deletion.
+ *
+ * `posthog-node` is not involved: it is a capture client and has no delete surface.
+ * The shared `analyticsFetch` seam is, so tests assert on the real outbound request.
+ */
+export async function deletePerson(env: Env, distinctId: string): Promise<void> {
+  const key = env.POSTHOG_PERSONAL_API_KEY;
+  // Unlike capture, a missing key is NOT a silent no-op here. Returning success
+  // without a key would report a two-system erasure that only ever happened in one
+  // system — the failure mode this whole function exists to prevent.
+  if (!key || !env.POSTHOG_PROJECT_ID) throw new Error("posthog person deletion is not configured");
+
+  const res = await analyticsFetch(`${POSTHOG_API_HOST}/api/projects/${env.POSTHOG_PROJECT_ID}/persons/bulk_delete/`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    // Erasure means the events and the replays too, not just the profile they hang
+    // off. PostHog queues both asynchronously (their docs: event deletion runs out of
+    // peak hours), so the 202 is an acknowledgement that it is queued, not that the
+    // rows are already gone. The person record itself goes immediately.
+    body: JSON.stringify({ distinct_ids: [distinctId], delete_events: true, delete_recordings: true }),
+  });
+  if (!res.ok) throw new Error(`posthog person delete failed: ${res.status}`);
+
+  const body = (await res.json().catch(() => ({}))) as BulkDeleteResult;
+  // PostHog reports per-person failures in the body of an otherwise-2xx response.
+  // Reading only the status code would turn exactly those into a false success.
+  if (body.deletion_errors?.length) {
+    throw new Error(`posthog person delete reported ${body.deletion_errors.length} error(s)`);
+  }
 }

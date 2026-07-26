@@ -31,6 +31,10 @@ export default defineConfig({
           MARKETING_POSTAL_ADDRESS: "123 Test St, Testville",
           UNSUBSCRIBE_SECRET: "test-unsubscribe-secret",
           POSTHOG_PROJECT_KEY: "phc_test_project_key",
+          // Ticket 09: present so the deletion path runs its real request; the
+          // outbound fetch is stubbed, so no key ever leaves the test worker.
+          POSTHOG_PERSONAL_API_KEY: "phx_test_personal_key",
+          POSTHOG_PROJECT_ID: "12345",
           PRIVATE_KG_REPO: "graflethq/kg-bundles",
           // Allow-list the CORS test asserts against (site origin + local dev).
           SITE_ORIGINS: "https://site.test,http://localhost:3000",

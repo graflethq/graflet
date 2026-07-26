@@ -21,6 +21,10 @@ declare namespace Cloudflare {
     // Comma-separated allow-list of site origins permitted CORS on the read-only
     // catalog endpoints (prod + local dev). Not a secret; browser-visible by design.
     SITE_ORIGINS: string;
+    // Numeric id of the PostHog project persons are deleted from (ticket 09). Not a
+    // secret — it is a path segment in every PostHog app URL; only the key that
+    // authorizes the call is.
+    POSTHOG_PROJECT_ID: string;
 
     // Secrets: set via `wrangler secret put` (prod) / .dev.vars (local). Never
     // in wrangler.jsonc; present on env as plain strings at runtime.
@@ -37,6 +41,11 @@ declare namespace Cloudflare {
     // secret here so no project token is committed to a public repo. Absent = capture
     // is a silent no-op, which is what local dev runs as.
     POSTHOG_PROJECT_KEY: string;
+    // PostHog PERSONAL API key, scope `person:write` (ticket 09). A genuinely
+    // privileged credential and the second one the Worker needs for PostHog — the
+    // project key above can only write events, never delete anything. Absent =
+    // account deletion FAILS rather than silently half-completing.
+    POSTHOG_PERSONAL_API_KEY: string;
   }
 }
 

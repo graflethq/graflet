@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Title, Lede, H2, P, UL, ProseLink } from "@/components/legal-prose";
 import { AnalyticsOptOut } from "@/components/analytics-opt-out";
+import { DeleteAccount } from "@/components/delete-account";
 import { LINKS } from "@/lib/links";
 
 export const metadata: Metadata = {
@@ -249,18 +250,37 @@ export default function PrivacyPage() {
       <AnalyticsOptOut />
       <P>
         It covers the website. Sign-ins and graph downloads are recorded by our server against your account, so if
-        you want those stopped too, ask us to delete your data below and use the tool signed out. The CLI has its
-        own switch — <code className="text-foreground">graflet telemetry off</code>, described{" "}
+        you want those stopped too, <ProseLink href="#delete">delete your account</ProseLink> and use the tool signed
+        out. The CLI has its own switch — <code className="text-foreground">graflet telemetry off</code>, described{" "}
         <ProseLink href="#cli">above</ProseLink>.
       </P>
 
       <H2 id="delete">Delete your data</H2>
       <P>
-        There is no self-serve delete button yet — we are not going to pretend otherwise. Email{" "}
-        <ProseLink href="mailto:graflet@rnui.dev">graflet@rnui.dev</ProseLink> from the address on your account, or
-        open an issue in the <ProseLink href={LINKS.github}>repository</ProseLink>, and we will delete both halves:
-        the row we hold and the person PostHog holds for us. We will confirm when it is done.
+        The button below deletes your account. You sign in with GitHub first — that is the only way we can tell it is
+        really you, since signing in on this site never gives your browser a password or a token — and then you
+        confirm here. Nothing is deleted until you confirm.
       </P>
+      <P>It removes, in one go:</P>
+      <UL>
+        <li>
+          Your account row: your <code className="text-foreground">github_id</code>, your email and your answer to
+          the email question.
+        </li>
+        <li>Every machine you are logged in on, so no CLI can keep using a token that belonged to you.</li>
+        <li>Every library you asked the CLI to watch.</li>
+        <li>
+          The person PostHog holds for us, together with your events and any session recordings. PostHog removes the
+          profile immediately and queues the events and recordings, which they clear outside peak hours.
+        </li>
+      </UL>
+      <P>
+        If either half fails, the whole thing fails and tells you so — we would rather you retry than be told you
+        were erased when half of you was still there. Prefer to ask a human, or want a copy of what we hold first?
+        Email <ProseLink href="mailto:graflet@rnui.dev">graflet@rnui.dev</ProseLink> or open an issue in the{" "}
+        <ProseLink href={LINKS.github}>repository</ProseLink>.
+      </P>
+      <DeleteAccount />
 
       <H2>The code</H2>
       <P>

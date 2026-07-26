@@ -13,3 +13,9 @@ GITHUB_OAUTH_CLIENT_SECRET="replace_me"
 # write-only key the browser bundle carries — kept out of the repo, not out of
 # the browser. Leave unset locally and capture is a silent no-op.
 POSTHOG_PROJECT_KEY="phc_replace_me"
+
+# PostHog PERSONAL API key with the `person:write` scope (ticket 09), from
+# https://us.posthog.com/settings/user-api-keys. This one really is privileged:
+# it is what deletes a person during account erasure, which the project key above
+# cannot do. Unset means POST /account/delete fails instead of half-deleting.
+POSTHOG_PERSONAL_API_KEY="phx_replace_me"

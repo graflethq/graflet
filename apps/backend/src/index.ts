@@ -15,11 +15,12 @@
  *   POST /auth/cli/start   GET /auth/cli/callback   POST /auth/cli/poll
  */
 
+import { handleAccountDelete } from "./account";
 import { createTracker, type Tracker } from "./analytics";
 import { handleCliCallback, handleCliPoll, handleCliStart, handleWebCallback, handleWebStart } from "./auth";
 import { handleKgDownload } from "./broker";
 import { handleCatalogDoc, handleCatalogList, handleCatalogUpsert } from "./catalog";
-import { corsPreflight, isPublicReadPath, withCors } from "./cors";
+import { corsPreflight, isCorsPath, withCors } from "./cors";
 import { handleStars } from "./stars";
 import { handleConsent, handleUnsubscribe, handleWatch } from "./watch";
 
@@ -80,11 +81,17 @@ async function route(req: Request, env: Env, track: Tracker): Promise<Response> 
     return handleWebCallback(env, req, track);
   }
 
-  // CORS preflight for the public read endpoints only (site slice, ticket 02).
-  // The site fetches the catalog + star count cross-origin; every other route
-  // stays same-origin.
-  if (req.method === "OPTIONS" && isPublicReadPath(pathname)) {
+  // CORS preflight for the site-callable endpoints only (site slice, ticket 02;
+  // account deletion, ticket 09). Every other route stays same-origin.
+  if (req.method === "OPTIONS" && isCorsPath(pathname)) {
     return corsPreflight(env, req);
+  }
+
+  // Account deletion (ticket 09) — the two-system erasure, and the only route that
+  // deletes a user. Authenticated by the one-time token the OAuth callback minted,
+  // not by a bearer: a website-only account never has one (ADR-0001).
+  if (pathname === "/account/delete" && req.method === "POST") {
+    return withCors(await handleAccountDelete(env, req, track), env, req);
   }
 
   // The repo's star count for the nav's ★ Star button. Public, CORS-open, and

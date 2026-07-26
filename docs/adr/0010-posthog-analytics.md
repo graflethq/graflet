@@ -116,3 +116,39 @@ silently:
 email in the OAuth return fragment would have kept it out of server logs but still left it in the address bar and in
 browser history. The trade-off recorded above — directly identifiable persons in a US third-party store, in exchange
 for readable profiles — is unchanged.
+
+## Amendment — 2026-07-26 (ticket 09, account deletion)
+
+"Erasure is now a two-system operation" was recorded above as a consequence with no owner. It has one now, and
+building it settled three things worth writing down rather than leaving to be inferred from the code.
+
+**1. Deletion authenticates through a fresh GitHub round trip, not through a bearer token.** The website sign-in
+mints no token at all, so a website-only account — the common case for the join flow — had nothing to authenticate a
+delete with. Sending the browser back through the OAuth leg (`intent=delete`) reuses the identity machinery that
+already exists. But that leg cannot itself delete: GitHub re-authorizes an already-approved app with **no user
+interaction**, so a bare link to `…/auth/web/start?intent=delete` would be a one-click account wipe for anyone who
+could be talked into clicking it. The callback therefore mints only a short-lived one-time token, and the
+irreversible half sits behind an explicit typed confirmation at `POST /account/delete`.
+
+**2. PostHog is deleted first, our rows second, and the order is not arbitrary.** Deleting our rows first and then
+failing at PostHog leaves a person profile keyed to a `github_id` whose account is gone — the exact state the
+obligation forbids — and it is unrecoverable, because the rows naming that person are what we just destroyed. In
+this order a PostHog failure leaves the account whole and retryable; a database failure leaves the profile already
+gone and the retry harmless, because a distinct id matching nobody is a successful no-op. A partial failure is
+reported as a failure (502) and the one-time token survives so the same link finishes the job.
+
+**3. The Worker now holds a second PostHog credential, and it is a privileged one.**
+`POSTHOG_PERSONAL_API_KEY` — a personal API key scoped `person:write` — is what the deletion calls
+`POST /api/projects/:id/persons/bulk_delete/` with. The `POSTHOG_PROJECT_KEY` used for capture is write-only and
+cannot delete anything. Unlike capture, an absent key is **not** a silent no-op here: deletion fails loudly, because
+succeeding without it would report a two-system erasure that only ever happened in one system. Set with
+`wrangler secret put POSTHOG_PERSONAL_API_KEY`; declared in `.dev.vars.example`, `worker-configuration.d.ts` and the
+secrets comment in `wrangler.jsonc`.
+
+**4. A `pending_auth` row now belongs to exactly one errand, and every lookup must say which.** Before this,
+`pending_auth.token` was written by one flow only, so `handleCliCallback` and `handleCliPoll` could safely match on
+`state` alone. Deletion parks a second kind of token on that table, and review caught both lookups still unscoped:
+polling a deletion handoff's `state` would have handed the caller that account's one-time delete token — skipping
+the confirmation that is the whole point of splitting the flow — and the CLI callback would have overwritten a
+deletion row's token with a live bearer while re-creating the user row being erased. Both are now scoped with
+`AND return_to IS NULL` (the discriminator `handleWebCallback` already used), with a test for each direction.

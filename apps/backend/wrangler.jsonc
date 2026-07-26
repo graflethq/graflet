@@ -27,8 +27,13 @@
     // The repo name isn't secret; only PRIVATE_REPO_TOKEN (a secret) authorizes the read.
     "PRIVATE_KG_REPO": "graflethq/kg-bundles",
     // Site origins allowed CORS on the read-only catalog endpoints (ticket 02 site
-    // slice). Comma-separated: local Next dev + the production site origin.
-    "SITE_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://graflet.rnui.dev"
+    // slice) and POST /account/delete (ticket 09). Comma-separated: local Next dev
+    // + the production site origin.
+    "SITE_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://graflet.rnui.dev",
+    // PostHog project the account-deletion endpoint erases persons from (ticket 09).
+    // Public: it is a path segment in every us.posthog.com app URL. Only
+    // POSTHOG_PERSONAL_API_KEY (a secret) authorizes the delete.
+    "POSTHOG_PROJECT_ID": "528914"
   },
 
   // Catalog store (ADR-0004), bound as env.CATALOG. Tickets 02 (catalog store)
@@ -56,4 +61,9 @@
   //                                   Write-only and public by design (the browser bundle
   //                                   carries the same value), but kept a secret so no project
   //                                   token is committed. Unset = capture is a silent no-op.
+  //   POSTHOG_PERSONAL_API_KEY      — PostHog PERSONAL API key, scope `person:write` (ticket 09),
+  //                                   created at us.posthog.com/settings/user-api-keys. The only
+  //                                   credential that can DELETE a person; the project key above
+  //                                   cannot. Unset = POST /account/delete fails loudly rather
+  //                                   than erasing our rows and orphaning the PostHog person.
 }

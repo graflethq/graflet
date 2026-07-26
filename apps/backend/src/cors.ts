@@ -34,9 +34,32 @@ export function isPublicReadPath(pathname: string): boolean {
   return pathname === "/catalog" || pathname.startsWith("/catalog/") || pathname === "/stars";
 }
 
-/** 204 preflight for a read endpoint; CORS headers only for an allowed origin. */
+/**
+ * Every path the site may call cross-origin: the public reads above, plus the
+ * account-deletion confirm (ticket 09). That one is a write, and opened anyway
+ * because it authenticates on a one-time token minted through GitHub rather than on
+ * the caller's origin — CORS was never the thing protecting it, and without the
+ * header the browser could not read the result of a deletion it just performed.
+ */
+export function isCorsPath(pathname: string): boolean {
+  return isPublicReadPath(pathname) || pathname === "/account/delete";
+}
+
+/**
+ * 204 preflight for a CORS path; CORS headers only for an allowed origin.
+ *
+ * The answer is per-path, not one blanket reply: opening the catalog reads to POST
+ * because a different endpoint needs it would advertise a method they do not accept.
+ */
 export function corsPreflight(env: Env, req: Request): Response {
-  const headers = new Headers({ "Access-Control-Allow-Methods": "GET, OPTIONS", "Access-Control-Max-Age": "86400" });
+  const read = isPublicReadPath(new URL(req.url).pathname);
+  const headers = new Headers({
+    "Access-Control-Allow-Methods": read ? "GET, OPTIONS" : "POST, OPTIONS",
+    "Access-Control-Max-Age": "86400",
+  });
+  // A JSON body is what makes /account/delete preflighted rather than a simple
+  // request, so the browser needs Content-Type named back before it will send it.
+  if (!read) headers.set("Access-Control-Allow-Headers", "Content-Type");
   headers.append("Vary", "Origin");
   setAllowOrigin(headers, env, req);
   return new Response(null, { status: 204, headers });

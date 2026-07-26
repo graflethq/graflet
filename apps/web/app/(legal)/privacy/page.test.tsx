@@ -91,10 +91,17 @@ describe("Privacy page — discloses what is actually collected", () => {
     expect(await screen.findByRole("button", { name: "Turn analytics back on" })).toBeInTheDocument();
   });
 
-  it("gives a real erasure route and promises no delete button that does not exist", () => {
+  it("offers a real delete button, and describes the two-system erasure it performs", async () => {
     const text = prose();
 
-    expect(text).toMatch(/no self-serve delete button yet/i);
+    // Ticket 09 replaced the "no self-serve delete button yet" wording with an
+    // actual one. The page may not drift back to promising a button that isn't
+    // there, nor to claiming one that is.
+    expect(await screen.findByRole("link", { name: "Delete my account" })).toBeInTheDocument();
+    expect(text).not.toMatch(/no self-serve delete button yet/i);
+    // Both halves have to be named: deleting only our row is the failure mode
+    // ADR-0010 calls out, so the page cannot describe it as if it were the job.
+    expect(text).toMatch(/person PostHog holds for us/i);
     expect(screen.getAllByRole("link", { name: "graflet@rnui.dev" })[0]).toHaveAttribute(
       "href",
       "mailto:graflet@rnui.dev",

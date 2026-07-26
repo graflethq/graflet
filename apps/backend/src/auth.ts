@@ -60,7 +60,19 @@ export async function handleCliCallback(env: Env, req: Request, track: Tracker):
   const denied = params.get("error"); // e.g. access_denied
 
   if (!state) return page("Sign-in link is missing its state — start again from the CLI.");
-  const pending = await env.CATALOG.prepare("SELECT expires_at FROM pending_auth WHERE state = ?")
+  // `return_to IS NULL` is what makes this a CLI row, and it is not optional.
+  //
+  // Three flows share pending_auth, and TWO of them now park a token on a row: this
+  // one (a real bearer, handed to the CLI) and account deletion (a one-time delete
+  // token, ticket 09). A row belongs to exactly ONE errand, so every lookup has to
+  // say which — matching on `state` alone would let this handler run the CLI
+  // exchange over a deletion handoff, overwriting its token with a live bearer that
+  // POST /account/delete would then happily spend, and re-creating the very user row
+  // the deletion is about to remove. `handleWebCallback` already used the same
+  // discriminator (a web row always has a return_to); this is its mirror.
+  const pending = await env.CATALOG.prepare(
+    "SELECT expires_at FROM pending_auth WHERE state = ? AND return_to IS NULL",
+  )
     .bind(state)
     .first<{ expires_at: string }>();
   // Reject unknown OR expired handoffs: never run the exchange / mint a token
@@ -106,8 +118,13 @@ export async function handleCliPoll(env: Env, req: Request): Promise<Response> {
   const { state } = (await req.json().catch(() => ({}))) as { state?: string };
   if (!state) return Response.json({ status: "error", error: "missing state" }, { status: 400 });
 
+  // Scoped to CLI rows for the same reason the callback above is, and here it is the
+  // sharper edge: without it, polling a DELETION handoff's state would hand the
+  // caller that account's one-time delete token and destroy the row on the way out —
+  // turning the confirmation step ticket 09 exists to require into something anyone
+  // who knows the state can skip.
   const row = await env.CATALOG.prepare(
-    "SELECT token, login, email, github_id, error, expires_at FROM pending_auth WHERE state = ?",
+    "SELECT token, login, email, github_id, error, expires_at FROM pending_auth WHERE state = ? AND return_to IS NULL",
   )
     .bind(state)
     .first<{
@@ -157,6 +174,10 @@ export async function handleWebStart(env: Env, req: Request): Promise<Response> 
   // Unchecked-by-default (ADR-0006): only an explicit "yes" is consent; anything
   // else — including a missing param — is 'no'.
   const consent = params.get("consent") === "yes" ? "yes" : "no";
+  // `intent=delete` sends the same round trip on a different errand (ticket 09):
+  // the callback mints a one-time deletion token instead of signing anyone in.
+  // Anything else, missing included, is an ordinary sign-in.
+  const intent = params.get("intent") === "delete" ? "delete" : null;
   const returnTo = siteReturnUrl(env, params.get("return_to"));
 
   const state = randomToken();
@@ -166,9 +187,9 @@ export async function handleWebStart(env: Env, req: Request): Promise<Response> 
 
   await env.CATALOG.prepare("DELETE FROM pending_auth WHERE expires_at < ?").bind(nowIso).run();
   await env.CATALOG.prepare(
-    "INSERT INTO pending_auth (state, created_at, expires_at, return_to, consent) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO pending_auth (state, created_at, expires_at, return_to, consent, intent) VALUES (?, ?, ?, ?, ?, ?)",
   )
-    .bind(state, nowIso, expiresIso, returnTo, consent)
+    .bind(state, nowIso, expiresIso, returnTo, consent, intent)
     .run();
 
   return Response.redirect(authorizeUrl(env.GITHUB_OAUTH_CLIENT_ID, webCallbackUri(req), state), 302);
@@ -190,10 +211,10 @@ export async function handleWebCallback(env: Env, req: Request, track: Tracker):
 
   if (!state) return page("Sign-in link is missing its state — start again from the site.");
   const pending = await env.CATALOG.prepare(
-    "SELECT expires_at, return_to, consent FROM pending_auth WHERE state = ?",
+    "SELECT expires_at, return_to, consent, intent FROM pending_auth WHERE state = ?",
   )
     .bind(state)
-    .first<{ expires_at: string; return_to: string | null; consent: string | null }>();
+    .first<{ expires_at: string; return_to: string | null; consent: string | null; intent: string | null }>();
   // A web row always has return_to; its absence means this state belongs to the
   // CLI flow (or is unknown) — reject either way.
   if (!pending || !pending.return_to || Date.parse(pending.expires_at) < Date.now()) {
@@ -214,6 +235,31 @@ export async function handleWebCallback(env: Env, req: Request, track: Tracker):
       webCallbackUri(req),
     );
     const id = await fetchIdentity(accessToken);
+
+    // Account deletion (ticket 09): this leg's only job is to prove who is asking.
+    // Erasing here would make a bare link a one-click account wipe — GitHub
+    // re-authorizes an already-approved app with no interaction — so the deletion
+    // itself waits behind an explicit confirmation the site collects, spending the
+    // one-time token parked below (see ./account).
+    //
+    // No `upsertUser`, no consent write and no `signin_completed`: none of the three
+    // are things to do to someone on their way out, and the upsert in particular
+    // would recreate the row of an account that has already been deleted.
+    if (pending.intent === "delete") {
+      const deleteToken = randomToken();
+      // `expires_at` is restamped, not inherited. The original was stamped at
+      // /auth/web/start and the trip to GitHub has been eating it ever since; leaving
+      // it would give the confirmation — and the retry a failed deletion depends on —
+      // whatever seconds happened to be left, which the tests (instant) could never
+      // see. The clock that matters starts when the token is minted.
+      await env.CATALOG.prepare("UPDATE pending_auth SET token = ?, github_id = ?, expires_at = ? WHERE state = ?")
+        .bind(deleteToken, id.github_id, new Date(Date.now() + PENDING_TTL_MS).toISOString(), state)
+        .run();
+      // The row stays until the token is spent, which is what gives the confirmation
+      // step something to spend and a failed deletion something to retry with.
+      return redirectBack(returnTo, { delete_token: deleteToken, login: id.login });
+    }
+
     const { isNew } = await upsertUser(env, id.github_id, id.email);
 
     const answer = pending.consent === "yes" ? "yes" : "no";
@@ -284,7 +330,17 @@ function siteReturnUrl(env: Env, raw: string | null): string {
   return allow[0] ? `${allow[0]}/join` : "/join";
 }
 
-/** 302 back to the site, carrying non-secret result data in the URL fragment. */
+/**
+ * 302 back to the site, carrying result data in the URL fragment (never sent to a
+ * server, never in an access log).
+ *
+ * Sign-in puts nothing secret here — the website flow mints no credential at all
+ * (ADR-0001). The deletion leg (ticket 09) is the exception: its one-time token IS a
+ * credential, and it rides the fragment because there is nowhere else to put it. Two
+ * things keep that acceptable: `siteReturnUrl` will only redirect to an allow-listed
+ * origin, and the token buys nothing but the deletion of the account whose owner just
+ * authenticated with GitHub to get it. It is spent or expired within the TTL.
+ */
 function redirectBack(returnTo: string, fragment: Record<string, string>): Response {
   return Response.redirect(`${returnTo}#${new URLSearchParams(fragment)}`, 302);
 }
