@@ -4,7 +4,8 @@ import { SiteFooter } from "@/components/landing-sections";
 /**
  * Shared shell for the legal pages (ticket 07): Privacy, Terms, Attribution. Same
  * nav + footer as the rest of the site, a narrow reading column for prose. All
- * three are static, public, and gate/capture nothing.
+ * three are static and public, and gate nothing. They are measured like the rest of
+ * the site (ADR-0010); /privacy is where that is disclosed and switched off.
  */
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (

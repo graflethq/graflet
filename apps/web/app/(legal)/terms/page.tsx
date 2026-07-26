@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   description: "Graflet is free and open source, provided as-is with no warranty.",
 };
 
-// Terms (ticket 07). Static, public, captures nothing.
+// Terms (ticket 07). Static and public; measured like every other page (ADR-0010) —
+// what is collected is spelled out on /privacy, and nothing here contradicts it.
 export default function TermsPage() {
   return (
     <article>

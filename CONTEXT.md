@@ -49,6 +49,18 @@ offerings (an MCP service, or charging for the KG) deferred to later.
 - **Savings metrics** — the four quantified numbers shown per doc (build-cost, build-time, GraphScore, usage
   token savings) that sell the value. Spec: `research/savings-metrics/REQUIREMENTS.md`.
 - **Operator** — you. Operator alerts go to **Telegram**; user alerts go to **email**. Never confused.
+- **Analytics processor** — the third party that stores product-usage data: **PostHog**. Named as a processor on
+  the privacy page. Distinct from the **email** processor (Resend) and the **merchant of record** (Freemius);
+  never say "analytics" when you mean one of those. See [ADR-0010].
+- **Anonymous visitor** — someone using the site or CLI who has not signed in. Counted, never stored on their
+  device, never identified. Becomes an **identified person** only by signing in with GitHub.
+- **Identified person** — a signed-in user as the analytics processor sees them: keyed by `github_id`, carrying
+  their GitHub login and email. _Avoid_: "user record", which means the row we hold ourselves. Deleting a person
+  and deleting our row are two separate acts. See [ADR-0010].
+- **Missing-doc demand signal** — a catalog search that returned **zero** results. The name of a library people
+  want and we do not carry; the primary input to what gets built next.
+- **CLI telemetry** — usage events sent by the CLI. **Opt-in, asked once, default no**, and never sent from a
+  non-interactive run. Not to be confused with **watch/notification**, which the user asks for per doc.
 
 ---
 
@@ -62,6 +74,7 @@ offerings (an MCP service, or charging for the KG) deferred to later.
 | **Three-box infrastructure**: Cloudflare backend / VPS poller / build machine — each on the infra its needs demand | [ADR-0004] |
 | **Gate only the KG download**; free + OSS; monetization deferred; goal = audience + stars + donations | [ADR-0005] |
 | **Consent model**: unchecked opt-in, two capture points, transactional/service/marketing email split | [ADR-0006] |
+| **PostHog** as analytics processor: managed reverse proxy for the browser, anonymous-until-sign-in, identified persons carry email, CLI telemetry opt-in | [ADR-0010] |
 
 ---
 
@@ -172,3 +185,4 @@ decision after there's an audience. (Replaces the old map's "100 signups / paywa
 [ADR-0004]: docs/adr/0004-three-box-infrastructure.md
 [ADR-0005]: docs/adr/0005-gate-and-free-oss-model.md
 [ADR-0006]: docs/adr/0006-consent-and-audience-model.md
+[ADR-0010]: docs/adr/0010-posthog-analytics.md
