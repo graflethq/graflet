@@ -18,6 +18,16 @@ happens here and nowhere earlier.
       which would silently fork one person into two.
 - [ ] Anonymous events from earlier in the same session appear on the identified person afterwards (the
       anonymous→identified merge). Verified on a real sign-in, not assumed.
+      **⚠ Read before starting — ticket 03 (2026-07-26) found this box may be unsatisfiable as written.** Ticket 03
+      ships `persistence: 'memory'`, and sign-in is a **full document navigation** off-site and back
+      (`components/join-panel.tsx` → `authStartUrl(...)` → GitHub → our callback). The anonymous `distinct_id` lives
+      only in memory, so it is gone by the time `identify()` runs on the page after the round trip: there is no
+      anonymous id left to merge from. `identify()` itself still works, so the *identified* half of this ticket is
+      fine — it is the stitching that does not survive. Resolve it deliberately, don't quietly drop it: either accept
+      no merge (pre-sign-in pageviews stay on an anonymous timeline — and then fix the wording in spec.md, which
+      promises "a person's site visit, backend download and CLI run land on one timeline"), or hand the anonymous id
+      through the OAuth round trip (e.g. in the `state` param the backend already round-trips) and call
+      `identify(github_id, …, { $anon_distinct_id })` on return, which is a new box and a backend change.
 - [ ] A signed-out visitor who never signs in still has **no** `ph_*` cookie or localStorage key — ticket 03's
       guarantee must survive this change.
 - [ ] Sign-out calls `reset()`, so a shared machine does not attribute the next person's events to the previous one.

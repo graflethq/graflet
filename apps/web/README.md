@@ -19,6 +19,23 @@ The catalog table reads the backend Worker's public `/catalog` API. Point it wit
 `NEXT_PUBLIC_CATALOG_API_URL` (in `.env.local` for dev, or the deploy env);
 it defaults to `http://localhost:8787` (the local `wrangler dev` port).
 
+### Env
+
+`.env.production` is **tracked** (the one `.env*` file that is — see `.gitignore`): every var in it
+is `NEXT_PUBLIC_*`, inlined into the client bundle at `next build`, so none of it is a secret. Add a
+var there and it ships with the next deploy — and gets committed, so put nothing private in it.
+
+| Var | What |
+|---|---|
+| `NEXT_PUBLIC_CATALOG_API_URL` | backend Worker base URL |
+| `NEXT_PUBLIC_POSTHOG_KEY` | PostHog *public* (write-only) project token — ADR-0010 |
+| `NEXT_PUBLIC_POSTHOG_HOST` | PostHog managed reverse proxy; unset → `https://us.i.posthog.com` |
+
+`next dev` and `vitest` see no PostHog vars, so **analytics is inert locally** — `components/analytics-provider.tsx`
+skips `posthog.init` without a token. To exercise the real SDK, copy those two lines into a gitignored
+`.env.local`; every local page load then lands in the live PostHog project. Prefer `pnpm build && pnpm start`
+for that: `next dev`'s fast refresh re-initialises the SDK on every rebuild.
+
 ## Preview / deploy (Cloudflare, via OpenNext)
 
 ```bash

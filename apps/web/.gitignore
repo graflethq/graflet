@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...except the deploy config: every var in it is NEXT_PUBLIC_*, so nothing in it is
+# secret, and the deployed build needs all of them inlined. See README → Env.
+!.env.production
 
 # vercel
 .vercel

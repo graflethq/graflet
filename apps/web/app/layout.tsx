@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, JetBrains_Mono } from "next/font/google";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 import "./globals.css";
 
 // Design uses JetBrains Mono as the terminal/heading face; Geist for body sans.
@@ -24,7 +25,10 @@ export default function RootLayout({
       lang="en"
       className={`dark ${geistSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col overflow-x-hidden">{children}</body>
+      <body className="min-h-full flex flex-col overflow-x-hidden">
+        <AnalyticsProvider />
+        {children}
+      </body>
     </html>
   );
 }

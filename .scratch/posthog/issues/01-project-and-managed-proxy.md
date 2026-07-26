@@ -60,9 +60,10 @@ token, a working proxy hostname, and a guarantee of no bill.
       own origins (localhost included, or local dev would silently record nothing).
       A `product_description` was set too — it is what PostHog's own AI reads for context on this project.
 - [x] The token and proxy hostname are in `apps/web/.env.production` as `NEXT_PUBLIC_POSTHOG_KEY` +
-      `NEXT_PUBLIC_POSTHOG_HOST`, with a comment recording the `us.i.posthog.com` fallback. **Still to do:**
-      `git add -f apps/web/.env.production` (the file is gitignored), and the backend's copy of the token, which
-      ticket 06 sets up where it is first used.
+      `NEXT_PUBLIC_POSTHOG_HOST`, with a comment recording the `us.i.posthog.com` fallback. **Closed by ticket 03
+      (2026-07-26):** the file is tracked now — and instead of relying on a remembered `git add -f`,
+      `apps/web/.gitignore` negates it (`!.env.production`) the way it already negates `.dev.vars.example`.
+      Documented under README → Env. The backend's copy of the token stays ticket 06's, where it is first used.
 
 ## Comments
 
