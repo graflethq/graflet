@@ -99,6 +99,25 @@ describe("JoinPanel (ticket 06 — unchecked opt-in, no secret, no re-ask)", () 
     expect(sessionStorage.getItem(ANON_ID_KEY)).toBe("anon-abc");
   });
 
+  it("offers a pre-ticket-05 session a way back, carrying their recorded answer so nobody is re-asked", async () => {
+    localStorage.setItem("graflet:session", JSON.stringify({ login: "octocat", consent: "yes" }));
+    render(<JoinPanel />);
+
+    const link = await screen.findByRole("link", { name: /reconnect your account/i });
+    // Their stored answer rides through, so the server's 'unset' guard has nothing
+    // to change — the opt-in box is never put in front of them again (ADR-0006).
+    expect(link.getAttribute("href")).toContain("consent=yes");
+    expect(screen.queryByRole("checkbox")).toBeNull();
+  });
+
+  it("does not nag a session that already carries the account id", async () => {
+    localStorage.setItem("graflet:session", JSON.stringify({ login: "octocat", consent: "no", github_id: 4242 }));
+    render(<JoinPanel />);
+
+    expect(await screen.findByText(/signed in as/i)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /reconnect/i })).toBeNull();
+  });
+
   it("a returning user who already answered sees no opt-in prompt", async () => {
     localStorage.setItem("graflet:session", JSON.stringify({ login: "octocat", consent: "no" }));
     render(<JoinPanel />);

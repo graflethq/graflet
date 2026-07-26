@@ -66,6 +66,24 @@ export function JoinPanel() {
             ? "We'll email you when a new library ships or a doc's graph is rebuilt."
             : "You opted out of product emails — you'll still get updates for docs you watch via the CLI."}
         </p>
+        {!session.github_id && (
+          // Signed in before ticket 05, so this browser never learned the account
+          // id and nothing they do can be attributed to them. Re-running sign-in is
+          // the only way to get it — the site has no authenticated session to ask
+          // with, and the users table stores no login to map back from.
+          //
+          // A link, not the sign-in panel: showing that again would put the
+          // marketing opt-in box in front of someone who already answered, which
+          // ADR-0006 forbids. This carries their recorded answer straight through,
+          // so the server's guard sees nothing to change and nobody is re-asked.
+          <p className="mt-4 font-mono text-xs text-muted-foreground">
+            <a href={authStartUrl(session.consent, returnTo)} className="text-primary hover:underline">
+              Reconnect your account
+            </a>{" "}
+            — this browser signed in before we started recording which account is which. It changes nothing about
+            your email settings.
+          </p>
+        )}
         <p className="mt-4 font-mono text-xs text-muted-foreground">
           Manage or withdraw consent anytime — see our{" "}
           <a href="/privacy" className="text-primary hover:underline">
