@@ -10,9 +10,23 @@
  * this and nothing else; there is no server-side session to end.
  */
 
-export type Session = { login: string; consent: "yes" | "no" };
+/**
+ * `github_id` is optional because sessions written before ticket 05 don't carry it.
+ * Those stay perfectly valid — the holder just isn't identified to PostHog until
+ * their next sign-in, which is a better outcome than logging everyone out.
+ */
+export type Session = { login: string; consent: "yes" | "no"; github_id?: number };
 
 export const SESSION_KEY = "graflet:session";
+
+/**
+ * One rule for "is this a usable GitHub account id", used by both the writer (the
+ * OAuth callback fragment) and the reader. Two rules would let a value the writer
+ * rejects survive in storage and reach `identify()` on the next load.
+ */
+export function isGithubId(v: unknown): v is number {
+  return typeof v === "number" && Number.isInteger(v) && v > 0;
+}
 
 /** The remembered session, or null — including when storage is unavailable
  *  (private mode, storage disabled) or holds something we didn't write. */
@@ -21,7 +35,10 @@ export function readSession(): Session | null {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as Session;
-    return s.login && (s.consent === "yes" || s.consent === "no") ? s : null;
+    if (!s.login || (s.consent !== "yes" && s.consent !== "no")) return null;
+    // A junk github_id is dropped rather than failing the whole session: it only
+    // drives analytics, and a bad one would key a person on garbage.
+    return isGithubId(s.github_id) ? s : { login: s.login, consent: s.consent };
   } catch {
     return null;
   }

@@ -5,6 +5,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { SiteNav } from "./site-nav";
 import { SESSION_KEY } from "@/lib/session";
 
+vi.mock("posthog-js", () => ({
+  default: { __loaded: true, reset: vi.fn(), set_config: vi.fn(), identify: vi.fn(), capture: vi.fn() },
+}));
+const ph = (await import("posthog-js")).default as unknown as {
+  reset: ReturnType<typeof vi.fn>;
+  set_config: ReturnType<typeof vi.fn>;
+};
+
 /** GET /stars answering `stars`. null = the backend couldn't reach GitHub. */
 function stubStars(stars: number | null) {
   vi.stubGlobal(
@@ -113,6 +121,11 @@ describe("SiteNav — the account slot", () => {
 
     expect(localStorage.getItem(SESSION_KEY)).toBeNull();
     expect(await screen.findByRole("link", { name: "Sign in with GitHub" })).toBeInTheDocument();
+
+    // A shared machine must not file the next person's events under this one, and
+    // a signed-out browser must stop keeping PostHog's entries (ticket 05).
+    expect(ph.reset).toHaveBeenCalledOnce();
+    expect(ph.set_config).toHaveBeenCalledWith({ persistence: "memory" });
   });
 
   it("the menu's Account item goes to /join, which shows the consent state", async () => {

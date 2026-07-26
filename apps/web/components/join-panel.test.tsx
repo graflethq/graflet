@@ -2,15 +2,38 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { JoinPanel } from "./join-panel";
+import { ANON_ID_KEY } from "@/lib/analytics";
+
+vi.mock("posthog-js", () => ({
+  default: {
+    __loaded: true,
+    capture: vi.fn(),
+    identify: vi.fn(),
+    set_config: vi.fn(),
+    reset: vi.fn(),
+    get_distinct_id: vi.fn(() => "anon-abc"),
+  },
+}));
+const ph = (await import("posthog-js")).default as unknown as {
+  identify: ReturnType<typeof vi.fn>;
+  set_config: ReturnType<typeof vi.fn>;
+};
 
 // The one ADR-critical behavior of the signup panel: the opt-in ships UNCHECKED
 // (ADR-0006), the choice is carried to the backend OAuth start (never a secret in
 // the browser, ADR-0001), and an already-answered user is never re-prompted.
 describe("JoinPanel (ticket 06 — unchecked opt-in, no secret, no re-ask)", () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    ph.identify.mockClear();
+    ph.set_config.mockClear();
+    window.location.hash = "";
+  });
   afterEach(() => {
     vi.unstubAllGlobals();
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   it("ships the opt-in unchecked and carries consent=no in the sign-in link by default", async () => {
@@ -39,14 +62,41 @@ describe("JoinPanel (ticket 06 — unchecked opt-in, no secret, no re-ask)", () 
   });
 
   it("adopts the OAuth return fragment: stores the session, shows signed-in, and scrubs the URL", async () => {
-    window.location.hash = "#login=octocat&consent=yes";
+    window.location.hash = "#login=octocat&consent=yes&github_id=4242";
     render(<JoinPanel />);
 
     expect(await screen.findByText("octocat")).toBeInTheDocument();
     expect(screen.queryByRole("checkbox")).toBeNull();
     // Persisted so a later visit isn't re-prompted; the token-free fragment is scrubbed.
-    expect(JSON.parse(localStorage.getItem("graflet:session")!)).toEqual({ login: "octocat", consent: "yes" });
+    expect(JSON.parse(localStorage.getItem("graflet:session")!)).toEqual({
+      login: "octocat",
+      consent: "yes",
+      github_id: 4242,
+    });
     expect(window.location.hash).toBe("");
+  });
+
+  it("identifies the person on the numeric id the moment the sign-in returns (ticket 05)", async () => {
+    window.location.hash = "#login=octocat&consent=yes&github_id=4242";
+    render(<JoinPanel />);
+
+    expect(await screen.findByText("octocat")).toBeInTheDocument();
+    expect(ph.identify).toHaveBeenCalledWith("4242", { github_login: "octocat" });
+    expect(ph.set_config).toHaveBeenCalledWith({ persistence: "localStorage+cookie" });
+  });
+
+  it("still signs in when the callback carries no github_id, it just identifies nobody", async () => {
+    window.location.hash = "#login=octocat&consent=yes";
+    render(<JoinPanel />);
+
+    expect(await screen.findByText("octocat")).toBeInTheDocument();
+    expect(ph.identify).not.toHaveBeenCalled();
+  });
+
+  it("parks the anonymous id before leaving for GitHub, so the trip back can merge it", async () => {
+    render(<JoinPanel />);
+    await userEvent.click(await screen.findByRole("link", { name: /sign in with github/i }));
+    expect(sessionStorage.getItem(ANON_ID_KEY)).toBe("anon-abc");
   });
 
   it("a returning user who already answered sees no opt-in prompt", async () => {

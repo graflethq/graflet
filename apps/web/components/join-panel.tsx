@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { capture } from "@/lib/analytics";
+import { capture, identifyPerson, rememberAnonId } from "@/lib/analytics";
 import { authStartUrl } from "@/lib/api";
 import { LINKS } from "@/lib/links";
-import { readSession, writeSession, type Session } from "@/lib/session";
+import { isGithubId, readSession, writeSession, type Session } from "@/lib/session";
 
 /**
  * The website signup flow (ticket 06 / ADR-0001, ADR-0006). "Sign in with GitHub"
@@ -37,9 +37,16 @@ export function JoinPanel() {
       return;
     }
     if (login && (consent === "yes" || consent === "no")) {
-      const s: Session = { login, consent };
+      // The backend hands back the numeric github_id (ticket 05). An old callback
+      // without one still signs in fine — it just identifies nobody.
+      const githubId = Number(frag.get("github_id"));
+      const s: Session = { login, consent, ...(isGithubId(githubId) && { github_id: githubId }) };
       writeSession(s);
       setSession(s);
+      // Here, not in AnalyticsProvider: the provider's effect already ran on this
+      // load, before this fragment had been read. On every LATER load the provider
+      // bootstraps the identity itself and this is not reached.
+      if (s.github_id) identifyPerson(s.github_id, login);
       history.replaceState(null, "", window.location.pathname);
       return;
     }
@@ -100,7 +107,14 @@ export function JoinPanel() {
         // Front half of the sign-in funnel; the back half is `signin_completed` from
         // the Worker (ticket 06). Fired inline before a top-level navigation on
         // purpose — posthog-js flushes its queue on pagehide, so the event still lands.
-        onClick={() => capture("signin_started", { surface: "join_panel" })}
+        // `rememberAnonId` parks the anonymous id for the round trip to GitHub, which
+        // is what lets everything done before this click end up on the same person
+        // (ticket 05). This click is the first moment anything is written to the
+        // device, and only because signing in is an explicit act.
+        onClick={() => {
+          capture("signin_started", { surface: "join_panel" });
+          rememberAnonId();
+        }}
         className="mt-6 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 font-mono text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
       >
         Sign in with GitHub

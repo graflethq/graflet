@@ -59,7 +59,8 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong className="text-foreground">Watched libraries</strong> — if you ask the CLI to watch a doc, we
-          store which doc, so we can email you when it is rebuilt. Unwatch it and the row is gone.
+          store which doc, so we can email you when it is rebuilt. There is no unwatch command yet; email us and we
+          will remove it, and deleting your data below removes them all.
         </li>
       </UL>
 
@@ -67,20 +68,27 @@ export default function PrivacyPage() {
       <P>Here is the whole list:</P>
       <UL>
         <li>
-          <strong className="text-foreground">Before you sign in — nothing.</strong> No analytics cookie, no stored
-          identifier. You are counted, and the count is all that leaves.
+          <strong className="text-foreground">While you are only browsing — nothing.</strong> No analytics cookie, no
+          stored identifier. You are counted, and the count is all that leaves.
+        </li>
+        <li>
+          <strong className="text-foreground">The moment you click &ldquo;Sign in with GitHub&rdquo;</strong> — one
+          entry, <code className="text-foreground">graflet:analytics-anon-id</code>. Signing in sends you to GitHub
+          and back, which loses the anonymous number this visit was counted under; this carries it across so what you
+          did before signing in belongs to you afterwards rather than to nobody. It belongs to that one browser tab,
+          it is deleted as soon as you come back, and it holds nothing but that random number.
         </li>
         <li>
           <strong className="text-foreground">After you sign in</strong> — one entry,{" "}
-          <code className="text-foreground">graflet:session</code>, holding your GitHub handle and your answer to the
-          email question, so you are not asked again. It is not a credential and grants access to nothing; signing
-          out deletes it.
+          <code className="text-foreground">graflet:session</code>, holding your GitHub handle, your GitHub account
+          id, and your answer to the email question, so you are not asked again. It is not a credential and grants
+          access to nothing; signing out deletes it.
         </li>
         <li>
           <strong className="text-foreground">After you sign in</strong>, PostHog also starts keeping its own
           entries (their names begin <code className="text-foreground">ph_</code>) so it can recognise you across
           visits. That is the difference between an anonymous visitor and an identified person, and signing in is
-          what causes it.
+          what causes it. Signing out clears them and stops new ones being written.
         </li>
         <li>
           <strong className="text-foreground">If you turn analytics off</strong> — one entry,{" "}
@@ -98,9 +106,9 @@ export default function PrivacyPage() {
         <ProseLink href="#opt-out">below</ProseLink> does.
       </P>
       <P>
-        <strong className="text-foreground">Before you sign in you are anonymous.</strong> Visits are counted, but
-        nothing is written to your device — no analytics cookie, no stored identifier — and no profile is created
-        for you.
+        <strong className="text-foreground">Before you sign in you are anonymous.</strong> Visits are counted, but no
+        analytics cookie and no stored identifier are kept for you, and no profile is created. The single exception
+        is the entry listed above that is written when you click sign in, and only then.
       </P>
       <P>
         <strong className="text-foreground">Signing in with GitHub makes you an identified person</strong> in
@@ -118,7 +126,10 @@ export default function PrivacyPage() {
           matched. This is the one piece of typed text we send on purpose, and it is how we learn which libraries to
           add next — a search that matches nothing is a library we should carry.
         </li>
-        <li>Copying an install command, starting a sign-in, completing one, and downloading a graph.</li>
+        <li>
+          Copying an install command, starting a sign-in, completing one, downloading a graph (or failing to), and
+          asking to watch a library.
+        </li>
         <li>Errors, so we find out something is broken before you have to tell us.</li>
       </UL>
       <P>

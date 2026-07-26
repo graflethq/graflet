@@ -56,6 +56,10 @@ describe("Privacy page — discloses what is actually collected", () => {
     expect(text).toMatch(/graflet:session/);
     expect(text).toMatch(/graflet:analytics-opt-out/);
     expect(text).toMatch(/ph_/);
+    // Written the moment "Sign in with GitHub" is clicked, to carry the anonymous
+    // id across the round trip to GitHub (ticket 05). It lands BEFORE sign-in
+    // completes, so "before you sign in — nothing" has to account for it.
+    expect(text).toMatch(/graflet:analytics-anon-id/);
   });
 
   it("names the third party a download actually touches, and claims no CLI telemetry that isn't there", () => {

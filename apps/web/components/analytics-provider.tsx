@@ -2,7 +2,8 @@
 
 import posthog from "posthog-js";
 import { useEffect } from "react";
-import { isAnalyticsOptedOut } from "@/lib/analytics";
+import { isAnalyticsOptedOut, takeAnonId } from "@/lib/analytics";
+import { readSession } from "@/lib/session";
 
 /**
  * Boots `posthog-js` once, client-side (ADR-0010, ticket 03).
@@ -22,6 +23,25 @@ export function AnalyticsProvider() {
     // never init, so the SDK cannot write, record or send anything at all.
     if (!key || posthog.__loaded || isAnalyticsOptedOut()) return;
 
+    // Who this browser already is, if anyone (ticket 05).
+    const person = readSession()?.github_id;
+    // Always consumed, whether or not it gets used: leaving a stale anonymous id in
+    // sessionStorage would merge it onto whoever browses this tab next.
+    const anon = takeAnonId();
+    // A signed-in visitor boots straight into their identified id. Initialising
+    // anonymously and identifying a beat later would mint a throwaway anonymous id
+    // on every page load and merge it in, growing that person's alias list forever
+    // — and posthog-js resets USER_STATE to anonymous for any non-identified
+    // bootstrap, so an anon id here would silently un-identify them on each reload.
+    const bootstrap = person
+      ? { distinctID: String(person), isIdentifiedID: true }
+      : anon
+        ? // Marked anonymous on purpose: posthog-js only emits `$identify` carrying
+          // `$anon_distinct_id` when the bootstrapped id is anonymous, and that is
+          // the whole point of having carried it across the OAuth round trip.
+          { distinctID: anon }
+        : undefined;
+
     posthog.init(key, {
       // The managed reverse proxy — a first-party host, so blocker lists miss it.
       // Fallback if the proxy ever breaks: unset the var to go direct (ADR-0010).
@@ -35,8 +55,12 @@ export function AnalyticsProvider() {
       // `internal_or_test_user_hostname`, which calls setPersonProperties on
       // localhost and so creates a person row for an anonymous visitor.
       external_scripts_inject_target: "head",
-      persistence: "memory",
+      // Anonymous visitors keep memory-only persistence, so nothing is written to
+      // their device. Storage is turned on only for someone already signed in —
+      // the consent boundary ADR-0010 chose.
+      persistence: person ? "localStorage+cookie" : "memory",
       person_profiles: "identified_only",
+      ...(bootstrap && { bootstrap }),
       // An App Router navigation is a history push, not a document load — without
       // this, every page but the first would go uncounted.
       capture_pageview: "history_change",

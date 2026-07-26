@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { forgetPerson } from "@/lib/analytics";
 import { fetchStars } from "@/lib/api";
 import { compact } from "@/lib/catalog";
 import { LINKS } from "@/lib/links";
@@ -125,6 +126,9 @@ function NavAccount() {
             // Local only — the website flow never minted a token, so there is no
             // server-side session to end and consent stays as recorded.
             clearSession();
+            // Drop the analytics identity in the same breath, or a shared machine
+            // would file the next person's events under this one (ticket 05).
+            forgetPerson();
             setSession(null);
           }}
         >

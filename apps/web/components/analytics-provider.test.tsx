@@ -1,7 +1,8 @@
 import { render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AnalyticsProvider } from "@/components/analytics-provider";
-import { ANALYTICS_OPT_OUT_KEY } from "@/lib/analytics";
+import { ANALYTICS_OPT_OUT_KEY, ANON_ID_KEY } from "@/lib/analytics";
+import { SESSION_KEY } from "@/lib/session";
 
 // The real SDK would open a websocket-ish request queue on init; the whole point
 // of these tests is *whether* init happens, so a stub is enough.
@@ -11,6 +12,10 @@ vi.mock("posthog-js", () => ({
     __loaded: false,
     has_opted_out_capturing: vi.fn(() => false),
     clear_opt_in_out_capturing: vi.fn(),
+    identify: vi.fn(),
+    set_config: vi.fn(),
+    reset: vi.fn(),
+    get_distinct_id: vi.fn(() => "anon-abc"),
   },
 }));
 const posthog = (await import("posthog-js")).default as unknown as {
@@ -18,16 +23,24 @@ const posthog = (await import("posthog-js")).default as unknown as {
   __loaded: boolean;
   has_opted_out_capturing: ReturnType<typeof vi.fn>;
   clear_opt_in_out_capturing: ReturnType<typeof vi.fn>;
+  identify: ReturnType<typeof vi.fn>;
+  set_config: ReturnType<typeof vi.fn>;
+  reset: ReturnType<typeof vi.fn>;
+  get_distinct_id: ReturnType<typeof vi.fn>;
 };
 
 const KEY = "phc_test_token";
+const initOptions = () => posthog.init.mock.calls[0][1];
 
 beforeEach(() => {
   posthog.init.mockClear();
   posthog.clear_opt_in_out_capturing.mockClear();
+  posthog.identify.mockClear();
+  posthog.set_config.mockClear();
   posthog.has_opted_out_capturing.mockReturnValue(false);
   posthog.__loaded = false;
   localStorage.clear();
+  sessionStorage.clear();
   delete (window as { posthog?: unknown }).posthog;
 });
 
@@ -107,5 +120,78 @@ describe("AnalyticsProvider", () => {
     posthog.__loaded = true;
     render(<AnalyticsProvider />);
     expect(posthog.init).not.toHaveBeenCalled();
+  });
+});
+
+describe("AnalyticsProvider identity (ticket 05)", () => {
+  const signedIn = (github_id?: number) =>
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ login: "octocat", consent: "no", github_id }));
+
+  it("a plain visitor gets no bootstrap and stays on memory-only persistence", () => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", KEY);
+    render(<AnalyticsProvider />);
+
+    expect(initOptions()).not.toHaveProperty("bootstrap");
+    expect(initOptions()).toMatchObject({ persistence: "memory" });
+    expect(posthog.identify).not.toHaveBeenCalled();
+  });
+
+  it("restores the anonymous id parked before the OAuth trip, so the merge has something to merge", () => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", KEY);
+    sessionStorage.setItem(ANON_ID_KEY, "anon-abc");
+    render(<AnalyticsProvider />);
+
+    // isIdentifiedID stays off: posthog-js only emits $identify with
+    // $anon_distinct_id when the bootstrapped id is marked anonymous.
+    expect(initOptions().bootstrap).toEqual({ distinctID: "anon-abc" });
+    expect(initOptions()).toMatchObject({ persistence: "memory" });
+    // Consumed — a later load in this tab must not re-merge a stale id.
+    expect(sessionStorage.getItem(ANON_ID_KEY)).toBeNull();
+  });
+
+  it("boots a signed-in visitor straight into their identified id, with no per-load merge", () => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", KEY);
+    signedIn(4242);
+    render(<AnalyticsProvider />);
+
+    // Initialising anonymously and identifying a beat later would mint a throwaway
+    // anonymous id on EVERY page load and merge it in, growing the person's alias
+    // list forever. Bootstrapping as identified skips that entirely.
+    expect(initOptions().bootstrap).toEqual({ distinctID: "4242", isIdentifiedID: true });
+    expect(initOptions()).toMatchObject({ persistence: "localStorage+cookie" });
+    expect(posthog.identify).not.toHaveBeenCalled();
+  });
+
+  it("never bootstraps a stale anonymous id over a signed-in person", () => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", KEY);
+    signedIn(4242);
+    sessionStorage.setItem(ANON_ID_KEY, "anon-abc");
+    render(<AnalyticsProvider />);
+
+    // posthog-js resets USER_STATE to anonymous for a non-identified bootstrap, so
+    // this would silently un-identify a signed-in person on every reload.
+    expect(initOptions().bootstrap).toEqual({ distinctID: "4242", isIdentifiedID: true });
+    expect(sessionStorage.getItem(ANON_ID_KEY)).toBeNull(); // still consumed, not left to rot
+  });
+
+  it.each([0, -1, 1.5, "4242", null])("refuses to key a person on a junk github_id (%p)", (bad) => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", KEY);
+    // The writer rejects these, so they can only arrive from hand-edited or
+    // corrupted storage — but one shared rule means the reader rejects them too,
+    // rather than bootstrapping distinctID "0".
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ login: "octocat", consent: "no", github_id: bad }));
+    render(<AnalyticsProvider />);
+
+    expect(initOptions()).not.toHaveProperty("bootstrap");
+    expect(initOptions()).toMatchObject({ persistence: "memory" });
+  });
+
+  it("treats a pre-ticket-05 session with no github_id as an ordinary anonymous visitor", () => {
+    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", KEY);
+    signedIn(undefined);
+    render(<AnalyticsProvider />);
+
+    expect(initOptions()).not.toHaveProperty("bootstrap");
+    expect(initOptions()).toMatchObject({ persistence: "memory" });
   });
 });

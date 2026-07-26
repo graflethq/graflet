@@ -66,3 +66,53 @@ Three facts shaped the decision:
   `us.i.posthog.com`, which trades the 10–30% recovery for working capture. Accepted.
 - Because everything runs on one project token with billing limits at $0, enabling the remaining products
   (feature flags, surveys, error tracking, experiments) is configuration, not architecture.
+
+## Amendment — 2026-07-26 (ticket 05, identify on sign-in)
+
+Building the identify step showed two statements above to be *nearly* right rather than right. Both are corrected
+here rather than left to be discovered from the code.
+
+**1. "Pre-login visitors are … counted, never stored on their device" is now false by one entry.**
+
+Sign-in is a full document navigation — out to github.com and back — so the anonymous `distinct_id` held in
+memory-only persistence does not survive the round trip. Without it there is no `$anon_distinct_id` to hand
+`identify()`, PostHog has nothing to merge, and the visit → sign-in → download funnel this ADR exists to enable
+starts on one person and ends on another. The decision above ("no cookie banner, anonymous by default") is only
+worth anything if the funnel actually joins up.
+
+So: on the sign-in **click**, one `sessionStorage` entry, `graflet:analytics-anon-id`, holding the random anonymous
+id and nothing else. It belongs to one browser tab, is read-and-removed on return, and dies with the tab.
+
+The revised rule: **a visitor who only browses still has nothing written to their device.** The write happens at the
+moment someone chooses to sign in — which this ADR already treats as the consent boundary, and which /privacy now
+names explicitly rather than letting the old sentence quietly stop being true.
+
+Rejected alternatives: accepting no merge (cheapest, but abandons the funnel and would have meant rewriting the
+"one timeline" promise in `spec.md`); and threading the anonymous id through the OAuth `state` round trip on the
+backend (nothing on the device at all, but a schema column, a backend change, and the id ends up in a URL).
+
+**2. "GitHub sign-in … is what enables persistence" — true, but not on every load.**
+
+A returning signed-in visitor is now booted straight into their identified id via
+`bootstrap: { distinctID, isIdentifiedID: true }` with persistence already on, rather than starting anonymous and
+identifying a beat later. The latter mints a throwaway anonymous id on *every* page load and merges it in, growing
+the person's alias list without bound. Persistence is still switched on only for someone who has signed in; it is
+simply set at `init` rather than after it.
+
+**Two SDK behaviours this depends on, both verified against source rather than assumed** — either would have failed
+silently:
+
+- `bootstrap.distinctID` with `isIdentifiedID` unset marks the id *anonymous* (`posthog-core.ts:793-803`), which is
+  precisely what makes a later `identify()` emit `$identify` carrying `$anon_distinct_id` (`:2613-2629`). Marking it
+  identified instead would skip the merge entirely.
+- `person_profiles: 'identified_only'` does **not** defeat the merge. Pre-identify events do carry
+  `$process_person_profile: false`, but ingestion writes a `person_distinct_id_overrides` row on merge so those
+  personless events resolve to the person anyway (PostHog handbook, *Person processing*: "when a user identifies,
+  their previous anonymous events are linked to their new person profile automatically"). A first reading of the SDK
+  source concluded the opposite and would have had us drop the carry as pointless.
+
+**3. Identified persons still carry all three fields, but `email` arrives from the Worker.** The browser sends
+`identify(github_id, { github_login })`; `signin_completed` carries `$set: { github_login, email }`. Putting the
+email in the OAuth return fragment would have kept it out of server logs but still left it in the address bar and in
+browser history. The trade-off recorded above — directly identifiable persons in a US third-party store, in exchange
+for readable profiles — is unchanged.

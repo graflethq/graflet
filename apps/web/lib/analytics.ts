@@ -42,6 +42,87 @@ export function setAnalyticsOptOut(optOut: boolean): void {
 }
 
 /**
+ * The anonymous distinct id, parked for the duration of the OAuth round trip.
+ *
+ * Sign-in is a full document navigation — off to github.com and back — and ticket
+ * 03 ships `persistence: 'memory'`, so the anonymous id dies on the way out. Without
+ * this, everything a person did before signing in would strand on a timeline nobody
+ * can ever reach again, and the visit → sign-in → download funnel would begin on one
+ * person and end on another.
+ *
+ * `sessionStorage`, not `localStorage`: this belongs to one tab and one trip, and it
+ * is gone when the tab closes. Written only when someone clicks "Sign in with
+ * GitHub" — a visitor who merely browses still leaves this device untouched, which
+ * is ticket 03's promise and what /privacy says. Named `graflet:` like the other two
+ * keys, so the page can list all three under one convention.
+ */
+export const ANON_ID_KEY = "graflet:analytics-anon-id";
+
+/** Park the anonymous id for the trip to GitHub. No-op unless the SDK is running. */
+export function rememberAnonId(): void {
+  if (!posthog.__loaded) return;
+  try {
+    const id = posthog.get_distinct_id();
+    if (id) sessionStorage.setItem(ANON_ID_KEY, id);
+  } catch {
+    // Storage blocked (private mode): no merge on return, but the sign-in itself
+    // must never fail over analytics bookkeeping.
+  }
+}
+
+/** The parked id, removed as it is read — one round trip, one use. */
+export function takeAnonId(): string | null {
+  try {
+    const id = sessionStorage.getItem(ANON_ID_KEY);
+    if (id) sessionStorage.removeItem(ANON_ID_KEY);
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Turn the anonymous visitor into an identified person (ticket 05 / ADR-0010).
+ * Sign-in is the consent boundary the ADR chose: an explicit act carrying its own
+ * disclosure, which is why nothing identifies anyone before this point.
+ *
+ * `distinct_id` is the numeric `github_id` as a string, never the login — a handle
+ * can be renamed, and a renamed handle would silently fork one person into two with
+ * no way to rejoin them. It is the same value the Worker (ticket 06) and the CLI
+ * (ticket 07) use, which is the only reason those three land on one timeline.
+ *
+ * `email` is deliberately absent: the Worker attaches it server-side (ticket 06) so
+ * it never has to ride through the browser. /privacy names all three fields.
+ */
+export function identifyPerson(githubId: number, login: string): void {
+  if (!posthog.__loaded) return;
+  // `set_config`, not a re-init: a re-init would drop the queued events and the
+  // in-flight session. Persistence flips first so the identity is the first thing
+  // written, rather than landing in memory and being lost on the next navigation.
+  posthog.set_config({ persistence: "localStorage+cookie" });
+  posthog.identify(String(githubId), { github_login: login });
+}
+
+/**
+ * Sign out of analytics (ticket 05): a shared machine must not file the next
+ * person's events under the last one.
+ *
+ * Both calls are needed, and not for the obvious reason. `reset()` clears the store
+ * but then immediately registers a *fresh* anonymous id into it
+ * (`posthog-core.ts:3011-3050`), so on its own it would leave a signed-out browser
+ * holding a new `ph_*` entry — the very thing /privacy says does not exist before
+ * sign-in. Switching persistence to `memory` is what removes them: changing the
+ * backend makes posthog-js clear the old layout and re-save into the new one
+ * (`posthog-persistence.ts:798-812`). `reset()` is still first, so the departing
+ * person's identity is gone before anything is rebuilt.
+ */
+export function forgetPerson(): void {
+  if (!posthog.__loaded) return;
+  posthog.reset();
+  posthog.set_config({ persistence: "memory" });
+}
+
+/**
  * Every explicit event the site sends, spelled once (`.scratch/posthog/spec.md`).
  * A union rather than `string` because captured events cannot be renamed
  * retroactively: a typo would be a permanently split series that no amount of

@@ -227,6 +227,18 @@ describe("website sign-in + opt-in (ticket 06 / ADR-0006)", () => {
     expect(tokens?.n).toBe(0);
   });
 
+  it("hands the site the numeric github_id, so PostHog keys the person on the id and not the handle", async () => {
+    const { cbLocation } = await webSignIn({ id: 100, login: "octo", email: "octo@example.com" }, "no");
+
+    // The id is the join key across site, backend and CLI (ticket 05). A handle can
+    // be renamed; an id cannot, so a handle would silently fork one person into two.
+    expect(fragment(cbLocation).get("github_id")).toBe("100");
+    // The email is NOT here on purpose: it would sit in the address bar and in
+    // browser history. The Worker sends it straight to PostHog instead (ticket 06).
+    expect(cbLocation).not.toContain("octo%40example.com");
+    expect(cbLocation).not.toContain("octo@example.com");
+  });
+
   it("a ticked opt-in records marketing_consent = yes", async () => {
     const { cbLocation } = await webSignIn({ id: 101, login: "yes-please", email: "y@example.com" }, "yes");
     expect(fragment(cbLocation).get("consent")).toBe("yes");

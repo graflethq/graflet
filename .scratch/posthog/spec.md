@@ -64,10 +64,11 @@ heatmaps, session replay (default input masking kept), `$exception`.
 ### Backend Worker
 | Event | Properties | Fired from |
 |---|---|---|
-| `signin_completed` | `is_new_user` | `apps/backend/src/auth.ts` |
+| `signin_completed` | `is_new_user`, `surface` (`website` \| `cli`), `$set: { github_login, email }` | `apps/backend/src/auth.ts` — both callbacks |
 | `kg_download_brokered` | `doc`, `version`, `sha`, `bytes` | `apps/backend/src/broker.ts` |
-| `download_failed` | `reason` | `apps/backend/src/broker.ts` |
-| `watch_created` / `watch_removed` | `doc` | `apps/backend/src/watch.ts` |
+| `download_failed` | `reason`, `doc`, `version` | `apps/backend/src/broker.ts` |
+| `watch_created` | `doc` | `apps/backend/src/watch.ts` — only on an actual insert; the endpoint is idempotent |
+| ~~`watch_removed`~~ | — | **not built (ticket 06): there is no unwatch endpoint to fire it from** |
 | exceptions | — | `captureException` in catch blocks |
 
 ### CLI (opt-in only)
@@ -78,8 +79,17 @@ heatmaps, session replay (default input masking kept), `$exception`.
 | `cli_download_completed` | `doc`, `version`, `duration_ms`, `bytes` |
 | `cli_download_failed` | `reason` |
 
+Three properties above were added during ticket 06 and are not in the original list. `surface` separates a website
+sign-in from a CLI one, which the funnel needs and nothing else records; `doc`/`version` on `download_failed` say
+*which* download broke, without which the event answers none of the five questions. `$set` is how ticket 05's third
+identifying field reaches PostHog without riding through the browser.
+
 **Deliberately not captured:** a per-request `catalog_served` event. That is request logging, not a product event;
 Workers observability already has it, and it would dominate the event count.
+
+**A blind spot worth naming:** a download rejected with 401 fires nothing, because an unauthenticated caller has no
+`github_id` to attribute it to. That is right for a random probe of a public URL and wrong for the commonest real
+failure — a CLI user whose bearer expired. Neither this nor anything else currently sees that case.
 
 ---
 
@@ -87,8 +97,16 @@ Workers observability already has it, and it would dominate the event count.
 
 - Before sign-in: anonymous, `persistence: 'memory'`, `person_profiles: 'identified_only'`. Nothing written to the
   visitor's device; no person row created.
-- On sign-in: switch persistence on, `identify(github_id, { github_login, email })`. Backend and CLI use the same
+- On sign-in: switch persistence on, `identify(github_id, { github_login })`. Backend and CLI use the same
   `github_id` as `distinct_id`.
+- **`email` is set from the Worker, not the browser** (ticket 05, built 2026-07-26). The site would have had to
+  carry it in the OAuth return fragment, which stays out of server logs but still lands in the address bar and in
+  browser history. `signin_completed` carries `$set: { github_login, email }` instead. PostHog holds the same three
+  fields either way.
+- **Sign-in is a full document navigation**, so the anonymous `distinct_id` does not survive the trip to GitHub on
+  memory-only persistence. It is parked in `sessionStorage` on the sign-in click and replayed as
+  `bootstrap: { distinctID }`, which is what makes `identify()` emit `$anon_distinct_id` and the merge real. Without
+  that carry the funnel below would start on one person and end on another.
 - Before login the CLI has no id — it uses a machine-local random id and `$identify`s it at login, the same
   anonymous→identified merge the browser does.
 
