@@ -152,3 +152,22 @@ polling a deletion handoff's `state` would have handed the caller that account's
 the confirmation that is the whole point of splitting the flow — and the CLI callback would have overwritten a
 deletion row's token with a live bearer while re-creating the user row being erased. Both are now scoped with
 `AND return_to IS NULL` (the discriminator `handleWebCallback` already used), with a test for each direction.
+
+## Amendment — 2026-07-27 (ticket 08, the dashboard)
+
+Capture has a read surface now: **[Graflet — demand & acquisition](https://us.posthog.com/project/528914/dashboard/1908780)**,
+pinned in the project. It leads with the missing-doc demand list (`catalog_search` where `result_count = 0`, the
+build queue for `kg-pipeline`) and the landing → copy → sign-in → download funnel. Two things about it constrain
+future work rather than merely describing the present.
+
+**1. A tile may only be built on an event some code actually emits.** "Confirmed to exist" has two readings that
+disagree, and both matter. `watch_removed` is in `spec.md` and on no tile, because no endpoint fires it — a series
+that can never move is worse than a missing one, since it reads as a product with no usage rather than a
+measurement that was never wired. Conversely `kg_download_brokered`, `cli_download_completed`, `support_click` and
+`watch_created` have real emitters and no rows yet, and they *are* on tiles, with the header text tile saying why
+the zero is expected. Anything added to `spec.md` from here earns a tile when its call site lands, not when the
+name is written.
+
+**2. The free allowances are now watched from inside the dashboard.** Because ticket 01 set every billing limit to
+$0, crossing 1M events or 5k replays stops capture rather than charging — a silent failure with no invoice to
+notice. A month-to-date tile sits next to the allowances so the headroom is visible without opening billing.
