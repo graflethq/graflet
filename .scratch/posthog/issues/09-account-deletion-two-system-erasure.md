@@ -15,8 +15,9 @@ third party, and a half-done deletion is worse than none — it leaves a person 
 **Blocked by:** 06 (the backend is where both halves have to happen, and it is where the PostHog server-side client
 is first set up).
 
-**Status:** done 2026-07-26 — **built and tested, not yet live**. Two deploy steps stand between this and a working
-delete button; see "Before this works in production" below.
+**Status:** done 2026-07-26, **live and verified on production 2026-07-27**. Migrations `0007`+`0008` applied,
+Worker deployed (version `52dd02f4`), site deployed (version `e18562c5`), `POSTHOG_PERSONAL_API_KEY` set. Verified
+against prod with a synthetic identity rather than a throwaway GitHub account — see "Verified on production" below.
 
 - [x] A deletion path exists and is reachable by the user it belongs to — either an authenticated endpoint the CLI
       and site can call, or a documented operator runbook. Whichever it is, `/privacy` is updated in the same commit
@@ -86,15 +87,51 @@ catalog reads.
 
 ## Before this works in production
 
-Nothing in this ticket has any effect on a user until both of these happen. Until then `/privacy` shows a delete
+Nothing in this ticket has any effect on a user until all of these happen. Until then `/privacy` shows a delete
 button whose second leg would return 502 — the safe failure, but a broken one.
 
 1. **Create the PostHog personal API key** at `us.posthog.com/settings/user-api-keys`, scope `person:write` only,
    and set it: `wrangler secret put POSTHOG_PERSONAL_API_KEY` (in `apps/backend/`). The value is shown once.
-2. **Deploy both apps** — the Worker (which also applies migration `0008_pending_auth_intent.sql`) and the site.
+2. **Apply the pending migrations** — `wrangler d1 migrations apply graflet-catalog --remote`, in `apps/backend/`.
+   `wrangler deploy` does **not** do this: the `deploy` script is a bare `wrangler deploy`, and `migrations_dir` in
+   `wrangler.jsonc` is only read by the `wrangler d1 migrations` subcommands. **Two** migrations are pending, not
+   one — `0007_pending_auth_github_id.sql` (ticket 07) as well as `0008_pending_auth_intent.sql`. Both are additive
+   `ADD COLUMN`s that default to NULL, so the currently deployed Worker keeps working after they land; skip them and
+   every `intent=delete` OAuth start throws on an unknown column.
+3. **Deploy both apps** — the Worker first (`apps/backend/`, `pnpm run deploy`), then the site (`apps/web/`,
+   `pnpm run deploy`). Not the other order: `/privacy` would advertise a delete button whose second leg 404s.
 
 Then verify end to end on production with a throwaway GitHub account: sign in, confirm a person exists in PostHog,
 delete, and confirm both the `users` row and the person are gone.
+
+## Verified on production — 2026-07-27
+
+Verified without a throwaway GitHub account. `handleAccountDelete` only looks a row up by `token` + `intent =
+'delete'`, so a synthetic identity (`github_id 999999999`) seeded into all four prod tables plus a PostHog person
+created by a capture call exercises the whole irreversible half against the real deployed Worker. What that misses
+is the `?intent=delete` OAuth round trip that mints the token, and the browser confirmation UI — both need a real
+GitHub login, and the only one available belonged to the operator, which the flow would have deleted.
+
+Run in this order, and the order is the point:
+
+1. **Fail-safe, before the key was set** — `POST /account/delete` returned **502**, and `users`, `tokens`,
+   `subscriptions` and `pending_auth` *all four survived*. The half-deleted state the ticket calls worse than no
+   deletion does not occur, and it was observed rather than argued.
+2. **Success on retry, with the same token** — after `POST /account/delete` → **200 `{"ok":true}`**. This is the
+   retry guarantee from the idempotency criterion, demonstrated end to end rather than in a unit test: one token,
+   first spend failed, second spend completed.
+3. **Both systems clean** — all four D1 tables at 0 rows for that `github_id`, and PostHog person
+   `e2cb0279-fbfb-5f1c-b223-5a29fd722c22` gone.
+4. **Replay guard** — spending the same token a third time returns **400 "expired or was already used"**, because
+   the `pending_auth` row died inside the successful batch.
+
+**The key.** Created in the PostHog UI as `graflet-worker-account-deletion`, scoped **`Person: Write` only** and
+restricted to the **`graflet` project only** — the account holds three other projects (`rnui.dev dashboard`,
+`pixellog.io dashboard`, `resume`) that this credential cannot touch. Set via `wrangler secret put`.
+
+**A propagation gotcha worth knowing:** the first call after `wrangler secret put` still returned 502. The secret
+takes a few seconds to reach the running Worker. That is not a defect — but it will read as one during a deploy, so
+wait and retry before diagnosing.
 
 ## Deliberately not built
 
