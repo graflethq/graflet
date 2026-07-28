@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:26px;line-height:46px;white-space:pre;color:#e6edf3;font-weight:400">
+<div><span style="color:#4ef08c">$</span> graphify benchmark graph.json</div>
+<div>&nbsp;</div>
+<div style="color:#8b949e">graphify token reduction benchmark</div>
+<div style="color:#4a525c">──────────────────────────────────────────────</div>
+<div><span style="color:#8b949e">  Corpus:          </span>218,700 words → ~291,600 tokens (naive)</div>
+<div><span style="color:#8b949e">  Graph:           </span>4,374 nodes, 4,585 edges</div>
+<div><span style="color:#8b949e">  Avg query cost:  </span>~2,500 tokens</div>
+<div><span style="color:#8b949e">  Reduction:       </span><span style="color:#4ef08c">116.6x fewer tokens per query</span></div>
+<div>&nbsp;</div>
+<div style="color:#8b949e">  Per question:</div>
+<div>    [86.3x]   <span style="color:#8b949e">how does authentication work</span></div>
+<div>    [272.3x]  <span style="color:#8b949e">how are errors handled</span></div>
+<div>    [556.5x]  <span style="color:#8b949e">what are the core abstractions</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:960,&quot;height&quot;:620}}"></script>
+</body>
+</html>

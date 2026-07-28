@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#101216}
+a{color:#4ef08c}a:hover{color:#e6edf3}
+</style>
+</helmet>
+
+<div style="padding:56px 64px 96px;display:flex;flex-direction:column;gap:88px;font-family:Geist,Inter,system-ui,sans-serif">
+
+<div style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;align-items:baseline;gap:14px;font-family:'JetBrains Mono',monospace;font-size:20px;color:#e6edf3">variant 1 <span style="color:#8b949e">— the number</span></div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="x-v1-1200x1500" style="position:relative;flex:none;width:1200px;height:1500px;background:#0a0b0d;overflow:hidden;border-radius:0">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;opacity:0.13"><dc-import name="Graph" count="34" seed="11" style="width:100%;height:100%" hint-size="1200px,1500px"></dc-import></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;background:radial-gradient(circle at 50% 40%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<dc-import name="Mark" style="position:absolute;left:72px;top:72px;width:96px;height:96px" hint-size="96px,96px"></dc-import>
+<div style="position:absolute;right:72px;top:86px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:44px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px;box-sizing:border-box;text-align:center">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:320px;line-height:1;letter-spacing:-12px;color:#4ef08c;text-shadow:0 0 44px rgba(78,240,140,0.3)">116x</div>
+<div style="margin-top:32px;font-size:54px;line-height:1.2;color:#e6edf3;white-space:nowrap">fewer tokens per query</div>
+<div style="margin-top:48px;font-size:24px;line-height:1.75;color:#8b949e">~2,500 tokens querying the Next.js knowledge graph,<br>against ~291,600 for the whole doc corpus.<br>measured with: graphify benchmark</div>
+</div>
+</div>
+
+<div id="x-v1-1600x900" style="position:relative;flex:none;width:1600px;height:900px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;opacity:0.13"><dc-import name="Graph" count="30" seed="4" style="width:100%;height:100%" hint-size="1600px,900px"></dc-import></div>
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;background:radial-gradient(circle at 50% 34%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<dc-import name="Mark" style="position:absolute;left:72px;bottom:72px;width:128px;height:128px" hint-size="128px,128px"></dc-import>
+<div style="position:absolute;right:72px;bottom:104px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:44px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 240px;box-sizing:border-box;text-align:center">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:300px;line-height:1;letter-spacing:-12px;color:#4ef08c;text-shadow:0 0 44px rgba(78,240,140,0.3)">116x</div>
+<div style="margin-top:24px;font-size:54px;line-height:1.2;color:#e6edf3;white-space:nowrap">fewer tokens per query</div>
+<div style="margin-top:34px;font-size:24px;line-height:1.7;color:#8b949e">~2,500 tokens querying the Next.js knowledge graph,<br>against ~291,600 for the whole doc corpus.<br>measured with: graphify benchmark</div>
+</div>
+</div>
+
+<div id="x-v1-1200x1200" style="position:relative;flex:none;width:1200px;height:1200px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;opacity:0.13"><dc-import name="Graph" count="30" seed="19" style="width:100%;height:100%" hint-size="1200px,1200px"></dc-import></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;background:radial-gradient(circle at 50% 40%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<dc-import name="Mark" style="position:absolute;left:72px;top:72px;width:96px;height:96px" hint-size="96px,96px"></dc-import>
+<div style="position:absolute;right:72px;top:86px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:44px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px;box-sizing:border-box;text-align:center">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:300px;line-height:1;letter-spacing:-12px;color:#4ef08c;text-shadow:0 0 44px rgba(78,240,140,0.3)">116x</div>
+<div style="margin-top:28px;font-size:54px;line-height:1.2;color:#e6edf3;white-space:nowrap">fewer tokens per query</div>
+<div style="margin-top:40px;font-size:24px;line-height:1.75;color:#8b949e">~2,500 tokens querying the Next.js knowledge graph,<br>against ~291,600 for the whole doc corpus.<br>measured with: graphify benchmark</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;align-items:baseline;gap:14px;font-family:'JetBrains Mono',monospace;font-size:20px;color:#e6edf3">variant 2 <span style="color:#8b949e">— the benchmark</span></div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="x-v2-1200x1500" style="position:relative;flex:none;width:1200px;height:1500px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;background:radial-gradient(circle at 50% 30%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:64px;padding:72px;box-sizing:border-box">
+<div style="width:1056px;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:10px;padding:104px 56px 128px">
+<div style="display:flex;gap:12px;margin-bottom:52px">
+<div style="width:16px;height:16px;border-radius:50%;background:#8b949e;opacity:0.45"></div>
+<div style="width:16px;height:16px;border-radius:50%;background:#8b949e;opacity:0.45"></div>
+<div style="width:16px;height:16px;border-radius:50%;background:#8b949e;opacity:0.45"></div>
+</div>
+<dc-import name="TermBody" hint-size="100%,620px"></dc-import>
+</div>
+<div style="display:flex;align-items:center;gap:20px">
+<dc-import name="Mark" style="width:64px;height:64px" hint-size="64px,64px"></dc-import>
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:44px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+</div>
+</div>
+</div>
+
+<div id="x-v2-1600x900" style="position:relative;flex:none;width:1600px;height:900px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;background:radial-gradient(circle at 50% 24%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;padding:56px 72px;box-sizing:border-box">
+<div style="width:1456px;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:10px;padding:40px 56px 44px">
+<div style="display:flex;gap:12px;margin-bottom:32px">
+<div style="width:16px;height:16px;border-radius:50%;background:#8b949e;opacity:0.45"></div>
+<div style="width:16px;height:16px;border-radius:50%;background:#8b949e;opacity:0.45"></div>
+<div style="width:16px;height:16px;border-radius:50%;background:#8b949e;opacity:0.45"></div>
+</div>
+<dc-import name="TermBody" hint-size="100%,600px"></dc-import>
+</div>
+<div style="display:flex;align-items:center;gap:18px">
+<dc-import name="Mark" style="width:52px;height:52px" hint-size="52px,52px"></dc-import>
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:38px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+</div>
+</div>
+</div>
+
+<div id="x-v2-1200x1200" style="position:relative;flex:none;width:1200px;height:1200px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;background:radial-gradient(circle at 50% 28%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;padding:72px;box-sizing:border-box">
+<div style="width:1056px;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:10px;padding:44px 56px 52px">
+<div style="display:flex;gap:12px;margin-bottom:36px">
+<div style="width:16px;height:16px;border-radius:50%;background:#8b949e;opacity:0.45"></div>
+<div style="width:16px;height:16px;border-radius:50%;background:#8b949e;opacity:0.45"></div>
+<div style="width:16px;height:16px;border-radius:50%;background:#8b949e;opacity:0.45"></div>
+</div>
+<dc-import name="TermBody" hint-size="100%,600px"></dc-import>
+</div>
+<div style="display:flex;align-items:center;gap:18px">
+<dc-import name="Mark" style="width:56px;height:56px" hint-size="56px,56px"></dc-import>
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:40px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;align-items:baseline;gap:14px;font-family:'JetBrains Mono',monospace;font-size:20px;color:#e6edf3">variant 3 <span style="color:#8b949e">— the arithmetic</span></div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="x-v3-1200x1500" style="position:relative;flex:none;width:1200px;height:1500px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;opacity:0.1"><dc-import name="Graph" count="32" seed="23" style="width:100%;height:100%" hint-size="1200px,1500px"></dc-import></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;background:radial-gradient(circle at 50% 50%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;display:flex;flex-direction:column;padding:72px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:20px">
+<dc-import name="Mark" style="width:72px;height:72px" hint-size="72px,72px"></dc-import>
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:44px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:32px">
+<div style="background:#0e1116;border:1px solid #1c2027;border-radius:10px;padding:48px 52px">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:88px;line-height:1.05;color:#e6edf3">63</div>
+<div style="margin-top:16px;font-size:32px;color:#8b949e">libraries live</div>
+</div>
+<div style="background:#0e1116;border:1px solid #1c2027;border-left:4px solid #4ef08c;border-radius:10px;padding:48px 52px">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:88px;line-height:1.05;color:#e6edf3">$133.52</div>
+<div style="margin-top:16px;font-size:32px;color:#8b949e">to graph them at Sonnet list prices</div>
+</div>
+<div style="background:#0e1116;border:1px solid #1c2027;border-radius:10px;padding:48px 52px">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:88px;line-height:1.05;color:#e6edf3">804 hours</div>
+<div style="margin-top:16px;font-size:32px;color:#8b949e">to graph them on a laptop instead</div>
+</div>
+</div>
+<div style="font-size:32px;line-height:1.4;color:#8b949e">so you don't spend 19 hours graphing Next.js yourself</div>
+</div>
+</div>
+
+<div id="x-v3-1600x900" style="position:relative;flex:none;width:1600px;height:900px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;opacity:0.1"><dc-import name="Graph" count="30" seed="31" style="width:100%;height:100%" hint-size="1600px,900px"></dc-import></div>
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;background:radial-gradient(circle at 50% 52%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;display:flex;flex-direction:column;padding:64px 72px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:20px">
+<dc-import name="Mark" style="width:64px;height:64px" hint-size="64px,64px"></dc-import>
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:40px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+</div>
+<div style="flex:1;display:flex;align-items:center"><div style="width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:28px;align-items:stretch">
+<div style="flex:1;background:#0e1116;border:1px solid #1c2027;border-radius:10px;padding:44px 40px">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:64px;line-height:1.05;color:#e6edf3">63</div>
+<div style="margin-top:18px;font-size:28px;line-height:1.35;min-height:76px;color:#8b949e">libraries live</div>
+</div>
+<div style="flex:1;background:#0e1116;border:1px solid #1c2027;border-left:4px solid #4ef08c;border-radius:10px;padding:44px 40px">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:64px;line-height:1.05;color:#e6edf3">$133.52</div>
+<div style="margin-top:18px;font-size:28px;line-height:1.35;min-height:76px;color:#8b949e">to graph them at Sonnet list prices</div>
+</div>
+<div style="flex:1;background:#0e1116;border:1px solid #1c2027;border-radius:10px;padding:44px 40px">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:64px;line-height:1.05;color:#e6edf3">804 hours</div>
+<div style="margin-top:18px;font-size:28px;line-height:1.35;min-height:76px;color:#8b949e">to graph them on a laptop instead</div>
+</div>
+</div>
+</div>
+<div style="font-size:32px;line-height:1.4;color:#8b949e">so you don't spend 19 hours graphing Next.js yourself</div>
+</div>
+</div>
+
+<div id="x-v3-1200x1200" style="position:relative;flex:none;width:1200px;height:1200px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;opacity:0.1"><dc-import name="Graph" count="30" seed="41" style="width:100%;height:100%" hint-size="1200px,1200px"></dc-import></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;background:radial-gradient(circle at 50% 50%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;display:flex;flex-direction:column;padding:72px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:20px">
+<dc-import name="Mark" style="width:68px;height:68px" hint-size="68px,68px"></dc-import>
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:42px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:26px">
+<div style="background:#0e1116;border:1px solid #1c2027;border-radius:10px;padding:36px 48px">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:80px;line-height:1.05;color:#e6edf3">63</div>
+<div style="margin-top:12px;font-size:32px;color:#8b949e">libraries live</div>
+</div>
+<div style="background:#0e1116;border:1px solid #1c2027;border-left:4px solid #4ef08c;border-radius:10px;padding:36px 48px">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:80px;line-height:1.05;color:#e6edf3">$133.52</div>
+<div style="margin-top:12px;font-size:32px;color:#8b949e">to graph them at Sonnet list prices</div>
+</div>
+<div style="background:#0e1116;border:1px solid #1c2027;border-radius:10px;padding:36px 48px">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:80px;line-height:1.05;color:#e6edf3">804 hours</div>
+<div style="margin-top:12px;font-size:32px;color:#8b949e">to graph them on a laptop instead</div>
+</div>
+</div>
+<div style="font-size:32px;line-height:1.4;color:#8b949e">so you don't spend 19 hours graphing Next.js yourself</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;align-items:baseline;gap:14px;font-family:'JetBrains Mono',monospace;font-size:20px;color:#e6edf3">variant 4 <span style="color:#8b949e">— the drift</span></div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="x-v4-1200x1500" style="position:relative;flex:none;width:1200px;height:1500px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;opacity:0.12"><dc-import name="Graph" count="26" seed="53" lit="{{ true }}" style="width:100%;height:100%" hint-size="1200px,1500px"></dc-import></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px;box-sizing:border-box">
+<div style="display:flex;flex-direction:column;align-items:center">
+<div style="width:800px;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:10px;padding:40px 44px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">what you installed</div>
+<div style="margin-top:22px;font-family:'JetBrains Mono',monospace;font-size:44px;color:#e6edf3">"next": "16.0.1"</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:44px;padding:28px 0">
+<div style="width:1px;height:48px;background:#4a525c"></div>
+<div style="width:1px;height:48px;background:#4a525c"></div>
+</div>
+<div style="width:800px;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:10px;padding:40px 44px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">what your agent read</div>
+<div style="margin-top:22px;font-family:'JetBrains Mono',monospace;font-size:44px;color:#e6edf3">nextjs.org/docs  ·  v15</div>
+</div>
+<div style="margin-top:72px;font-size:40px;line-height:1.35;color:#e6edf3;text-align:center">graflet pins the docs to one exact commit.</div>
+</div>
+</div>
+<div style="position:absolute;left:72px;right:72px;bottom:72px;display:flex;align-items:center;justify-content:space-between">
+<div style="display:flex;align-items:center;gap:18px">
+<dc-import name="Mark" style="width:56px;height:56px" hint-size="56px,56px"></dc-import>
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:40px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+</div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">graflet.rnui.dev</div>
+</div>
+</div>
+
+<div id="x-v4-1600x900" style="position:relative;flex:none;width:1600px;height:900px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;opacity:0.12"><dc-import name="Graph" count="24" seed="59" lit="{{ true }}" style="width:100%;height:100%" hint-size="1600px,900px"></dc-import></div>
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:0">
+<div style="width:600px;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:10px;padding:40px 44px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">what you installed</div>
+<div style="margin-top:20px;font-family:'JetBrains Mono',monospace;font-size:40px;color:#e6edf3">"next": "16.0.1"</div>
+</div>
+<div style="display:flex;align-items:center;gap:44px;padding:0 26px">
+<div style="height:1px;width:44px;background:#4a525c"></div>
+<div style="height:1px;width:44px;background:#4a525c"></div>
+</div>
+<div style="width:600px;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:10px;padding:40px 44px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">what your agent read</div>
+<div style="margin-top:20px;font-family:'JetBrains Mono',monospace;font-size:40px;color:#e6edf3">nextjs.org/docs  ·  v15</div>
+</div>
+</div>
+<div style="margin-top:64px;font-size:40px;line-height:1.35;color:#e6edf3;text-align:center">graflet pins the docs to one exact commit.</div>
+</div>
+<div style="position:absolute;left:72px;right:72px;bottom:64px;display:flex;align-items:center;justify-content:space-between">
+<div style="display:flex;align-items:center;gap:18px">
+<dc-import name="Mark" style="width:52px;height:52px" hint-size="52px,52px"></dc-import>
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:38px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+</div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">graflet.rnui.dev</div>
+</div>
+</div>
+
+<div id="x-v4-1200x1200" style="position:relative;flex:none;width:1200px;height:1200px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;opacity:0.12"><dc-import name="Graph" count="24" seed="67" lit="{{ true }}" style="width:100%;height:100%" hint-size="1200px,1200px"></dc-import></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px;box-sizing:border-box">
+<div style="display:flex;align-items:center">
+<div style="width:452px;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:10px;padding:34px 36px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">what you installed</div>
+<div style="margin-top:20px;font-family:'JetBrains Mono',monospace;font-size:28px;color:#e6edf3;white-space:nowrap">"next": "16.0.1"</div>
+</div>
+<div style="display:flex;align-items:center;gap:36px;padding:0 22px">
+<div style="height:1px;width:32px;background:#4a525c"></div>
+<div style="height:1px;width:32px;background:#4a525c"></div>
+</div>
+<div style="width:452px;box-sizing:border-box;background:#0d0f12;border:1px solid #1c2027;border-radius:10px;padding:34px 36px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">what your agent read</div>
+<div style="margin-top:20px;font-family:'JetBrains Mono',monospace;font-size:28px;color:#e6edf3;white-space:nowrap">nextjs.org/docs · v15</div>
+</div>
+</div>
+<div style="margin-top:64px;font-size:40px;line-height:1.35;color:#e6edf3;text-align:center">graflet pins the docs to one exact commit.</div>
+</div>
+<div style="position:absolute;left:72px;right:72px;bottom:72px;display:flex;align-items:center;justify-content:space-between">
+<div style="display:flex;align-items:center;gap:18px">
+<dc-import name="Mark" style="width:54px;height:54px" hint-size="54px,54px"></dc-import>
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:38px;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+</div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">graflet.rnui.dev</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;align-items:baseline;gap:14px;font-family:'JetBrains Mono',monospace;font-size:20px;color:#e6edf3">variant 5 <span style="color:#8b949e">— the mark</span></div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="x-v5-1200x1500" style="position:relative;flex:none;width:1200px;height:1500px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;background:radial-gradient(circle at 50% 42%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1500px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px;box-sizing:border-box;text-align:center">
+<dc-import name="Mark" ambient="{{ true }}" style="width:600px;height:600px" hint-size="600px,600px"></dc-import>
+<div style="margin-top:24px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:120px;line-height:1;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+<div style="margin-top:36px;font-size:36px;line-height:1.4;color:#8b949e">Docs as a graph, not snippets.</div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:72px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">Free · MIT · graflet.rnui.dev</div>
+</div>
+
+<div id="x-v5-1600x900" style="position:relative;flex:none;width:1600px;height:900px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;background:radial-gradient(circle at 50% 44%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<div style="position:absolute;left:0;top:0;width:1600px;height:900px;display:flex;align-items:center;justify-content:center;gap:64px;padding:72px;box-sizing:border-box">
+<dc-import name="Mark" ambient="{{ true }}" style="width:400px;height:400px" hint-size="400px,400px"></dc-import>
+<div style="display:flex;flex-direction:column;align-items:flex-start">
+<div style="font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:112px;line-height:1;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+<div style="margin-top:28px;font-size:36px;line-height:1.4;color:#8b949e">Docs as a graph, not snippets.</div>
+</div>
+</div>
+<div style="position: absolute; left: 0; right: 0; bottom: 64px; text-align: center; font-family: 'JetBrains Mono',monospace; font-size: 26px; color: #8b949e">Free · MIT · graflet.rnui.dev</div>
+</div>
+
+<div id="x-v5-1200x1200" style="position:relative;flex:none;width:1200px;height:1200px;background:#0a0b0d;overflow:hidden">
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;background:radial-gradient(circle at 50% 42%,rgba(78,240,140,0.08) 0%,rgba(78,240,140,0) 80%)"></div>
+<div style="position:absolute;left:0;top:0;width:1200px;height:1200px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px;box-sizing:border-box;text-align:center">
+<dc-import name="Mark" ambient="{{ true }}" style="width:480px;height:480px" hint-size="480px,480px"></dc-import>
+<div style="margin-top:20px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:-2px;font-size:108px;line-height:1;color:#e6edf3">graf<span style="color:#4ef08c">let</span></div>
+<div style="margin-top:32px;font-size:36px;line-height:1.4;color:#8b949e">Docs as a graph, not snippets.</div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:72px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:26px;color:#8b949e">Free · MIT · graflet.rnui.dev</div>
+</div>
+
+</div>
+</div>
+
+</div>
+</x-dc>
+</body>
+</html>
