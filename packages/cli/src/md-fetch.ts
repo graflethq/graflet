@@ -25,6 +25,11 @@ export interface ResolvedSource {
   // Nullable: the catalog resolve carries null until P1 records it; fetchMarkdown
   // guards it and fails cleanly (before any network) rather than fetching.
   docs_path: string | null;
+  /** Repo-relative prefixes inside `docs_path` the KG was NOT built from — e.g. Tauri's
+   *  translation dirs, which are siblings of the English content rather than a subtree of
+   *  their own. Must match `fetch.py`'s `_pruned`, or the KG and the `.md` stop aligning
+   *  (ADR-0002/0011). Absent on every same-repo row. */
+  docs_exclude?: string[] | null;
 }
 
 export interface FetchMarkdownOptions {
@@ -143,6 +148,9 @@ export async function fetchMarkdown(
   // doc-extension files repo-wide, so that's what we fetch (see isDocFile). repo_url + sha are
   // the real requirement — without the pin there is nothing to align to.
   const docsPath = (src.docs_path ?? "").trim().replace(/^\/+|\/+$/g, "");
+  const excludes = (src.docs_exclude ?? [])
+    .map((e) => e.trim().replace(/^\/+|\/+$/g, ""))
+    .filter(Boolean);
   if (!repoUrl || !sha) {
     throw new Error("cannot fetch markdown: unresolved source (missing repo_url or sha)");
   }
@@ -163,9 +171,13 @@ export async function fetchMarkdown(
   // The archive's single top-level dir is `{repo}-{sha}/`; strip it, then keep either the pinned
   // `docs_path` subtree or — when none is pinned — the doc files the KG was actually built from.
   const prefix = `${repo}-${sha}/`;
-  const keep = docsPath
+  const inScope = docsPath
     ? (rel: string) => rel === docsPath || rel.startsWith(`${docsPath}/`)
     : isDocFile;
+  // `docs_exclude` prunes inside that scope — the mirror of fetch.py's `_pruned`.
+  const keep = excludes.length
+    ? (rel: string) => inScope(rel) && !excludes.some((e) => rel === e || rel.startsWith(`${e}/`))
+    : inScope;
   const written: string[] = [];
   for (const entry of readTar(tar)) {
     if (!entry.path.startsWith(prefix)) continue;

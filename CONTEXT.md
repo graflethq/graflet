@@ -22,7 +22,8 @@ offerings (an MCP service, or charging for the KG) deferred to later.
 
 ## Ubiquitous language (glossary)
 
-- **Documentation / doc** — one software project's docs (e.g. React, Next.js). Identified by its GitHub repo.
+- **Documentation / doc** — one software project's docs (e.g. React, Next.js). Identified by the **docs repo**
+  it is fetched from, never by the library it describes.
 - **Knowledge graph (KG)** — graphify's output for one doc snapshot: `graph.json` + `graph.html` +
   `GRAPH_REPORT.md` + `savings.json`. The product's real value.
 - **Bundle** — the shippable core of a KG (the four files above + `LICENSE`), pruned of graphify's internal
@@ -39,6 +40,27 @@ offerings (an MCP service, or charging for the KG) deferred to later.
 - **Release axis** — the semver component that separates two *documents* for a given project: the most-
   significant component that moves across its stable releases (major for Next.js, minor for React Native).
   Auto-detected per project. See [ADR-0003].
+
+### Split docs (docs repo ≠ library repo)
+
+- **Docs repo** — the GitHub repo a doc's markdown is fetched from and its KG was built from. **`sha` always
+  pins this repo**, and the bundle is keyed `{org}__{repo}__{sha}` on it. _Avoid_: "source repo", "upstream
+  repo" — both blur which of the two repos is meant. See [ADR-0011].
+- **Library repo** — the repo of the software being documented, when that is a *different* repo from the docs
+  repo (Effect's library is `Effect-TS/effect`; its docs are `Effect-TS/website`). Recorded as `code_repo_url`
+  + `code_ref`. Never fetched, never graphified — display and release-detection only. _Avoid_: "code repo".
+- **Split doc** — a doc whose docs repo and library repo differ. The same-repo case (Next.js) is just a split
+  doc where the two coincide, so nothing about it is special-cased.
+- **Docs ref mode** — how a docs repo carries versions, one of three: `branch` (tauri-docs keeps `v1` and `v2`
+  branches), `dir` (Effect's website keeps `src/content/docs/v3`), `floating` (langfuse-docs has only "now").
+  NULL = same-repo, resolve the version as a tag in that repo. See [ADR-0011].
+- **Licence scope** — whether `license_id` is granted by the whole docs repo (`repo`) or only over the
+  `docs_path` subtree (`path`). PostHog's LICENSE forbids reuse of the site but grants MIT over `/contents/`,
+  so its scope is `path`. Operator-set — GitHub reports a split licence as `NOASSERTION`. A source that states
+  no licence ships anyway, with a `NOTICE` in place of a `LICENSE`. See [ADR-0012].
+- **Docs exclude** — paths under `docs_path` pruned from the KG build *and* the CLI's markdown download
+  (tauri's `ja`/`zh-cn`/`ko`/… translations). Must be applied by both engines or the two halves of
+  two-source delivery stop matching. See [ADR-0002].
 - **Version playbook** — `research/context7-legality/version-resolution.jsonl`: per-library scheme, release
   axis, stable `site_versions`, pre-release markers to ignore, and what `default` currently represents.
 - **Catalog** — the list of docs + their versions + metadata the site and CLI read. Spine =
@@ -75,6 +97,8 @@ offerings (an MCP service, or charging for the KG) deferred to later.
 | **Gate only the KG download**; free + OSS; monetization deferred; goal = audience + stars + donations | [ADR-0005] |
 | **Consent model**: unchecked opt-in, two capture points, transactional/service/marketing email split | [ADR-0006] |
 | **PostHog** as analytics processor: managed reverse proxy for the browser, anonymous-until-sign-in, identified persons carry email, CLI telemetry opt-in | [ADR-0010] |
+| **Split docs**: `sha` pins the **docs** repo, library repo is metadata; licence scoped to `docs_path`; correct scope beats GraphScore | [ADR-0011] |
+| **A bundle carries no source text** (labels + relations + paths only, verified) → unlicensed sources are shippable, with a `NOTICE` | [ADR-0012] |
 
 ---
 
@@ -186,3 +210,5 @@ decision after there's an audience. (Replaces the old map's "100 signups / paywa
 [ADR-0005]: docs/adr/0005-gate-and-free-oss-model.md
 [ADR-0006]: docs/adr/0006-consent-and-audience-model.md
 [ADR-0010]: docs/adr/0010-posthog-analytics.md
+[ADR-0011]: docs/adr/0011-split-docs-and-library-repos.md
+[ADR-0012]: docs/adr/0012-bundle-carries-no-source-text.md

@@ -159,6 +159,15 @@ describe("buildCatalogRows — present metrics render real values", () => {
     });
   });
 
+  // ADR-0011 — the card names the library the docs are about, not the docs site's own repo.
+  it("shows code_repo_url as the repo when the docs live in a different repo", () => {
+    const [row] = buildCatalogRows(
+      [{ ...DOCS[0], slug: "tauri", name: "tauri", repo_url: "https://github.com/tauri-apps/tauri-docs", code_repo_url: "https://github.com/tauri-apps/tauri" }],
+      TOP_SCORED,
+    );
+    expect(row.repo).toBe("tauri-apps/tauri");
+  });
+
   it("every row's command is the latest bare command (no @version)", () => {
     for (const row of buildCatalogRows(DOCS, TOP_SCORED)) {
       expect(row.command).toBe(`uvx graflet ${row.slug}`);

@@ -23,7 +23,7 @@ import { sha256Hex } from "./tokens";
 /** GET /catalog — the public, sign-in-free doc list. */
 export async function handleCatalogList(env: Env): Promise<Response> {
   const { results } = await env.CATALOG.prepare(
-    `SELECT d.slug, d.name, d.repo_url, d.license_id AS license, d.popularity_rank,
+    `SELECT d.slug, d.name, d.repo_url, d.code_repo_url, d.license_id AS license, d.popularity_rank,
             v.version_label AS latest_version, v.graphscore, v.hero_savings,
             v.nodes, v.edges, v.built_at, v.build_seconds, v.doc_tokens
        FROM docs d
@@ -33,6 +33,9 @@ export async function handleCatalogList(env: Env): Promise<Response> {
     slug: string;
     name: string;
     repo_url: string;
+    // The library repo when the docs live elsewhere (ADR-0011); NULL when they coincide.
+    // The site's card prefers this; /attribution keeps using repo_url.
+    code_repo_url: string | null;
     license: string;
     popularity_rank: number;
     latest_version: string;
@@ -50,15 +53,22 @@ export async function handleCatalogList(env: Env): Promise<Response> {
 /** GET /catalog/{slug}[?version=] — doc detail + a resolve for one version. */
 export async function handleCatalogDoc(env: Env, slug: string, wantVersion: string | null): Promise<Response> {
   const doc = await env.CATALOG.prepare(
-    "SELECT slug, name, repo_url, license_id AS license, popularity_rank FROM docs WHERE slug = ?",
+    "SELECT slug, name, repo_url, code_repo_url, license_id AS license, popularity_rank FROM docs WHERE slug = ?",
   )
     .bind(slug)
-    .first<{ slug: string; name: string; repo_url: string; license: string; popularity_rank: number }>();
+    .first<{
+      slug: string;
+      name: string;
+      repo_url: string;
+      code_repo_url: string | null;
+      license: string;
+      popularity_rank: number;
+    }>();
   if (!doc) return new Response("not found", { status: 404 });
 
   const { results: rows } = await env.CATALOG.prepare(
-    `SELECT version_label, is_latest, status, sha, docs_path, kg_ref, graphscore, hero_savings, savings_json,
-            nodes, edges, built_at
+    `SELECT version_label, is_latest, status, sha, docs_path, docs_exclude, kg_ref, graphscore, hero_savings,
+            savings_json, nodes, edges, built_at
        FROM doc_versions WHERE slug = ?
       ORDER BY is_latest DESC, version_label DESC`,
   )
@@ -69,6 +79,7 @@ export async function handleCatalogDoc(env: Env, slug: string, wantVersion: stri
       status: string;
       sha: string | null;
       docs_path: string | null;
+      docs_exclude: string | null;
       kg_ref: string | null;
       graphscore: number | null;
       hero_savings: number | null;
@@ -100,10 +111,34 @@ export interface ResolvedTarget {
   repo_url: string;
   sha: string;
   docs_path: string | null;
+  /** Prefixes inside docs_path the KG skipped (ADR-0011). Always an array — omitting it on a
+   *  same-repo row would leave older CLIs and newer ones disagreeing about undefined vs []. */
+  docs_exclude: string[];
   kg_ref: string | null;
 }
 
-type VersionRow = { version_label: string; is_latest: number; status: string; sha: string | null; docs_path: string | null; kg_ref: string | null };
+type VersionRow = {
+  version_label: string;
+  is_latest: number;
+  status: string;
+  sha: string | null;
+  docs_path: string | null;
+  docs_exclude?: string | null;
+  kg_ref: string | null;
+};
+
+/** `doc_versions.docs_exclude` (a JSON array, or NULL on every pre-ADR-0011 row) as a string[].
+ *  Malformed JSON degrades to "nothing excluded" — the pre-split behaviour — rather than 500-ing
+ *  a download; a wider fetch than the KG is a cosmetic mismatch, a failed resolve is an outage. */
+function parseExclude(json: string | null | undefined): string[] {
+  if (!json) return [];
+  try {
+    const v = JSON.parse(json);
+    return Array.isArray(v) ? v.filter((e): e is string => typeof e === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Resolve {slug, version|latest} to its deliverable pin (ADR-0002/0005), or null.
@@ -116,7 +151,14 @@ type VersionRow = { version_label: string; is_latest: number; status: string; sh
 export function resolveTarget(repoUrl: string, rows: VersionRow[], wantVersion: string | null): ResolvedTarget | null {
   const target = wantVersion ? rows.find((r) => r.version_label === wantVersion) : rows.find((r) => r.is_latest === 1);
   if (!target || target.status !== "ready" || !target.sha) return null;
-  return { version: target.version_label, repo_url: repoUrl, sha: target.sha, docs_path: target.docs_path, kg_ref: target.kg_ref };
+  return {
+    version: target.version_label,
+    repo_url: repoUrl,
+    sha: target.sha,
+    docs_path: target.docs_path,
+    docs_exclude: parseExclude(target.docs_exclude),
+    kg_ref: target.kg_ref,
+  };
 }
 
 /** DB-backed resolve for a slug — the broker's entry point (ticket 05). Reads the
@@ -125,7 +167,7 @@ export async function resolveVersion(env: Env, slug: string, wantVersion: string
   const doc = await env.CATALOG.prepare("SELECT repo_url FROM docs WHERE slug = ?").bind(slug).first<{ repo_url: string }>();
   if (!doc) return null;
   const { results } = await env.CATALOG.prepare(
-    "SELECT version_label, is_latest, status, sha, docs_path, kg_ref FROM doc_versions WHERE slug = ?",
+    "SELECT version_label, is_latest, status, sha, docs_path, docs_exclude, kg_ref FROM doc_versions WHERE slug = ?",
   )
     .bind(slug)
     .all<VersionRow>();
@@ -181,11 +223,11 @@ export async function handleCatalogUpsert(env: Env, req: Request): Promise<Respo
 
   const stmts = [
     env.CATALOG.prepare(
-      `INSERT INTO docs (slug, name, repo_url, license_id, popularity_rank) VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO docs (slug, name, repo_url, code_repo_url, license_id, popularity_rank) VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(slug) DO UPDATE SET
-         name = excluded.name, repo_url = excluded.repo_url,
+         name = excluded.name, repo_url = excluded.repo_url, code_repo_url = excluded.code_repo_url,
          license_id = excluded.license_id, popularity_rank = excluded.popularity_rank`,
-    ).bind(slug, str(body.name) || slug, str(body.repo_url), license, rank),
+    ).bind(slug, str(body.name) || slug, str(body.repo_url), str(body.code_repo_url) || null, license, rank),
   ];
 
   // A new latest alias demotes the previous one first (same transaction), so the
@@ -202,11 +244,12 @@ export async function handleCatalogUpsert(env: Env, req: Request): Promise<Respo
   stmts.push(
     env.CATALOG.prepare(
       `INSERT INTO doc_versions
-         (slug, version_label, is_latest, status, sha, docs_path, kg_ref, license_id, savings_json, graphscore, hero_savings, nodes, edges, built_at, build_seconds, doc_tokens, needs_human)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         (slug, version_label, is_latest, status, sha, docs_path, docs_exclude, kg_ref, license_id, savings_json, graphscore, hero_savings, nodes, edges, built_at, build_seconds, doc_tokens, needs_human)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(slug, version_label) DO UPDATE SET
          is_latest = excluded.is_latest, status = excluded.status,
-         sha = excluded.sha, docs_path = excluded.docs_path, kg_ref = excluded.kg_ref,
+         sha = excluded.sha, docs_path = excluded.docs_path,
+         docs_exclude = excluded.docs_exclude, kg_ref = excluded.kg_ref,
          license_id = excluded.license_id, savings_json = excluded.savings_json,
          graphscore = excluded.graphscore, hero_savings = excluded.hero_savings,
          nodes = excluded.nodes, edges = excluded.edges, built_at = excluded.built_at,
@@ -219,6 +262,7 @@ export async function handleCatalogUpsert(env: Env, req: Request): Promise<Respo
       status,
       str(body.sha) || null,
       str(body.docs_path) || null,
+      strList(body.docs_exclude),
       str(body.kg_ref) || null,
       license,
       body.savings != null ? JSON.stringify(body.savings) : null,
@@ -252,12 +296,14 @@ type UpsertBody = {
   slug?: unknown;
   name?: unknown;
   repo_url?: unknown;
+  code_repo_url?: unknown;
   popularity_rank?: unknown;
   version_label?: unknown;
   is_latest?: unknown;
   status?: unknown;
   sha?: unknown;
   docs_path?: unknown;
+  docs_exclude?: unknown;
   kg_ref?: unknown;
   license?: unknown;
   savings?: unknown;
@@ -296,4 +342,12 @@ function str(v: unknown): string {
 
 function num(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
+/** A list of non-empty strings stored as JSON, or NULL when there is nothing to store —
+ *  so an absent `docs_exclude` and an explicit `[]` both read back as "nothing excluded". */
+function strList(v: unknown): string | null {
+  if (!Array.isArray(v)) return null;
+  const out = v.map((e) => str(e)).filter(Boolean);
+  return out.length ? JSON.stringify(out) : null;
 }

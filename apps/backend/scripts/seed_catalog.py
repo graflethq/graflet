@@ -23,6 +23,10 @@ from pathlib import Path
 
 # parents[3] = repo root (this file sits at apps/backend/scripts/ after ADR-0008).
 REPO = Path(__file__).resolve().parents[3]
+# The slug rule lives with the pipeline because post.py is its main caller; this script already
+# reads kg-pipeline/manifest.jsonl, so importing one more file from there adds no new coupling.
+sys.path.insert(0, str(REPO / "kg-pipeline"))
+import slug as slugs  # noqa: E402
 MANIFEST = REPO / "kg-pipeline" / "manifest.jsonl"
 DB = REPO / "kg-data" / "programming-docs.db"
 OUT = REPO / "apps" / "backend" / "catalog-seed.sql"
@@ -56,13 +60,17 @@ def main() -> int:
     con = sqlite3.connect(DB)
     con.row_factory = sqlite3.Row
 
+    manifest = [json.loads(l) for l in MANIFEST.read_text().splitlines() if l.strip()]
+    # Slugs come from the shared rule, resolved over the WHOLE manifest — not just the `done` rows
+    # seeded here. post.py resolves over the whole corpus too; if this file used a narrower view the
+    # two writers would disagree and a re-seed would resurrect the old slug next to the new one.
+    subject = {(d["org"], d["repo"]): (d.get("code_repo_url") or d.get("repo_url") or "").rstrip("/")
+               for d in manifest}
+    slug_of = slugs.slug_map(set(subject.values()))
+
     docs_rows, version_rows = [], []
     ready = provisional = skipped = 0
-    for line in MANIFEST.read_text().splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        d = json.loads(line)
+    for d in manifest:
         if d.get("status") != "done":
             continue
         r = con.execute(
@@ -75,7 +83,7 @@ def main() -> int:
             print(f"  skip (no catalog row): {d['org']}/{d['repo']}", file=sys.stderr)
             continue
 
-        slug = d["repo"]
+        slug = slug_of[subject[(d["org"], d["repo"])]]
         license_id = r["license_id"] or d.get("license_id")
         # Held provisional (never served) if the version label is unconfirmed OR the
         # license is not green; otherwise the done bundle seeds ready.

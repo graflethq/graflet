@@ -20,7 +20,12 @@ export interface CatalogDoc {
   popularity_rank: number;
   latest_version: string;
   hero_savings: number | null;
+  /** The repo the docs are FETCHED from — for a split doc that's the docs site's own repo
+   *  ("tauri-apps/tauri-docs"). /attribution must credit this one; the catalog card must not. */
   repo_url: string | null;
+  /** The library the docs describe, when it lives in a different repo (ADR-0011). Null when the
+   *  two coincide. The card shows this — "PostHog/posthog.com" under a PostHog row reads as a bug. */
+  code_repo_url?: string | null;
   graphscore: number | null;
   /** Savings metric #4 — the raw token count of the whole source-doc corpus (all `.md`), the
    *  Anthropic-counted `doc_tokens` from the bundle's savings.json. It's the size of the docs this
@@ -97,7 +102,8 @@ export function buildCatalogRows(
     .map((d) => ({
       slug: d.slug,
       name: d.name,
-      repo: repoSlug(d.repo_url),
+      // the LIBRARY, not the docs repo it happens to be fetched from (ADR-0011)
+      repo: repoSlug(d.code_repo_url ?? d.repo_url),
       version: d.latest_version,
       score: d.graphscore == null ? DASH : `${d.graphscore}/100`,
       // Metric #4 — the raw doc-corpus token count this graph distills, shown compact (954k).

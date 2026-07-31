@@ -141,6 +141,35 @@ describe("fetchMarkdown (ticket 04)", () => {
     expect(readFileSync(written[0])).toEqual(Buffer.from(bytes));
   });
 
+  // ADR-0011 — a docs_path can hold content the KG was NOT built from. Tauri's English docs are
+  // not a subdirectory: the translation dirs sit beside the English content, so they are named in
+  // docs_exclude. The CLI must prune exactly the same set as the engine's fetch.py `_pruned`,
+  // or the user gets 360 Japanese pages the graph has no nodes for (ADR-0002 alignment).
+  it("prunes docs_exclude prefixes inside the docs_path subtree", async () => {
+    const tarGz = makeTarGz([
+      block(`${top}/src/content/docs/index.mdx`, enc.encode("en index")),
+      block(`${top}/src/content/docs/develop/plugins.mdx`, enc.encode("en plugins")),
+      block(`${top}/src/content/docs/ja/index.mdx`, enc.encode("ja index")),
+      block(`${top}/src/content/docs/zh-cn/deep/nested.mdx`, enc.encode("zh nested")),
+      // a sibling whose name merely STARTS with an excluded prefix must survive
+      block(`${top}/src/content/docs/java-interop.mdx`, enc.encode("keep me")),
+    ]);
+    const d = dest();
+    const written = await fetchMarkdown(
+      {
+        repo_url: "https://github.com/me/myrepo",
+        sha: SHA,
+        docs_path: "src/content/docs",
+        docs_exclude: ["src/content/docs/ja", "src/content/docs/zh-cn"],
+      },
+      d,
+      { fetchImpl: fakeFetch(tarGz) },
+    );
+    expect(written.map((p) => p.slice(d.length + 1)).sort()).toEqual(
+      [join("src", "content", "docs", "index.mdx"), join("src", "content", "docs", "develop", "plugins.mdx"), join("src", "content", "docs", "java-interop.mdx")].sort(),
+    );
+  });
+
   // Most catalog rows pin no docs_path; for those the KG was built from the doc-extension files
   // repo-wide (engine: fetch.py `_DOC_EXTS` / `_is_license`), so the .md half must match that set
   // exactly or the two sources stop aligning (ADR-0002).

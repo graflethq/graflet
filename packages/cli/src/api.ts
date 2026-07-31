@@ -71,6 +71,9 @@ export interface Resolve {
   repo_url: string;
   sha: string;
   docs_path: string | null;
+  /** Prefixes inside `docs_path` the KG skipped — see ResolvedSource.docs_exclude (ADR-0011).
+   *  Absent from every pre-split-docs catalog row, so treat undefined as "nothing excluded". */
+  docs_exclude?: string[] | null;
   kg_ref: string | null;
 }
 
