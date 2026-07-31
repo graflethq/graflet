@@ -16,11 +16,15 @@ export interface AttributionRow {
   repo: string;
   /** Link href for the repo, or "" when absent. */
   repoUrl: string;
-  /** SPDX id like "MIT", or "—" when absent (ADR-0006 honesty — never fabricate). */
+  /** SPDX id like "MIT"; "none stated" when the source states no license (ADR-0012); "—" when the
+   *  catalog has nothing at all (ADR-0006 honesty — never fabricate). */
   license: string;
 }
 
 const DASH = "—";
+/** The source states no license — a checked fact, not a blank. Spelled out rather than shown as a
+ *  dash, which would read as "we forgot to fill this in" (ADR-0012). */
+const NONE_STATED = "none stated";
 
 export function buildAttributionRows(docs: CatalogDoc[]): AttributionRow[] {
   return docs
@@ -29,8 +33,10 @@ export function buildAttributionRows(docs: CatalogDoc[]): AttributionRow[] {
     .map((d) => ({
       key: `attr-${d.slug}`,
       name: d.name,
+      // the repo the bytes actually come from — the DOCS repo on a split doc (ADR-0011). This page
+      // must be accurate, so it never substitutes code_repo_url the way the catalog card does.
       repo: repoSlug(d.repo_url),
       repoUrl: d.repo_url ?? "",
-      license: d.license || DASH,
+      license: d.license?.trim().toUpperCase() === "NONE" ? NONE_STATED : d.license || DASH,
     }));
 }

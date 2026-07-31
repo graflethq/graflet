@@ -89,21 +89,63 @@ describe("catalog API (ticket 02)", () => {
     expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
   });
 
-  it("GET /catalog/{slug} lists versions and resolves latest to {repo_url, sha, docs_path, kg_ref} only", async () => {
+  it("GET /catalog/{slug} lists versions and resolves latest to {repo_url, sha, docs_path, docs_exclude, kg_ref} only", async () => {
     await upsert(readyDoc());
     const res = await SELF.fetch("https://backend.test/catalog/next.js");
     expect(res.status).toBe(200);
     const body = (await res.json()) as any;
     expect(body).toMatchObject({ slug: "next.js", repo_url: "https://github.com/vercel/next.js", license: "MIT" });
     expect(body.versions[0]).toMatchObject({ version_label: "16", is_latest: true, status: "ready" });
-    // resolve returns ONLY the four pin fields (+ echoed version), never KG bytes.
+    // resolve returns ONLY the pin fields (+ echoed version), never KG bytes.
+    // docs_exclude is always present, `[]` when nothing was pruned (ADR-0011).
     expect(body.resolve).toEqual({
       version: "16",
       repo_url: "https://github.com/vercel/next.js",
       sha: "a".repeat(40),
       docs_path: "docs",
+      docs_exclude: [],
       kg_ref: "vercel/next.js/" + "a".repeat(40),
     });
+  });
+
+  // ADR-0011 — Tauri's docs live in tauri-apps/tauri-docs, not tauri-apps/tauri. repo_url + sha
+  // pin the DOCS repo (that's what codeload fetches and what /attribution credits); code_repo_url
+  // carries the library for the catalog card, and docs_exclude names what the KG skipped inside
+  // docs_path so the CLI's markdown download prunes the same set.
+  it("a split doc round-trips code_repo_url and docs_exclude", async () => {
+    await upsert(
+      readyDoc({
+        slug: "tauri",
+        name: "Tauri",
+        repo_url: "https://github.com/tauri-apps/tauri-docs",
+        code_repo_url: "https://github.com/tauri-apps/tauri",
+        docs_path: "src/content/docs",
+        docs_exclude: ["src/content/docs/ja", "src/content/docs/zh-cn", "  ", ""],
+        version_label: "2",
+        kg_ref: "tauri-apps/tauri-docs/" + "a".repeat(40),
+      }),
+    );
+    const { docs } = (await (await SELF.fetch("https://backend.test/catalog")).json()) as { docs: any[] };
+    expect(docs.find((d) => d.slug === "tauri")).toMatchObject({
+      repo_url: "https://github.com/tauri-apps/tauri-docs",
+      code_repo_url: "https://github.com/tauri-apps/tauri",
+    });
+    const body = (await (await SELF.fetch("https://backend.test/catalog/tauri")).json()) as any;
+    expect(body.code_repo_url).toBe("https://github.com/tauri-apps/tauri");
+    // Blank entries are dropped — an empty prefix would match every path and prune the whole subtree.
+    expect(body.resolve.docs_exclude).toEqual(["src/content/docs/ja", "src/content/docs/zh-cn"]);
+  });
+
+  // ADR-0012 — a source that states NO license still ships, because the bundle carries entity
+  // labels, relations and file paths, never source text. "NONE" is the operator asserting they
+  // checked, and is the ONLY non-license the gate admits; anything unrecognised stays red.
+  it("accepts license NONE as ready, and still rejects an unknown license", async () => {
+    expect((await upsert(readyDoc({ slug: "effect", license: "NONE", kg_ref: "e" }))).status).toBe(200);
+    const { docs } = (await (await SELF.fetch("https://backend.test/catalog")).json()) as { docs: any[] };
+    expect(docs.find((d) => d.slug === "effect")).toMatchObject({ license: "NONE" });
+
+    const res = await upsert(readyDoc({ slug: "nope", license: "SOME-PROPRIETARY-EULA", kg_ref: "n" }));
+    expect(res.status).toBe(422);
   });
 
   it("GET /catalog/{slug}?version=<old> resolves that specific version", async () => {
