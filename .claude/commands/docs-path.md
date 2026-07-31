@@ -1,8 +1,13 @@
 ---
 description: Pin the documentation subtree (docs_path) for the next 10 docs in the kg-pipeline backfill queue, with a human approval gate.
+argument-hint: "[deferred]"
 ---
 
 # /docs-path — one batch of ten
+
+**Arguments: `$ARGUMENTS`.** If that is `deferred` (or the user is clearly asking about the
+set-aside pile), run the **Clearing the deferred pile** section at the bottom INSTEAD of the batch
+protocol below. Empty argument = run the batch protocol.
 
 Resumable. This file is the whole protocol: a fresh session with no memory of any previous one
 runs it and continues exactly where the last batch stopped. Progress lives in
@@ -138,6 +143,43 @@ git -C kg-pipeline commit -m "fix(manifest): pin docs_path for docs <a>–<b>"
 git -C kg-pipeline push
 git add kg-pipeline && git commit -m "bump kg-pipeline (docs_path batch)"
 ```
+
+## Clearing the deferred pile
+
+Run this instead of the batch protocol when the argument is `deferred`.
+
+```bash
+cd /Users/mrp/Documents/1-Projects/graflet/kg-pipeline && python3 docspath.py deferred
+```
+
+Each entry carries the ambiguity and the options already worked out, with counts — that analysis was
+done when the doc was deferred and does not need redoing. Present them to the user as a short table
+(option, what they get, what they lose, doc files / files ingested), **recommend one**, and wait.
+
+The user answers in plain language ("take the API reference", "leave it alone", "just use the
+guides"). Translate that into a decision and apply it — never make them write JSON:
+
+```bash
+python3 docspath.py apply /tmp/decision.json --dry-run && python3 docspath.py apply /tmp/decision.json
+```
+
+- a subtree → `{"id": "...", "docs_path": "...", "docs_exclude": [...], "note": "..."}`
+- keep the existing build → `{"id": "...", "repo_is_docs": "<why the current scope is already right>"}`
+- never build it → `{"id": "...", "no_docs": "<why>"}`
+
+If the exclude list is long but mechanical (per-component `demo/`, `__tests__/` dirs — antd needs
+~246 entries), GENERATE it from the cached tree rather than typing it; `docs_exclude` is prefix-only,
+so a wildcard is not an option and a long literal list is the correct answer:
+
+```python
+import docspath as D
+paths = D._tree(org, repo, sha)
+exclude = [f"components/{c}/{s}" for c in comps for s in ("demo", "__tests__") if ...]
+D._doc_count(paths, "components", exclude), D._graphable_count(paths, "components", exclude)
+```
+
+Applying a decision clears the `deferred` flag automatically (the row becomes `resolved`), so the
+doc leaves the pile and — if it was pinned — re-enters the build queue at once.
 
 ## If the worker is off
 
