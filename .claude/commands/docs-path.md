@@ -75,16 +75,35 @@ doc's whole section from step 2 verbatim, plus:
 >   reStructuredText that isn't under one root, or the repo is a code-only SDK — return `no_docs`
 >   with a one-line reason. When the docs live in another repo, say which one and end the reason with
 >   `needs a repo repoint` so a later pass can find it.
+> - If the **whole repo** is documentation and nothing else (a dedicated docs repo — laravel/docs is
+>   103 markdown files at the root), return `repo_is_docs`. The existing repo-wide build is already
+>   correctly scoped, so nothing is pinned and nothing is rebuilt. Never return `"docs_path": "."`
+>   or `""` — an empty path reads as a pin but behaves as unpinned, and `apply` refuses it.
+> - If the right subtree is **genuinely ambiguous** — two mutually exclusive candidates and no way to
+>   have both — return `defer` with the ambiguity AND the options spelled out with their numbers. Do
+>   not guess.
 >
 > Return ONLY this JSON, nothing else:
 > `{"id": "...", "docs_path": "...", "docs_exclude": [...], "note": "<why, one line>"}`
-> or `{"id": "...", "no_docs": "<why, one line>"}`
+> or `{"id": "...", "no_docs": "<why>"}` / `{"id": "...", "repo_is_docs": "<why>"}`
+> / `{"id": "...", "defer": "<the ambiguity + the options>"}`
 
 ### 4. Show the user, and WAIT
 
 Collect the ten answers into one markdown table — rank, repo, chosen `docs_path`, doc-file count,
 excludes, and the one-line why. Then **stop and ask for approval.** Do not run `apply` before the
 user answers. They may correct any line; edit that line and re-show only if a correction lands.
+
+**A doubtful doc never holds up the other nine.** The user's standing rule (2026-07-31): pin what is
+clear and push it to the server in this batch; `defer` anything genuinely ambiguous so they can
+decide later. Do not ask them to resolve an ambiguity mid-batch and do not guess to keep the batch
+whole. A deferred doc stays unpinned, so it cannot build, and `next` will not offer it again —
+`docspath.py deferred` is the pile they come back to.
+
+Distinguish two things before deferring. Ambiguity about **where the docs are** (two mutually
+exclusive candidate subtrees) → defer. A known cost that **no choice of path removes** (duplicate
+`.html`/`.md` twins, demo `.tsx` beside the prose) → pin it anyway and note the cost; deferring that
+means the doc simply never gets built.
 
 ### 5. Apply
 
