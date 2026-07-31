@@ -25,6 +25,47 @@ is the only thing that puts work back into the build queue.**
 a *correct* narrowing, because the score rewards a wide sprawling graph. The acceptance test is a
 human reading the subtree. Hence the gate at the bottom.
 
+## The version rule
+
+Every row carries a `version_label` — `5.2`, `11.5.5`, `1.25`, or `latest` — and `next` prints it in
+the doc's section header. **The pin must document that version.** A graph labelled 5.2 but built from
+5.1 prose is wrong in a way no GraphScore catches and no reader of the bundle can see.
+
+**Docs in the same repo.** The pinned SHA already freezes the version, so a single-version docs tree
+needs no thought. The trap is a tree carrying several versions *side by side* — Docusaurus
+`versioned_docs/version-X`, mkdocs `docs/v2` + `docs/v3`, a Mintlify `versions` array, a `legacy/`
+sibling. Pin the copy matching `version_label` and `docs_exclude` the rest.
+
+- `version_label` is a number → pin that number's copy. lightweight-charts 5.2 →
+  `website/versioned_docs/version-5.2`, **not** `website/docs`, which is the unreleased `/next` mirror.
+- `version_label` is `latest` → pin the current/live version and exclude every archived, `legacy/`
+  or prior-major copy. Two API generations in one graph make every symbol lookup a coin flip:
+  dnd-kit's `legacy/` and pandas-ai's `docs/v2` are each a *full parallel API reference* for a
+  package the current version replaced, colliding on `useSortable`, `useDraggable`, `sensors`.
+- The site config states the answer — Docusaurus `versions.json` + `lastVersion`, Mintlify
+  `versions` in `docs.json`/`mint.json`, mkdocs `mike`. Read it instead of guessing from names.
+
+**Docs in another repo** (`no_docs` + repoint). This is where version silently drifts, because the
+docs repo's HEAD is whatever shipped last week. Never hand back a bare repo name — establish the ref
+whose docs match `version_label`:
+
+- prefer a tag or branch naming the version;
+- no tags? anchor by DATE — get `version_label`'s release date from the CODE repo
+  (`gh api repos/<org>/<repo>/releases`), then the last docs-repo commit at or before it
+  (`gh api "repos/<o>/<r>/commits?until=<ISO>&per_page=1"`);
+- a docs repo that pins the library it documents in its own `package.json` is a stronger signal
+  than the date — use both when they agree.
+
+Verify the ref exists. Do not invent a SHA. Write the reason so the later repoint pass needs no
+rework:
+
+```
+docs live in <org>/<repo> at <ref> (<how the ref was matched>), subtree <path> — needs a repo repoint
+```
+
+Worked twice already: xyflow 11.5.5 → `xyflow/react-flow-docs@138e6e2` (HEAD is 11.9.2, four minors
+off); adk-python 1.25 → `google/adk-docs@06a7859` (HEAD carries a whole `docs/2.0/` tree).
+
 ## Run it
 
 All commands run from `kg-pipeline/`.
@@ -60,7 +101,8 @@ the sidecar in `docs_exclude`.
 Spawn **10 subagents in a single message** so they run concurrently — one per doc. Give each one the
 doc's whole section from step 2 verbatim, plus:
 
-> You are pinning the documentation subtree for `<org>/<repo>` at commit `<sha>`.
+> You are pinning the documentation subtree for `<org>/<repo>` at commit `<sha>`, catalog version
+> `<version_label>`.
 > Inspect candidates with:
 > `cd /Users/mrp/Documents/1-Projects/graflet/kg-pipeline && python3 docspath.py peek '<id>' '<candidate>'`
 > (lists the actual doc FILE NAMES under a candidate, from a local cache — no API call, run it as
@@ -76,10 +118,25 @@ doc's whole section from step 2 verbatim, plus:
 >   sidecar (`.vitepress`, `snippets`, `scripts`, a nested `src`).
 > - If the docs subtree also holds translations or versioned copies you do NOT want, name them in
 >   `docs_exclude` (repo-relative prefixes, e.g. `src/content/docs/ja`).
+> - **Match the catalog version.** If the repo holds several documentation versions side by side
+>   (`versioned_docs/version-X`, `docs/v2` + `docs/v3`, a `legacy/` sibling, a Mintlify or Docusaurus
+>   `versions` array), pin the one matching this row's version and `docs_exclude` the others. A
+>   numeric version means that number's copy, not the unreleased `/next` mirror. `latest` means the
+>   current/live version — exclude archived, `legacy/` and prior-major copies, because two API
+>   generations in one graph make every symbol lookup a coin flip. Read the site config
+>   (`versions.json`, `docs.json`, `mint.json`, `mkdocs.yml`) rather than guessing from directory
+>   names, and say in your note which version the pin documents.
 > - If this repo has **no** documentation subtree — docs live in a different repo, or are AsciiDoc /
 >   reStructuredText that isn't under one root, or the repo is a code-only SDK — return `no_docs`
->   with a one-line reason. When the docs live in another repo, say which one and end the reason with
->   `needs a repo repoint` so a later pass can find it.
+>   with a one-line reason.
+> - When the docs live in **another repo**, you must also establish the ref in that repo whose docs
+>   match THIS row's version — a tag naming the version, or (if the docs repo has no tags) the last
+>   commit at or before this version's release date: `gh api repos/<org>/<repo>/releases` for the
+>   date, then `gh api "repos/<o>/<r>/commits?until=<ISO>&per_page=1"`. A docs repo that pins the
+>   library in its own `package.json` corroborates the date. **Never point at HEAD** — it is
+>   whatever shipped last week, often a major version ahead. Verify the ref exists; do not invent a
+>   SHA. Write the reason as:
+>   `docs live in <org>/<repo> at <ref> (<how matched>), subtree <path> — needs a repo repoint`
 > - If the **whole repo** is documentation and nothing else (a dedicated docs repo — laravel/docs is
 >   103 markdown files at the root), return `repo_is_docs`. The existing repo-wide build is already
 >   correctly scoped, so nothing is pinned and nothing is rebuilt. Never return `"docs_path": "."`
@@ -95,9 +152,24 @@ doc's whole section from step 2 verbatim, plus:
 
 ### 4. Show the user, and WAIT
 
-Collect the ten answers into one markdown table — rank, repo, chosen `docs_path`, doc-file count,
-excludes, and the one-line why. Then **stop and ask for approval.** Do not run `apply` before the
-user answers. They may correct any line; edit that line and re-show only if a correction lands.
+Collect the ten answers into one markdown table — rank, repo, **catalog version**, chosen
+`docs_path`, doc-file count, excludes, and the one-line why. Then **stop and ask for approval.** Do
+not run `apply` before the user answers. They may correct any line; edit that line and re-show only
+if a correction lands.
+
+Before you show the table, write the decisions to the batch JSON and run the version check. It is
+mechanical and catches what a subagent reading one repo cannot see — a version-looking directory
+left INSIDE a pin is a second generation of the same docs in one graph:
+
+```bash
+python3 docspath.py versioncheck /tmp/batch.json   # this batch
+python3 docspath.py versioncheck                   # no file: re-scan every pin already resolved
+```
+
+A hit is a bug unless the row's version IS that directory. Fix it one of two ways: add the sibling
+to `docs_exclude`, or — if the row's version names the sibling — pin the sibling instead. Then
+re-run until it prints `Every pin holds one version.` `apply --dry-run` runs the same check and
+warns, so a mixed pin cannot reach the server unnoticed.
 
 **A doubtful doc never holds up the other nine.** The user's standing rule (2026-07-31): pin what is
 clear and push it to the server in this batch; `defer` anything genuinely ambiguous so they can
