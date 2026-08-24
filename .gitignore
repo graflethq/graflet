@@ -24,3 +24,7 @@ docs/*
 !docs/adr/
 !docs/agents/
 !docs/supporter/
+
+# /kg-run lives in the PRIVATE kg-pipeline submodule (it names the VPS host, container and
+# data paths). Symlinked here only so the skill is discoverable from the project root.
+.claude/skills/kg-run
